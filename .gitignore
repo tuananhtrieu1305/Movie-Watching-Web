@@ -10,13 +10,6 @@ Thumbs.db
 *.sln
 *.sw?
 
-# --- ENVIRONMENT VARIABLES (BẢO MẬT TUYỆT ĐỐI) ---
-.env
-.env.*
-!.env.example
-# Chặn cả file env nằm sâu bên trong
-**/.env
-**/.env.*
 
 # --- DEPENDENCIES (Thư viện tải về) ---
 node_modules/
