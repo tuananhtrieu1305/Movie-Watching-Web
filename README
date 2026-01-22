@@ -1,19 +1,19 @@
-# 🎬 Movie Streaming Platform 
+#  Movie Streaming Platform 
 
 Hệ thống xem phim trực tuyến (Rophim Clone) xây dựng theo kiến trúc Modular Monorepo.
 
-## 🚀 Yêu cầu cài đặt (Prerequisites)
+##  Yêu cầu cài đặt (Prerequisites)
 
 Để chạy dự án này, máy bạn **CHỈ CẦN** cài đặt:
 1.  **Docker Desktop** (Bắt buộc) - [Tải tại đây](https://www.docker.com/products/docker-desktop/)
 2.  **Git**
 3.  **VS Code** (Khuyên dùng)
 
-> ⚠️ **Lưu ý:** Bạn **KHÔNG CẦN** cài Node.js, Python hay MySQL lên máy thật. Docker sẽ lo hết.
+> **Lưu ý:** Bạn **KHÔNG CẦN** cài Node.js, Python hay MySQL lên máy thật. Docker sẽ lo hết.
 
 ---
 
-## 🛠️ Hướng dẫn chạy dự án (Quick Start)
+##  Hướng dẫn chạy dự án (Quick Start)
 
 ### Bước 1: Clone mã nguồn
 Mở Terminal (hoặc Git Bash) và chạy:
@@ -36,7 +36,7 @@ docker compose up --build
 
 ⏳ Chờ khoảng 5-10 phút cho lần chạy đầu tiên để Docker tải và cài đặt môi trường. Khi thấy dòng **Server running...** hoặc **Ready for connections** là thành công.
 
-### 🌐 Truy cập hệ thống
+###  Truy cập hệ thống
 
 Sau khi khởi động xong, bạn có thể truy cập:
 ```bash 
@@ -47,7 +47,7 @@ AI Service        http://localhost:8002      Chatbot & Gợi ý (Python)
 Database          localhost:3306             MySQL (User: root / Pass: rootpassword) 
 ```
 
-### 👨‍💻 Quy trình làm việc (Workflow)
+###  Quy trình làm việc (Workflow)
 **Code hàng ngày**
 
 - Frontend/Node.js: Code có tính năng Hot Reload. Chỉ cần sửa file và Save (Ctrl+S), web sẽ tự cập nhật ngay lập tức mà không cần chạy lại Docker.
