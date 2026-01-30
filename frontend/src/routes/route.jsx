@@ -4,17 +4,25 @@ import HomePage from "../modules/discovery/HomePage";
 import AdminPage from "../admin/AdminPage";
 import Test from "../admin/analytics/Test";
 import Test1 from "../admin/users/Test";
-import Test2 from "../admin/content/Test";
+import ContentTable from "../admin/content/ContentTable";
 import Test3 from "../admin/community/Test";
+import NotFoundPage from "../components/streamingPage/NotFoundPage";
+import WatchPageWrapper from "../modules/streaming/WatchPageWrapper";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <NotFoundPage />,
     children: [
       {
         index: true,
         element: <HomePage />,
+      },
+      {
+        // :slug là tham số động (VD: /watch/stranger-things-s4)
+        path: "watch/:slug",
+        element: <WatchPageWrapper />,
       },
     ],
   },
@@ -32,7 +40,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/admin/content",
-        element: <Test2 />,
+        element: <ContentTable />,
       },
       {
         path: "/admin/community",

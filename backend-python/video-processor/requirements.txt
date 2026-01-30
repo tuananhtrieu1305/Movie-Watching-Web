@@ -1,2 +1,6 @@
 fastapi
 uvicorn
+boto3
+ffmpeg-python
+python-multipart
+requests

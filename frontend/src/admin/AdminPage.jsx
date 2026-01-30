@@ -13,6 +13,7 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import React, { useState, memo } from "react";
 import Logo from "../components/Logo";
 import Logo_Icon from "../assets/react.svg";
+import AnonymousAvatar from "../assets/anonymous.png";
 
 const { Content, Sider, Header: AntHeader } = Layout;
 
@@ -49,7 +50,7 @@ const MemoizedHeader = memo(({ collapsed, onToggle }) => {
       <div className="pr-6">
         <Dropdown menu={{ items: dropdownItems }} trigger={["click"]}>
           <Space className="cursor-pointer p-2 rounded-md">
-            <Avatar src={urlAvatar} />
+            <Avatar src={urlAvatar.length == 0 ? AnonymousAvatar : urlAvatar} />
             <span className="font-medium text-gray-600">Admin</span>
           </Space>
         </Dropdown>
@@ -62,7 +63,7 @@ MemoizedHeader.displayName = "MemoizedHeader";
 
 const MemoizedContent = memo(() => {
   return (
-    <Content className="m-4 p-6 bg-white rounded-lg shadow-inner">
+    <Content className="m-4 p-6 bg-[#1f1f1f] rounded-lg shadow-inner">
       <Outlet />
     </Content>
   );
@@ -74,7 +75,7 @@ const AdminPage = () => {
   const location = useLocation();
   const getActiveMenuKey = () => {
     const pathSegments = location.pathname.split("/");
-    const lastSegment = pathSegments.pop() || pathSegments.pop(); // Xử lý trường hợp trailing slash
+    const lastSegment = pathSegments.pop() || pathSegments.pop();
 
     const keyMap = {
       admin: "analytics",
@@ -137,7 +138,7 @@ const AdminPage = () => {
         />
       </Sider>
 
-      <Layout className="!bg-gray-200 transition-all duration-300 ease-in-out">
+      <Layout className="!bg-[#022c53] transition-all duration-300 ease-in-out">
         <MemoizedHeader collapsed={collapsed} onToggle={handleToggle} />
         <MemoizedContent />
       </Layout>
