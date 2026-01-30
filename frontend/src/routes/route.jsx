@@ -24,61 +24,69 @@ import CheckoutPage from "../modules/payment/pages/CheckoutPage";
 import AdminPage from "../admin/AdminPage";
 import Test from "../admin/analytics/Test";
 import Test1 from "../admin/users/Test";
-import Test2 from "../admin/content/Test";
+import ContentTable from "../admin/content/ContentTable";
 import Test3 from "../admin/community/Test";
+import NotFoundPage from "../components/streamingPage/NotFoundPage";
+import WatchPageWrapper from "../modules/streaming/WatchPageWrapper";
 
 export const router = createBrowserRouter([
   // --- NHÓM 1: PUBLIC (Có Header/Footer) ---
   {
     path: "/",
     element: <MainLayout />,
+    errorElement: <NotFoundPage />,
     children: [
       {
         index: true,
         element: <HomePage />,
       },
       // --- USER SECTION (Nested routes) ---
+
       {
-        path: "user",
-        element: <UserLayout />,
-        children: [
-          {
-            index: true,
-            element: <Navigate to="/user/profile" replace />,
-          },
-          {
-            path: "profile",
-            element: <ProfilePage />,
-          },
-          {
-            path: "history",
-            element: <HistoryPage />,
-          },
-          {
-            path: "favorites",
-            element: <FavoritesPage />,
-          },
-          {
-            path: "notifications",
-            element: <NotificationsPage />,
-          },
-          {
-            path: "settings",
-            element: <SettingsPage />,
-          },
-          {
-            path: "plans",
-            element: <PlansPage />,
-          },
-          {
-            path: "checkout",
-            element: <CheckoutPage />,
-          },
-        ],
+        // :slug là tham số động (VD: /watch/stranger-things-s4)
+        path: "watch/:slug",
+        element: <WatchPageWrapper />,
       },
     ],
   },
-
+  {
+    path: "/user",
+    element: <UserLayout />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/user/profile" replace />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
+      {
+        path: "history",
+        element: <HistoryPage />,
+      },
+      {
+        path: "favorites",
+        element: <FavoritesPage />,
+      },
+      {
+        path: "notifications",
+        element: <NotificationsPage />,
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
+      },
+      {
+        path: "plans",
+        element: <PlansPage />,
+      },
+      {
+        path: "checkout",
+        element: <CheckoutPage />,
+      },
+    ],
+  },
   // --- NHÓM 2: ADMIN (Giao diện riêng) ---
   {
     path: "/admin",
@@ -93,8 +101,8 @@ export const router = createBrowserRouter([
         element: <Test1 />,
       },
       {
-        path: "content",
-        element: <Test2 />,
+        path: "/admin/content",
+        element: <ContentTable />,
       },
       {
         path: "community",
@@ -116,6 +124,10 @@ export const router = createBrowserRouter([
   // --- 404 Not Found ---
   {
     path: "*",
-    element: <div className="text-white text-center mt-20">404 - Trang không tồn tại</div>,
-  }
+    element: (
+      <div className="text-white text-center mt-20">
+        404 - Trang không tồn tại
+      </div>
+    ),
+  },
 ]);
