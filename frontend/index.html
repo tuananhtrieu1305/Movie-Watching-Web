@@ -3,11 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="stylesheet" href="src/assets/chatbot.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Movies Watching Web</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+          <!-- Chatbot Widget -->
+      <div class="rp-chat" id="rpChat">
+        <div class="rp-chat__badge" id="rpChatBadge">1</div>
+
+        <!-- Minimized button -->
+        <button class="rp-chat__fab" id="rpChatFab" type="button" aria-label="Mở chatbot">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7.5 19.5c-1 0-1.5-.7-1.5-1.5V7.2C6 5.43 7.43 4 9.2 4h5.6C16.57 4 18 5.43 18 7.2v5.2c0 1.77-1.43 3.2-3.2 3.2H12l-3.2 3.1c-.4.38-.8.8-1.3.8Z" stroke="rgba(255,255,255,.92)" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M9 9.4h6M9 12h4.2" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <!-- Panel -->
+        <section class="rp-chat__panel" role="dialog" aria-label="Chatbot">
+          <header class="rp-chat__header">
+            <div class="rp-chat__title">
+              <div class="rp-chat__avatar" aria-hidden="true"></div>
+              <div class="rp-chat__titleText">
+                <div class="rp-chat__name">Movie Assistant</div>
+                <div class="rp-chat__status"><span class="rp-chat__dot"></span>Online • trả lời nhanh</div>
+              </div>
+            </div>
+
+            <div class="rp-chat__actions">
+              <button class="rp-chat__iconBtn" id="rpChatClear" type="button" title="Xoá chat" aria-label="Xoá chat">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 7h12M9 7V5.8c0-.99.81-1.8 1.8-1.8h2.4c.99 0 1.8.81 1.8 1.8V7M8 7l1 14h6l1-14" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+              </button>
+
+              <button class="rp-chat__iconBtn" id="rpChatMin" type="button" title="Thu nhỏ" aria-label="Thu nhỏ">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 12h12" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          <main class="rp-chat__body" id="rpChatBody">
+            <div class="rp-chat__msg rp-chat__msg--bot">
+              <div class="rp-chat__bubble">
+                Chào bạn! Mình có thể giúp tìm phim, gợi ý theo thể loại/diễn viên, hoặc tóm tắt (không spoil).
+                <div class="rp-chat__meta">Gợi ý: “Gợi ý phim hành động giống Biệt Đội Đập Phá”</div>
+              </div>
+            </div>
+          </main>
+
+          <footer class="rp-chat__footer">
+            <div class="rp-chat__composer">
+              <textarea id="rpChatInput" class="rp-chat__input" placeholder="Nhập tin nhắn... (Enter để gửi, Shift+Enter xuống dòng)"></textarea>
+              <button class="rp-chat__send" id="rpChatSend" type="button" aria-label="Gửi">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3.5 11.2 21 3.7l-7.5 17.8-2.9-7.2-7.1-3.1Z" stroke="rgba(0,0,0,.72)" stroke-width="1.6" stroke-linejoin="round"/>
+                  <path d="M10.6 14.3 21 3.7" stroke="rgba(0,0,0,.55)" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </footer>
+        </section>
+      </div>
+    <script src="./chatbot.js"></script>
+
   </body>
 </html>
