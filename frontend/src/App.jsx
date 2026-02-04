@@ -1,13 +1,20 @@
 import { Outlet } from "react-router-dom";
+import Header from "./components/Header";
+import ChatbotWidget from "./components/ChatbotWidget";
 
 const App = () => {
   return (
-    <div>
-      {/* Header chung cho mọi trang */}
-      <h1 className="text-3xl font-bold underline text-red-500">Header</h1>
+    <div className="app">
+      {/* Header Navigation */}
+      <Header />
 
-      {/* Outlet là nơi các trang con (Home, About...) sẽ được render vào */}
-      <Outlet />
+      {/* Main Content */}
+      <main className="app-main">
+        <Outlet />
+      </main>
+
+      {/* Chatbot Widget - hiển thị ở mọi trang */}
+      <ChatbotWidget />
     </div>
   );
 };
