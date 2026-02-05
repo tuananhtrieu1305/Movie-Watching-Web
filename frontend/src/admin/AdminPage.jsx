@@ -7,6 +7,8 @@ import {
   MenuUnfoldOutlined,
   LogoutOutlined,
   HomeOutlined,
+  DollarOutlined,
+  CrownOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu, Dropdown, Space, Avatar } from "antd";
 import { Outlet, Link, useLocation } from "react-router-dom";
@@ -79,6 +81,8 @@ const AdminPage = () => {
     const keyMap = {
       admin: "analytics",
       users: "users",
+      transactions: "transactions",
+      subscriptions: "subscriptions",
       content: "content",
       community: "community",
     };
@@ -97,6 +101,16 @@ const AdminPage = () => {
       label: <Link to="/admin/users">Users Management</Link>,
       key: "users",
       icon: <UserOutlined />,
+    },
+    {
+      label: <Link to="/admin/transactions">Transactions</Link>,
+      key: "transactions",
+      icon: <DollarOutlined />,
+    },
+    {
+      label: <Link to="/admin/subscriptions">Subscriptions</Link>,
+      key: "subscriptions",
+      icon: <CrownOutlined />,
     },
     {
       label: <Link to="/admin/content">Content Management</Link>,

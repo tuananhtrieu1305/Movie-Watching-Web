@@ -23,9 +23,11 @@ import CheckoutPage from "../modules/payment/pages/CheckoutPage";
 // 5. Import Admin Pages
 import AdminPage from "../admin/AdminPage";
 import Test from "../admin/analytics/Test";
-import Test1 from "../admin/users/Test";
+import UsersManagement from "../admin/users/UsersManagement";
 import Test2 from "../admin/content/Test";
 import Test3 from "../admin/community/Test";
+import TransactionsManagement from "../admin/transactions/TransactionsManagement";
+import SubscriptionsHistory from "../admin/subscriptions/SubscriptionsHistory";
 
 export const router = createBrowserRouter([
   // --- NHÓM 1: PUBLIC (Có Header/Footer) ---
@@ -90,7 +92,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "users",
-        element: <Test1 />,
+        element: <UsersManagement />,
+      },
+      {
+        path: "transactions",
+        element: <TransactionsManagement />,
+      },
+      {
+        path: "subscriptions",
+        element: <SubscriptionsHistory />,
       },
       {
         path: "content",
