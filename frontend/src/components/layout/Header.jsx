@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaSearch, FaBell, FaBars } from 'react-icons/fa';
-import UserMenu from '../common/UserMenu'; // Đảm bảo bạn đã tạo file này ở bước trước
+import { FaSearch, FaBell, FaBars, FaUserPlus, FaSignInAlt } from 'react-icons/fa';
+import UserMenu from '../common/UserMenu';
 
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // State quản lý trạng thái đăng nhập
     const location = useLocation();
 
     useEffect(() => {
@@ -63,20 +64,38 @@ const Header = () => {
                     </nav>
                 </div>
 
-                {/* --- RIGHT: Search, Noti, User --- */}
-                <div className="flex items-center gap-5">
+                {/* --- RIGHT: Auth buttons or User Menu --- */}
+                <div className="flex items-center gap-4">
+                    {isLoggedIn ? (
+                        <>
+                            <button className="relative p-2 text-gray-300 hover:text-white transition-colors">
+                                <FaBell className="text-xl" />
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-gray-900"></span>
+                            </button>
 
+                            <UserMenu />
+                        </>
+                    ) : (
+                        <>
+                            <Link
+                                to="/login"
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white hover:text-[#ffdd95] transition-colors"
+                            >
+                                <FaSignInAlt />
+                                <span className="hidden sm:inline">Đăng nhập</span>
+                            </Link>
 
-                    {/* Notification */}
-                    <button className="relative p-2 text-gray-300 hover:text-white transition-colors">
-                        <FaBell className="text-xl" />
-                        <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-gray-900"></span>
-                    </button>
+                            {/* Register Button */}
+                            <Link
+                                to="/register"
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#ffdd95] text-gray-900 rounded-full hover:bg-[#ffd175] transition-colors shadow-lg hover:shadow-xl"
+                            >
+                                <FaUserPlus />
+                                <span className="hidden sm:inline">Đăng ký</span>
+                            </Link>
+                        </>
+                    )}
 
-                    {/* User Menu Dropdown (Component con) */}
-                    <UserMenu />
-
-                    {/* Mobile Menu Toggle */}
                     <button className="lg:hidden text-white text-2xl ml-2">
                         <FaBars />
                     </button>
