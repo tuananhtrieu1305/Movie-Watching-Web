@@ -28,6 +28,10 @@ import ContentTable from "../admin/content/ContentTable";
 import Test3 from "../admin/community/Test";
 import NotFoundPage from "../components/streamingPage/NotFoundPage";
 import WatchPageWrapper from "../modules/streaming/WatchPageWrapper";
+import UsersManagement from "../admin/users/UsersManagement";
+import Test2 from "../admin/content/Test";
+import TransactionsManagement from "../admin/transactions/TransactionsManagement";
+import SubscriptionsHistory from "../admin/subscriptions/SubscriptionsHistory";
 
 export const router = createBrowserRouter([
   // --- NHÓM 1: PUBLIC (Có Header/Footer) ---
@@ -98,7 +102,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "users",
-        element: <Test1 />,
+        element: <UsersManagement />,
+      },
+      {
+        path: "transactions",
+        element: <TransactionsManagement />,
+      },
+      {
+        path: "subscriptions",
+        element: <SubscriptionsHistory />,
       },
       {
         path: "/admin/content",
