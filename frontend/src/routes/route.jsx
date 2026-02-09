@@ -4,7 +4,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import MainLayout from "../components/layout/MainLayout";
 
 // 2. Import Discovery Pages
-import HomePage from "../modules/discovery/pages/HomePage";
+import HomePage from "../modules/discovery/HomePage";
 import UserLayout from "../modules/user/UserLayout";
 import ProfilePage from "../modules/user/pages/ProfilePage";
 import HistoryPage from "../modules/user/pages/HistoryPage";
@@ -23,7 +23,6 @@ import CheckoutPage from "../modules/payment/pages/CheckoutPage";
 // 5. Import Admin Pages
 import AdminPage from "../admin/AdminPage";
 import Test from "../admin/analytics/Test";
-import Test1 from "../admin/users/Test";
 import ContentTable from "../admin/content/ContentTable";
 import Test3 from "../admin/community/Test";
 import NotFoundPage from "../components/streamingPage/NotFoundPage";
