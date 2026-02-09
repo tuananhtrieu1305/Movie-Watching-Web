@@ -34,7 +34,7 @@ const InfoHero = ({ production }) => {
   return (
     <>
       {contextHolder}
-      <div className="relative w-full bg-[#121212] overflow-hidden min-h-[550px] flex items-center shadow-2xl mb-8 font-sans">
+      <div className="relative w-full bg-[#121212] overflow-hidden min-h-[550px] flex items-center shadow-2xl mb-8 font-sans pt-10">
         {/* 1. BACKGROUND LAYER (Blur & Darken) */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-40 blur-xl scale-110"

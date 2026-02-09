@@ -47,7 +47,7 @@ const WatchPage = () => {
   return (
     <>
       {contextHolder}
-      <div className="min-h-screen bg-[#121212] text-gray-300 font-sans pb-10 relative">
+      <div className="min-h-screen bg-[#121212] text-gray-300 font-sans pb-10 relative pt-12">
         {/* Light Off Overlay */}
         <div
           className={`fixed inset-0 bg-black/95 z-40 transition-opacity duration-500 pointer-events-none ${isLightOff ? "opacity-100" : "opacity-0"}`}
