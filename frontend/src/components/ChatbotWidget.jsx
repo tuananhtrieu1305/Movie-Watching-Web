@@ -106,10 +106,7 @@ const ChatbotWidget = () => {
                 aria-label="Minimize"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M19 13H5v-2h14v2z"
-                    fill="currentColor"
-                  />
+                  <path d="M19 13H5v-2h14v2z" fill="currentColor" />
                 </svg>
               </button>
               <button
@@ -137,7 +134,9 @@ const ChatbotWidget = () => {
                 <div className="message-content">
                   <div className="message-text">{message.text}</div>
                   {message.suggestion && (
-                    <div className="message-suggestion">{message.suggestion}</div>
+                    <div className="message-suggestion">
+                      {message.suggestion}
+                    </div>
                   )}
                 </div>
               </div>
@@ -149,7 +148,7 @@ const ChatbotWidget = () => {
           <div className="chatbot-input-container">
             <textarea
               className="chatbot-input"
-              placeholder="Nhập tin nhắn... (Enter để gửi, Shift+Enter xuống dòng)"
+              placeholder="Nhập tin nhắn... "
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
