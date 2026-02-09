@@ -29,7 +29,6 @@ import Test3 from "../admin/community/Test";
 import NotFoundPage from "../components/streamingPage/NotFoundPage";
 import WatchPageWrapper from "../modules/streaming/WatchPageWrapper";
 import UsersManagement from "../admin/users/UsersManagement";
-import Test2 from "../admin/content/Test";
 import TransactionsManagement from "../admin/transactions/TransactionsManagement";
 import SubscriptionsHistory from "../admin/subscriptions/SubscriptionsHistory";
 
