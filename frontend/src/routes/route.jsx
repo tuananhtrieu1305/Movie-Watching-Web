@@ -22,7 +22,7 @@ import CheckoutPage from "../modules/payment/pages/CheckoutPage";
 
 // 5. Import Admin Pages
 import AdminPage from "../admin/AdminPage";
-import Test from "../admin/analytics/Test";
+import AnalyticsDashboard from "../admin/analytics/AnalyticsDashboard";
 import ContentTable from "../admin/content/ContentTable";
 import Test3 from "../admin/community/Test";
 import NotFoundPage from "../components/streamingPage/NotFoundPage";
@@ -96,7 +96,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Test />,
+        element: <AnalyticsDashboard />,
       },
       {
         path: "users",

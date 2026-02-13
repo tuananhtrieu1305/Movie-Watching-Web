@@ -228,12 +228,21 @@
   overflow: hidden;
 }
 
+.hero-slides-container {
+  display: flex;
+  height: 100%;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
 .hero-slide {
+  min-width: 100%;
   width: 100%;
   height: 100%;
   background-size: cover;
   background-position: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .hero-content {
@@ -249,7 +258,8 @@
 .hero-info {
   flex: 1;
   max-width: 650px;
-  animation: fadeInUp 0.8s ease-out;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease-out 0.2s forwards;
 }
 
 @keyframes fadeInUp {
@@ -463,13 +473,19 @@
   background: rgba(255, 255, 255, 0.3);
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.indicator:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.2);
 }
 
 .indicator.active {
-  width: 24px;
+  width: 32px;
   border-radius: 4px;
-  background: white;
+  background: linear-gradient(135deg, #ffd166, #f59e0b);
+  box-shadow: 0 2px 8px rgba(255, 209, 102, 0.4);
 }
 
 /* ===== HOMEPAGE CONTENT ===== */
