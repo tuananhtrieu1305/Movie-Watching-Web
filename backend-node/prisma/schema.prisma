@@ -1,9 +1,12 @@
 generator client {
   provider = "prisma-client-js"
+  binaryFeatures = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model productions {
