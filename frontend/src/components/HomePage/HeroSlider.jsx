@@ -9,9 +9,9 @@ const HeroSlider = () => {
   const featuredMovies = [
     {
       id: 1,
-      title: "Biệt Đội Đáp Phá",
-      originalTitle: "The Wrecking Crew",
-      slug: "biet-doi-dap-pha",
+      title: "The Dark Knight",
+      originalTitle: "The Dark Knight",
+      slug: "the-dark-knight",
       description:
         "Hai anh em cùng cha khác mẹ, Jonny và James, đã xa cách từ lâu, buộc phải tái ngộ sau cái chết đầy bí ẩn của người cha. Trong hành trình tìm kiếm sự thật, những bí mật bị chôn vùi dần lộ diện, hé mở một âm mưu có thể xé rạch gia đình họ mãi mãi.",
       backdrop: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920",
@@ -32,9 +32,9 @@ const HeroSlider = () => {
     },
     {
       id: 2,
-      title: "Kẻ Trộm Mặt Trăng 4",
-      originalTitle: "Despicable Me 4",
-      slug: "ke-trom-mat-trang-4",
+      title: "Inception",
+      originalTitle: "Inception",
+      slug: "inception",
       description:
         "Gru và gia đình đối mặt với một kẻ thù mới đầy nguy hiểm trong cuộc phiêu lưu hoành tráng nhất từ trước đến nay. Cùng với đội quân Minions trung thành, họ phải ngăn chặn một âm mưu đe dọa cả thế giới.",
       backdrop: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=1920",
@@ -55,9 +55,9 @@ const HeroSlider = () => {
     },
     {
       id: 3,
-      title: "Vùng Đất Câm Lặng: Ngày Một",
-      originalTitle: "A Quiet Place: Day One",
-      slug: "vung-dat-cam-lang-ngay-mot",
+      title: "Parasite",
+      originalTitle: "Parasite",
+      slug: "parasite",
       description:
         "Quay trở lại ngày đầu tiên của cuộc xâm lược, khi thế giới biết đến những sinh vật săn mồi bằng âm thanh. Một cô gái phải tìm cách sống sót trong thành phố New York đầy hỗn loạn và chết chóc.",
       backdrop: "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=1920",
@@ -78,9 +78,9 @@ const HeroSlider = () => {
     },
     {
       id: 4,
-      title: "Deadpool & Wolverine",
-      originalTitle: "Deadpool & Wolverine",
-      slug: "deadpool-wolverine",
+      title: "Spirited Away",
+      originalTitle: "Spirited Away",
+      slug: "spirited-away",
       description:
         "Wade Wilson đối mặt với một mối đe dọa lớn hơn bao giờ hết và phải hợp tác với một phiên bản Wolverine từ vũ trụ khác. Cùng nhau, họ phải ngăn chặn một kế hoạch có thể hủy diệt đa vũ trụ.",
       backdrop: "https://images.unsplash.com/photo-1549989476-69a92fa57c36?w=1920",
@@ -101,9 +101,9 @@ const HeroSlider = () => {
     },
     {
       id: 5,
-      title: "Dune: Phần Hai",
-      originalTitle: "Dune: Part Two",
-      slug: "dune-phan-hai",
+      title: "Avengers: Endgame",
+      originalTitle: "Avengers: Endgame",
+      slug: "avengers-endgame",
       description:
         "Paul Atreides đoàn tụ với Chani và người Fremen trong cuộc hành trình báo thù những kẻ đã hủy hoại gia đình mình. Đối mặt với sự lựa chọn giữa tình yêu và số phận của vũ trụ, anh phải ngăn chặn một tương lai khủng khiếp mà chỉ mình anh có thể nhìn thấy.",
       backdrop: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920",

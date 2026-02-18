@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Spin, Result } from "antd";
+import { Spin } from "antd";
 import { useParams } from "react-router-dom";
 import { getWatchDataBySlug } from "../../modules/streaming/mock/watchData";
 
