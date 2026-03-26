@@ -1,0 +1,261 @@
+/* Analytics Dashboard Dark Theme */
+.analytics-dashboard {
+  background: transparent !important;
+}
+
+/* Cards */
+.analytics-dashboard .ant-card {
+  background: #141414 !important;
+  border: 1px solid #2a2a2a !important;
+}
+
+.analytics-dashboard .ant-card-head {
+  background: #1a1a1a !important;
+  border-bottom: 1px solid #2a2a2a !important;
+  color: #fff !important;
+}
+
+.analytics-dashboard .ant-card-head-title {
+  color: #fff !important;
+}
+
+.analytics-dashboard .ant-card-body {
+  color: #e0e0e0 !important;
+  background: #141414 !important;
+}
+
+/* Statistic */
+.analytics-dashboard .ant-statistic-title {
+  color: #999 !important;
+}
+
+.analytics-dashboard .ant-statistic-content {
+  color: #fff !important;
+}
+
+/* Table */
+.analytics-dashboard .ant-table {
+  background: transparent !important;
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-table-thead > tr > th {
+  background: #1a1a1a !important;
+  color: #fff !important;
+  border-bottom: 1px solid #2a2a2a !important;
+  border-right: none !important;
+}
+
+.analytics-dashboard .ant-table-tbody > tr > td {
+  background: #141414 !important;
+  border-bottom: 1px solid #2a2a2a !important;
+  border-right: none !important;
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-table-tbody > tr:hover > td {
+  background: #1f1f1f !important;
+}
+
+.analytics-dashboard .ant-table-summary {
+  background: #1a1a1a !important;
+}
+
+.analytics-dashboard .ant-table-summary > tr > td {
+  background: #1a1a1a !important;
+  border-top: 1px solid #2a2a2a !important;
+  border-bottom: none !important;
+  color: #fff !important;
+}
+
+/* List */
+.analytics-dashboard .ant-list {
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-list-item {
+  border-bottom: 1px solid #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-list-item-meta-title {
+  color: #fff !important;
+}
+
+.analytics-dashboard .ant-list-item-meta-description {
+  color: #999 !important;
+}
+
+/* Select, DatePicker */
+.analytics-dashboard .ant-select-selector {
+  background: #1a1a1a !important;
+  border: 1px solid #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-select-arrow {
+  color: #999 !important;
+}
+
+.analytics-dashboard .ant-picker {
+  background: #1a1a1a !important;
+  border: 1px solid #2a2a2a !important;
+}
+
+.analytics-dashboard .ant-picker-input > input {
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-picker-suffix {
+  color: #999 !important;
+}
+
+/* Tabs */
+.analytics-dashboard .ant-tabs-nav {
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-tabs-tab {
+  color: #999 !important;
+}
+
+.analytics-dashboard .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #1890ff !important;
+}
+
+.analytics-dashboard .ant-tabs-ink-bar {
+  background: #1890ff !important;
+}
+
+.analytics-dashboard .ant-tabs-nav::before {
+  border-bottom: 1px solid #2a2a2a !important;
+}
+
+/* Progress */
+.analytics-dashboard .ant-progress-text {
+  color: #e0e0e0 !important;
+}
+
+/* Badge */
+.analytics-dashboard .ant-badge-count {
+  background: #52c41a !important;
+  color: #fff !important;
+}
+
+/* Button */
+.analytics-dashboard .ant-btn {
+  background: #1a1a1a !important;
+  border: 1px solid #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+.analytics-dashboard .ant-btn:hover {
+  background: #242424 !important;
+  border-color: #3a3a3a !important;
+  color: #fff !important;
+}
+
+.analytics-dashboard .ant-btn-primary {
+  background: #1890ff !important;
+  border-color: #1890ff !important;
+  color: #fff !important;
+}
+
+.analytics-dashboard .ant-btn-primary:hover {
+  background: #40a9ff !important;
+  border-color: #40a9ff !important;
+}
+
+/* Avatar */
+.analytics-dashboard .ant-avatar {
+  background: #1a1a1a !important;
+  border: 1px solid #2a2a2a !important;
+}
+
+/* Space with text */
+.analytics-dashboard .ant-space-item {
+  color: #e0e0e0 !important;
+}
+
+/* Dropdown menus */
+.ant-select-dropdown {
+  background: #1a1a1a !important;
+  border: 1px solid #2a2a2a !important;
+}
+
+.ant-select-item {
+  color: #e0e0e0 !important;
+}
+
+.ant-select-item-option-selected {
+  background: #242424 !important;
+}
+
+.ant-select-item-option-active {
+  background: #2a2a2a !important;
+}
+
+.ant-picker-dropdown {
+  background: #1a1a1a !important;
+}
+
+.ant-picker-panel-container {
+  background: #1a1a1a !important;
+  border: 1px solid #2a2a2a !important;
+}
+
+.ant-picker-header,
+.ant-picker-body,
+.ant-picker-content {
+  color: #e0e0e0 !important;
+}
+
+.ant-picker-cell {
+  color: #999 !important;
+}
+
+.ant-picker-cell-in-view {
+  color: #e0e0e0 !important;
+}
+
+.ant-picker-cell-selected .ant-picker-cell-inner {
+  background: #1890ff !important;
+  color: #fff !important;
+}
+
+.ant-picker-cell:hover .ant-picker-cell-inner {
+  background: #2a2a2a !important;
+}
+
+/* Header Title */
+.analytics-dashboard h1,
+.analytics-dashboard h2,
+.analytics-dashboard h3 {
+  color: #fff !important;
+}
+
+.analytics-dashboard p {
+  color: #999 !important;
+}
+
+/* Trend indicators */
+.analytics-dashboard .text-xs {
+  color: #999 !important;
+}
+
+.analytics-dashboard .text-green-500 {
+  color: #52c41a !important;
+}
+
+.analytics-dashboard .text-red-500 {
+  color: #ff4d4f !important;
+}
+
+.analytics-dashboard .text-gray-500 {
+  color: #999 !important;
+}
+
+.analytics-dashboard .font-medium,
+.analytics-dashboard .font-semibold {
+  color: #fff !important;
+}
