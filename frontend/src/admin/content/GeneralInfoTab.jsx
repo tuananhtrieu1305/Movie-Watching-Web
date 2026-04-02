@@ -15,11 +15,25 @@ import {
   Upload,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import mockDB from "../../modules/streaming/mock/mockDB";
+import { getGenres } from "../../services/movieService";
+import { useEffect, useState } from "react";
 
 const GeneralInfoTab = (props) => {
   const { initialData, type, setType } = props;
-  const allGenres = mockDB.genres;
+  const [allGenres, setAllGenres] = useState([]);
+
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const genres = await getGenres();
+        setAllGenres(genres);
+      } catch (error) {
+        console.error("Lỗi khi lấy thể loại:", error);
+      }
+    };
+    fetchGenres();
+  }, []);
+
   return (
     <>
       <Form.Item name="type" className="mb-2 text-center">

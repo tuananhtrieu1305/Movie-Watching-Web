@@ -25,11 +25,11 @@ const InfoHero = ({ production }) => {
   const { handleCopyUrl, contextHolder } = useShareUrl();
   if (!production) return null;
 
+  console.log(production);
+
   let firstEpLink = createWatchNowUrl(production);
 
   const durationDisplay = calcDurationDisplay(production);
-
-  console.log(production);
 
   return (
     <>
@@ -66,9 +66,7 @@ const InfoHero = ({ production }) => {
 
               {/* Tags Row */}
               <div className="flex flex-wrap items-center gap-3">
-                <PremiumTag>
-                  {production.is_premium ? "VIP" : "Free"}
-                </PremiumTag>
+                <PremiumTag isPremium={production.is_premium} />
                 <StatusTag status={production.status} />
                 <TypeTag type={production.type} />
                 <span className="text-white font-medium flex items-center gap-1 text-sm">
