@@ -1,19 +1,12 @@
-import { useEffect, useState } from "react";
-import { FaUser, FaPencilAlt, FaEye, FaEyeSlash, FaCrown } from "react-icons/fa";
+import { useState } from "react";
+import { FaUser, FaPencilAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useAuth } from "../../auth/hooks/useAuth";
-import { paymentApi } from "../../payment/services/paymentApi";
 
 const ProfilePage = () => {
-  const { user, updateProfile, accessToken } = useAuth();
-  const defaultAvatar =
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&h=300";
-
-  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const { user, updateProfile } = useAuth();
 
   const [formData, setFormData] = useState({
     username: user?.username || "",
-    avatar_url: user?.avatar_url || "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -27,26 +20,6 @@ const ProfilePage = () => {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
-
-  useEffect(() => {
-    const fetchCurrentSubscription = async () => {
-      if (!accessToken) {
-        setSubscriptionLoading(false);
-        return;
-      }
-
-      try {
-        const data = await paymentApi.getCurrentSubscription(accessToken);
-        setSubscriptionInfo(data.subscription);
-      } catch {
-        setSubscriptionInfo(null);
-      } finally {
-        setSubscriptionLoading(false);
-      }
-    };
-
-    fetchCurrentSubscription();
-  }, [accessToken]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -64,10 +37,10 @@ const ProfilePage = () => {
   };
 
   const validateForm = () => {
-    if (!formData.username && !formData.newPassword && !formData.avatar_url) {
+    if (!formData.username && !formData.newPassword) {
       setMessage({
         type: "error",
-        text: "Vui lòng nhập ít nhất một trường (username, avatar hoặc mật khẩu mới)",
+        text: "Vui lòng nhập ít nhất một trường (username hoặc mật khẩu mới)",
       });
       return false;
     }
@@ -108,10 +81,6 @@ const ProfilePage = () => {
 
       if (formData.newPassword) {
         payload.password = formData.newPassword;
-      }
-
-      if (formData.avatar_url && formData.avatar_url !== user?.avatar_url) {
-        payload.avatar_url = formData.avatar_url;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -161,27 +130,13 @@ const ProfilePage = () => {
               </label>
               <input
                 type="email"
-                value={user?.email || "(Chưa đồng bộ email, đăng xuất/đăng nhập lại)"}
+                value={user?.email || ""}
                 disabled
                 className="w-full bg-gray-600 text-gray-300 rounded px-4 py-2.5 outline-none cursor-not-allowed font-medium"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Email không thể thay đổi
               </p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                Avatar URL
-              </label>
-              <input
-                type="url"
-                name="avatar_url"
-                value={formData.avatar_url}
-                onChange={handleInputChange}
-                placeholder="https://..."
-                className="w-full bg-white text-gray-900 rounded px-4 py-2.5 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
-              />
             </div>
 
             {/* Username */}
@@ -210,35 +165,6 @@ const ProfilePage = () => {
                   : "N/A"}
               </div>
             </div>
-
-            {/* Current VIP Plan */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                Gói đang sử dụng
-              </label>
-              <div className="w-full bg-[#1f1f22] text-gray-300 rounded px-4 py-2.5 border border-gray-700 flex items-center gap-2">
-                <FaCrown className="text-yellow-400" />
-                {subscriptionLoading
-                  ? "Đang tải..."
-                  : subscriptionInfo?.hasActiveSubscription
-                    ? `${subscriptionInfo.planName || "VIP"} (${subscriptionInfo.planCode?.toUpperCase() || "VIP"})`
-                    : "Free"}
-              </div>
-            </div>
-
-            {/* Remaining VIP Days */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                Số ngày VIP còn lại
-              </label>
-              <div className="w-full bg-[#1f1f22] text-gray-300 rounded px-4 py-2.5 border border-gray-700">
-                {subscriptionLoading
-                  ? "Đang tải..."
-                  : subscriptionInfo?.hasActiveSubscription
-                    ? `${subscriptionInfo.remainingDays} ngày`
-                    : "0 ngày"}
-              </div>
-            </div>
           </div>
 
           {/* RIGHT: AVATAR */}
@@ -246,7 +172,10 @@ const ProfilePage = () => {
             <div className="relative group cursor-pointer">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#2a2a2d] shadow-xl">
                 <img
-                  src={formData.avatar_url || user?.avatar_url || defaultAvatar}
+                  src={
+                    user?.avatar_url ||
+                    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&h=300"
+                  }
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />

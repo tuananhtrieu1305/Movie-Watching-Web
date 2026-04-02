@@ -1,21 +1,29 @@
 import React, { useEffect } from "react";
-import { Modal, Form, Input, Select, Switch, DatePicker } from "antd";
+import { Modal, Form, Input, Select, DatePicker } from "antd";
 import { UserOutlined, MailOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 
-const UserEditModal = ({ visible, user, onCancel, onSave }) => {
+const UserEditModal = ({ visible, user, isCreateMode = false, onCancel, onSave }) => {
     const [form] = Form.useForm();
 
     useEffect(() => {
+        if (isCreateMode) {
+            form.resetFields();
+            form.setFieldsValue({
+                role: "user",
+            });
+            return;
+        }
+
         if (user) {
             form.setFieldsValue({
                 ...user,
                 vip_expires_at: user.vip_expires_at ? dayjs(user.vip_expires_at) : null,
             });
         }
-    }, [user, form]);
+    }, [user, form, isCreateMode]);
 
     const handleOk = () => {
         form.validateFields().then((values) => {
@@ -31,11 +39,11 @@ const UserEditModal = ({ visible, user, onCancel, onSave }) => {
 
     return (
         <Modal
-            title="Chỉnh sửa người dùng"
+            title={isCreateMode ? "Tạo người dùng" : "Chỉnh sửa người dùng"}
             open={visible}
             onCancel={onCancel}
             onOk={handleOk}
-            okText="Lưu"
+            okText={isCreateMode ? "Tạo" : "Lưu"}
             cancelText="Hủy"
             width={500}
         >
@@ -59,6 +67,27 @@ const UserEditModal = ({ visible, user, onCancel, onSave }) => {
                     <Input prefix={<MailOutlined />} placeholder="Email" />
                 </Form.Item>
 
+                <Form.Item
+                    name="password"
+                    label="Mật khẩu"
+                    rules={
+                        isCreateMode
+                            ? [
+                                  { required: true, message: "Vui lòng nhập mật khẩu" },
+                                  { min: 6, message: "Mật khẩu tối thiểu 6 ký tự" },
+                              ]
+                            : [{ min: 6, message: "Mật khẩu tối thiểu 6 ký tự" }]
+                    }
+                >
+                    <Input.Password
+                        placeholder={
+                            isCreateMode
+                                ? "Nhập mật khẩu"
+                                : "Để trống nếu không đổi mật khẩu"
+                        }
+                    />
+                </Form.Item>
+
                 <Form.Item name="role" label="Vai trò">
                     <Select>
                         <Option value="user">User</Option>
@@ -75,9 +104,6 @@ const UserEditModal = ({ visible, user, onCancel, onSave }) => {
                     />
                 </Form.Item>
 
-                <Form.Item name="is_banned" label="Trạng thái cấm" valuePropName="checked">
-                    <Switch checkedChildren="Đã cấm" unCheckedChildren="Hoạt động" />
-                </Form.Item>
             </Form>
         </Modal>
     );
