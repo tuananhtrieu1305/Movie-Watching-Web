@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Input,
@@ -9,7 +9,6 @@ import {
   Dropdown,
   Modal,
   message,
-  Tooltip,
   Select,
   Card,
   Row,
@@ -20,184 +19,154 @@ import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
-  StopOutlined,
-  CheckCircleOutlined,
   UserOutlined,
   CrownOutlined,
   MoreOutlined,
   ExclamationCircleOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import UserEditModal from "./UserEditModal";
+import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { adminApi } from "../services/adminApi";
 
 const { Search } = Input;
 const { Option } = Select;
 const { confirm } = Modal;
 
-// Mock data based on database schema
-const mockUsers = [
-  {
-    id: 1,
-    username: "admin",
-    email: "admin@moviehub.com",
-    avatar_url: "/avatars/admin.jpg",
-    role: "admin",
-    vip_expires_at: "2025-12-31 23:59:59",
-    is_banned: false,
-    total_watch_time: 86400,
-    last_login: "2026-01-22 07:36:26",
-    created_at: "2026-01-22 00:36:26",
-  },
-  {
-    id: 2,
-    username: "john_doe",
-    email: "john.doe@email.com",
-    avatar_url: "/avatars/john.jpg",
-    role: "user",
-    vip_expires_at: "2024-12-31 23:59:59",
-    is_banned: false,
-    total_watch_time: 43200,
-    last_login: "2026-01-22 07:36:26",
-    created_at: "2026-01-22 00:36:26",
-  },
-  {
-    id: 3,
-    username: "jane_smith",
-    email: "jane.smith@email.com",
-    avatar_url: "/avatars/jane.jpg",
-    role: "user",
-    vip_expires_at: "2024-11-30 23:59:59",
-    is_banned: true,
-    total_watch_time: 64800,
-    last_login: "2026-01-22 07:36:26",
-    created_at: "2026-01-22 00:36:26",
-  },
-  {
-    id: 4,
-    username: "michael_brown",
-    email: "michael.b@email.com",
-    avatar_url: "/avatars/michael.jpg",
-    role: "user",
-    vip_expires_at: null,
-    is_banned: false,
-    total_watch_time: 21600,
-    last_login: "2026-01-22 07:36:26",
-    created_at: "2026-01-22 00:36:26",
-  },
-  {
-    id: 5,
-    username: "sarah_jones",
-    email: "sarah.j@email.com",
-    avatar_url: "/avatars/sarah.jpg",
-    role: "user",
-    vip_expires_at: "2024-10-31 23:59:59",
-    is_banned: false,
-    total_watch_time: 72000,
-    last_login: "2026-01-22 07:36:26",
-    created_at: "2026-01-22 00:36:26",
-  },
-];
-
 const UsersManagement = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const { accessToken, user: currentUser } = useAuth();
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [isCreateMode, setIsCreateMode] = useState(false);
 
-  // Filter users based on search and filters
-  const filteredUsers = users.filter((user) => {
-    const matchSearch =
-      user.username.toLowerCase().includes(searchText.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchText.toLowerCase());
-    const matchRole = roleFilter === "all" || user.role === roleFilter;
-    const matchStatus =
-      statusFilter === "all" ||
-      (statusFilter === "banned" && user.is_banned) ||
-      (statusFilter === "active" && !user.is_banned) ||
-      (statusFilter === "vip" && user.vip_expires_at);
-    return matchSearch && matchRole && matchStatus;
-  });
+  const loadUsers = async () => {
+    if (!accessToken) return;
 
-  // Statistics
-  const stats = {
-    total: users.length,
-    admins: users.filter((u) => u.role === "admin").length,
-    vipUsers: users.filter((u) => u.vip_expires_at).length,
-    bannedUsers: users.filter((u) => u.is_banned).length,
+    setLoading(true);
+    try {
+      const data = await adminApi.getUsers(accessToken);
+      setUsers(data.users || []);
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không tải được danh sách users");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle ban/unban user
-  const handleToggleBan = (user) => {
-    const action = user.is_banned ? "bỏ cấm" : "cấm";
+  useEffect(() => {
+    loadUsers();
+  }, [accessToken]);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchSearch =
+        user.username.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchText.toLowerCase());
+      const matchRole = roleFilter === "all" || user.role === roleFilter;
+      const matchStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active") ||
+        (statusFilter === "vip" && user.vip_expires_at && new Date(user.vip_expires_at) > new Date());
+      return matchSearch && matchRole && matchStatus;
+    });
+  }, [users, searchText, roleFilter, statusFilter]);
+
+  const stats = useMemo(
+    () => ({
+      total: users.length,
+      admins: users.filter((u) => u.role === "admin").length,
+      vipUsers: users.filter((u) => u.vip_expires_at && new Date(u.vip_expires_at) > new Date()).length,
+    }),
+    [users],
+  );
+
+  const handleChangeRole = (record, newRole) => {
     confirm({
-      title: `Bạn có chắc muốn ${action} người dùng "${user.username}"?`,
+      title: `Thay đổi quyền của "${record.username}" thành ${newRole}?`,
       icon: <ExclamationCircleOutlined />,
       okText: "Xác nhận",
       cancelText: "Hủy",
-      okType: user.is_banned ? "primary" : "danger",
-      onOk() {
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === user.id ? { ...u, is_banned: !u.is_banned } : u,
-          ),
-        );
-        message.success(`Đã ${action} người dùng ${user.username}`);
+      async onOk() {
+        try {
+          await adminApi.updateUser(accessToken, record.id, { role: newRole });
+          message.success(`Đã đổi quyền thành ${newRole}`);
+          loadUsers();
+        } catch (error) {
+          message.error(error.response?.data?.message || "Không đổi được quyền user");
+        }
       },
     });
   };
 
-  // Handle change role
-  const handleChangeRole = (user, newRole) => {
+  const handleDelete = (record) => {
     confirm({
-      title: `Thay đổi quyền của "${user.username}" thành ${newRole}?`,
-      icon: <ExclamationCircleOutlined />,
-      okText: "Xác nhận",
-      cancelText: "Hủy",
-      onOk() {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u)),
-        );
-        message.success(`Đã thay đổi quyền thành ${newRole}`);
-      },
-    });
-  };
-
-  // Handle delete user
-  const handleDelete = (user) => {
-    confirm({
-      title: `Xóa người dùng "${user.username}"?`,
+      title: `Xóa người dùng "${record.username}"?`,
       icon: <ExclamationCircleOutlined />,
       content: "Hành động này không thể hoàn tác!",
       okText: "Xóa",
       cancelText: "Hủy",
       okType: "danger",
-      onOk() {
-        setUsers((prev) => prev.filter((u) => u.id !== user.id));
-        message.success(`Đã xóa người dùng ${user.username}`);
+      async onOk() {
+        try {
+          await adminApi.deleteUser(accessToken, record.id);
+          message.success(`Đã xóa người dùng ${record.username}`);
+          loadUsers();
+        } catch (error) {
+          message.error(error.response?.data?.message || "Không thể xóa user");
+        }
       },
     });
   };
 
-  // Handle edit user
-  const handleEdit = (user) => {
-    setSelectedUser(user);
+  const handleEdit = (record) => {
+    setIsCreateMode(false);
+    setSelectedUser(record);
     setEditModalVisible(true);
   };
 
-  // Handle save edited user
-  const handleSaveUser = (updatedUser) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)),
-    );
-    setEditModalVisible(false);
-    message.success("Cập nhật thông tin thành công!");
+  const handleCreate = () => {
+    setIsCreateMode(true);
+    setSelectedUser(null);
+    setEditModalVisible(true);
   };
 
-  // Format watch time
-  const formatWatchTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
+  const handleSaveUser = async (payload) => {
+    try {
+      if (isCreateMode) {
+        await adminApi.createUser(accessToken, {
+          username: payload.username,
+          email: payload.email,
+          password: payload.password,
+          role: payload.role,
+          avatar_url: payload.avatar_url || null,
+        });
+        message.success("Tạo user thành công");
+      } else {
+        await adminApi.updateUser(accessToken, payload.id, {
+          username: payload.username,
+          email: payload.email,
+          role: payload.role,
+          avatar_url: payload.avatar_url,
+          vip_expires_at: payload.vip_expires_at,
+          ...(payload.password ? { password: payload.password } : {}),
+        });
+        message.success("Cập nhật thông tin thành công");
+      }
+
+      setEditModalVisible(false);
+      loadUsers();
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không thể lưu thông tin user");
+    }
+  };
+
+  const formatWatchTime = (seconds = 0) => {
+    const hours = Math.floor(Number(seconds) / 3600);
     return `${hours} giờ`;
   };
 
@@ -237,11 +206,7 @@ const UsersManagement = () => {
       key: "status",
       render: (_, record) => (
         <Space direction="horizontal" size={0}>
-          {record.is_banned ? (
-            <Tag color="red">Đã cấm</Tag>
-          ) : (
-            <Tag color="green">Hoạt động</Tag>
-          )}
+          <Tag color="green">Hoạt động</Tag>
           {record.vip_expires_at && (
             <Tag color="gold">
               <CrownOutlined /> VIP
@@ -255,40 +220,50 @@ const UsersManagement = () => {
       dataIndex: "total_watch_time",
       key: "watch_time",
       render: (time) => formatWatchTime(time),
-      sorter: (a, b) => a.total_watch_time - b.total_watch_time,
+      sorter: (a, b) => (a.total_watch_time || 0) - (b.total_watch_time || 0),
     },
     {
       title: "Đăng nhập cuối",
       dataIndex: "last_login",
       key: "last_login",
-      render: (date) => new Date(date).toLocaleDateString("vi-VN"),
+      render: (date) => (date ? new Date(date).toLocaleDateString("vi-VN") : "-"),
     },
     {
       title: "Hành động",
       key: "actions",
       render: (_, record) => {
+        const isSelf = Number(currentUser?.id) === Number(record.id);
+
+        const handleMenuClick = ({ key }) => {
+          if (key === "edit") {
+            handleEdit(record);
+            return;
+          }
+
+          if (key === "role") {
+            handleChangeRole(
+              record,
+              record.role === "admin" ? "user" : "admin",
+            );
+            return;
+          }
+
+          if (key === "delete") {
+            handleDelete(record);
+          }
+        };
+
         const menuItems = [
           {
             key: "edit",
             label: "Chỉnh sửa",
             icon: <EditOutlined />,
-            onClick: () => handleEdit(record),
-          },
-          {
-            key: "ban",
-            label: record.is_banned ? "Bỏ cấm" : "Cấm người dùng",
-            icon: record.is_banned ? <CheckCircleOutlined /> : <StopOutlined />,
-            onClick: () => handleToggleBan(record),
           },
           {
             key: "role",
             label: record.role === "admin" ? "Đặt làm User" : "Đặt làm Admin",
             icon: <CrownOutlined />,
-            onClick: () =>
-              handleChangeRole(
-                record,
-                record.role === "admin" ? "user" : "admin",
-              ),
+            disabled: isSelf,
           },
           { type: "divider" },
           {
@@ -296,12 +271,18 @@ const UsersManagement = () => {
             label: "Xóa",
             icon: <DeleteOutlined />,
             danger: true,
-            onClick: () => handleDelete(record),
+            disabled: isSelf,
           },
         ];
 
         return (
-          <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+          <Dropdown
+            menu={{
+              items: menuItems,
+              onClick: handleMenuClick,
+            }}
+            trigger={["click"]}
+          >
             <Button type="text" icon={<MoreOutlined />} />
           </Dropdown>
         );
@@ -311,11 +292,16 @@ const UsersManagement = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Quản lý người dùng</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Quản lý người dùng</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+          Tạo user
+        </Button>
+      </div>
 
       {/* Statistics Cards */}
       <Row gutter={16} className="mb-6">
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Tổng người dùng"
@@ -324,7 +310,7 @@ const UsersManagement = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Quản trị viên"
@@ -334,23 +320,13 @@ const UsersManagement = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Thành viên VIP"
               value={stats.vipUsers}
               prefix={<CrownOutlined />}
               valueStyle={{ color: "#faad14" }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Đã bị cấm"
-              value={stats.bannedUsers}
-              prefix={<StopOutlined />}
-              valueStyle={{ color: "#cf1322" }}
             />
           </Card>
         </Col>
@@ -384,7 +360,6 @@ const UsersManagement = () => {
           >
             <Option value="all">Tất cả trạng thái</Option>
             <Option value="active">Hoạt động</Option>
-            <Option value="banned">Đã cấm</Option>
             <Option value="vip">VIP</Option>
           </Select>
         </Space>
@@ -398,7 +373,7 @@ const UsersManagement = () => {
           rowKey="id"
           loading={loading}
           pagination={{
-            pageSize: 3,
+            pageSize: 8,
             showSizeChanger: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} của ${total} người dùng`,
@@ -410,6 +385,7 @@ const UsersManagement = () => {
       <UserEditModal
         visible={editModalVisible}
         user={selectedUser}
+        isCreateMode={isCreateMode}
         onCancel={() => setEditModalVisible(false)}
         onSave={handleSaveUser}
       />
