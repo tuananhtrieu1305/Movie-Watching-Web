@@ -5,8 +5,9 @@ import {
   LeftOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { Button, Tag } from "antd";
+import { Button } from "antd";
 import { Link } from "react-router-dom";
+import { calcDurationDisplay } from "../../utils/streaming/common";
 
 const RelatedMovies = ({ movies }) => {
   const scrollRef = useRef(null);
@@ -67,47 +68,52 @@ const RelatedMovies = ({ movies }) => {
             }
           `}</style>
 
-          {movies.map((movie, index) => (
-            <Link to={`/watch/${movie.slug}`}>
-              <div
-                // Dùng index trong key vì bạn đang duplicate data để test
-                key={`${movie.id}-${index}`}
-                className="w-[160px] md:w-[180px] lg:w-[210px] shrink-0 snap-start select-none group cursor-pointer"
-              >
-                {/* Poster Card */}
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-[#18181b] border border-gray-800">
-                  <img
-                    src={movie.poster}
-                    alt={movie.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    draggable="false"
-                  />
+          {movies.map((movie, index) => {
+            const durationDisplay = calcDurationDisplay(movie);
 
-                  {/* Overlay Play Icon */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                    <PlayCircleFilled className="text-5xl text-white drop-shadow-xl scale-0 group-hover:scale-100 transition-transform duration-300" />
+            return (
+              <Link to={`/watch/${movie.slug}`}>
+                <div
+                  // Dùng index trong key vì bạn đang duplicate data để test
+                  key={`${movie.id}-${index}`}
+                  className="w-[160px] md:w-[180px] lg:w-[210px] shrink-0 snap-start select-none group cursor-pointer"
+                >
+                  {/* Poster Card */}
+                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-[#18181b] border border-gray-800">
+                    <img
+                      src={movie.poster}
+                      alt={movie.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      draggable="false"
+                    />
+
+                    {/* Overlay Play Icon */}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                      <PlayCircleFilled className="text-5xl text-white drop-shadow-xl scale-0 group-hover:scale-100 transition-transform duration-300" />
+                    </div>
+                  </div>
+
+                  {/* Title & Info */}
+                  <div className="px-1">
+                    <h4
+                      className="text-gray-200 font-bold text-sm line-clamp-1 group-hover:text-[#ffdd95] transition-colors"
+                      title={movie.title}
+                    >
+                      {movie.title}
+                    </h4>
+                    <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                      <span>{movie.type}</span>
+                      <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                      <span className="flex items-center gap-1">
+                        <ClockCircleFilled className="text-[10px]" />{" "}
+                        {durationDisplay}
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Title & Info */}
-                <div className="px-1">
-                  <h4
-                    className="text-gray-200 font-bold text-sm line-clamp-1 group-hover:text-[#ffdd95] transition-colors"
-                    title={movie.title}
-                  >
-                    {movie.title}
-                  </h4>
-                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                    <span>{movie.type || "Movie"}</span>
-                    <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                    <span className="flex items-center gap-1">
-                      <ClockCircleFilled className="text-[10px]" /> 24m
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Bóng mờ 2 bên để chỉ thị còn nội dung (Optional - Hiệu ứng đẹp) */}

@@ -1,9 +1,9 @@
-import { Modal, Form, Input, Button, Select, message, Tabs } from "antd";
+import { Modal, Form, Button, message, Tabs } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
-import { uploadMovie } from "../../services/movieService";
 import GeneralInfoTab from "./GeneralInfoTab";
 import ActorsTab from "./ActorsTab";
+import { updateProduction, uploadMovie } from "../../services/movieService";
 
 const ModalCreateProduction = ({
   open,
@@ -14,6 +14,7 @@ const ModalCreateProduction = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState("movie");
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     if (open) {
@@ -45,7 +46,7 @@ const ModalCreateProduction = ({
       formData.append("title", values.title);
       formData.append("type", type);
       formData.append("status", values.status);
-      formData.append("genres", JSON.stringify(values.genres));
+      formData.append("genres", JSON.stringify(values.genres || []));
       formData.append(
         "poster_url",
         values.poster_url || "https://via.placeholder.com/150",
@@ -54,82 +55,102 @@ const ModalCreateProduction = ({
         "banner_url",
         values.banner_url || "https://via.placeholder.com/150",
       );
-      formData.append("is_premium", values.is_premium);
+      formData.append("is_premium", values.is_premium || false);
+
+      // BỔ SUNG CÁC TRƯỜNG BỊ THIẾU Ở ĐÂY:
+      if (values.release_year)
+        formData.append("release_year", values.release_year);
+      if (values.description)
+        formData.append("description", values.description);
+      if (values.country) formData.append("country", values.country);
+      if (values.language) formData.append("language", values.language);
 
       if (values.actors && values.actors.length > 0) {
         formData.append("actors", JSON.stringify(values.actors));
       }
 
-      await uploadMovie(formData);
+      // Xử lý tạo mới hoặc cập nhật
+      if (initialData) {
+        await updateProduction(initialData.id, formData);
+        messageApi.success("Cập nhật thành công!");
+      } else {
+        await uploadMovie(formData);
+        messageApi.success("Thêm mới thành công!");
+      }
 
-      message.success(
-        initialData ? "Cập nhật thành công!" : "Thêm mới thành công!",
-      );
       form.resetFields();
       setOpen(false);
       refreshTable();
     } catch (error) {
-      console.error(error);
-      message.error("Có lỗi xảy ra!");
+      console.error("API Error:", error);
+
+      const errorMsg =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Có lỗi xảy ra, vui lòng thử lại!";
+
+      messageApi.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal
-      title={initialData ? `Sửa: ${initialData.title}` : "Thêm Nội Dung Mới"}
-      open={open}
-      onCancel={() => setOpen(false)}
-      footer={null}
-      width={720}
-      destroyOnClose
-      maskClosable={false}
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        initialValues={{
-          type: "movie",
-          release_year: new Date().getFullYear(),
-          is_premium: false,
-          status: "ongoing",
-        }}
+    <>
+      {contextHolder}
+      <Modal
+        title={initialData ? `Sửa: ${initialData.title}` : "Thêm Nội Dung Mới"}
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        width={720}
+        destroyOnClose
+        maskClosable={false}
       >
-        <Tabs
-          defaultActiveKey="1"
-          items={[
-            {
-              key: "1",
-              label: "Thông tin chung",
-              children: (
-                <GeneralInfoTab
-                  type={type}
-                  setType={setType}
-                  initialData={initialData}
-                  status={status}
-                />
-              ),
-            },
-            { key: "2", label: "Diễn viên (Cast)", children: <ActorsTab /> },
-          ]}
-        />
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          initialValues={{
+            type: "movie",
+            release_year: new Date().getFullYear(),
+            is_premium: false,
+            status: "ongoing",
+          }}
+        >
+          <Tabs
+            defaultActiveKey="1"
+            items={[
+              {
+                key: "1",
+                label: "Thông tin chung",
+                children: (
+                  <GeneralInfoTab
+                    type={type}
+                    setType={setType}
+                    initialData={initialData}
+                    status={status}
+                  />
+                ),
+              },
+              { key: "2", label: "Diễn viên (Cast)", children: <ActorsTab /> },
+            ]}
+          />
 
-        <div className="flex justify-end gap-2 ">
-          <Button onClick={() => setOpen(false)}>Hủy</Button>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            icon={<UploadOutlined />}
-            onClick={() => setOpen(false)}
-          >
-            {initialData ? "Lưu Thay Đổi" : "Tạo Mới"}
-          </Button>
-        </div>
-      </Form>
-    </Modal>
+          <div className="flex justify-end gap-2 ">
+            <Button onClick={() => setOpen(false)}>Hủy</Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              icon={<UploadOutlined />}
+            >
+              {initialData ? "Lưu Thay Đổi" : "Tạo Mới"}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+    </>
   );
 };
 

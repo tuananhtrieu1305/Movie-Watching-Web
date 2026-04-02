@@ -1,9 +1,9 @@
-import { getEpisodesBySeason } from "../../modules/streaming/mock/watchData";
+import { getEpisodesBySeason } from "../../services/movieService";
 
 export const calcDurationDisplay = (production) => {
   const durationDisplay =
     production.type === "movie"
-      ? `${Math.floor((production.movie?.duration || 0) / 60)} min`
+      ? `${Math.floor((production.movies?.duration || 0) / 60)} min`
       : `${production.series?.total_seasons || 0} Seasons`;
 
   return durationDisplay;

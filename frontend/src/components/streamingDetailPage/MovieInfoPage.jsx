@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Spin } from "antd";
 import { useParams } from "react-router-dom";
-import { getWatchDataBySlug } from "../../modules/streaming/mock/watchData";
+import { getMovieBySlug, getPopularMovies } from "../../services/movieService";
 
 import InfoHero from "./InfoHero";
 import RelatedMovies from "../streamingPage/RelatedMovies";
@@ -12,19 +12,25 @@ const MovieInfoPage = () => {
   const { slug } = useParams();
   const [loading, setLoading] = useState(true);
   const [productionData, setProductionData] = useState(null);
+  const [popularList, setPopularList] = useState([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    // Giả lập load data
-    setTimeout(() => {
-      const data = getWatchDataBySlug(slug);
-      if (data) {
-        setProductionData(data.production);
-      }
-      setLoading(false);
-    }, 400);
+    // Fetch song song 2 API
+    Promise.all([getMovieBySlug(slug), getPopularMovies()])
+      .then(([movieData, popularData]) => {
+        setProductionData(movieData);
+        setPopularList(popularData); // Lưu data popular
+      })
+      .catch((err) => {
+        console.error(err);
+        message.error("Lỗi tải thông tin phim!");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [slug]);
 
   if (loading)
@@ -34,7 +40,7 @@ const MovieInfoPage = () => {
       </div>
     );
 
-  const { related } = productionData;
+  const related = productionData?.related || [];
 
   return (
     <div className="min-h-screen bg-[#121212] text-gray-300 font-sans pb-10">
@@ -56,7 +62,7 @@ const MovieInfoPage = () => {
           {/* --- CỘT PHẢI --- */}
           <div className="xl:col-span-3">
             <div className="sticky top-4">
-              <RecommendedList list={related} />
+              <RecommendedList list={popularList} />
             </div>
           </div>
         </div>

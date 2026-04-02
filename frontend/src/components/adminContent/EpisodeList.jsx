@@ -1,30 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { List, Button, Empty, Spin, Popconfirm, message } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   PlayCircleOutlined,
 } from "@ant-design/icons";
-import { getEpisodesBySeason } from "../../modules/streaming/mock/watchData";
+import {
+  getEpisodesBySeason,
+  deleteEpisode,
+} from "../../services/movieService";
 
-const EpisodeList = ({ seasonId, onEditEpisode }) => {
+const EpisodeList = ({ seasonId, onEditEpisode, refreshTrigger }) => {
   const [episodes, setEpisodes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchEpisodes = async () => {
-      setLoading(true);
-      try {
-        const res = await getEpisodesBySeason(seasonId);
-        setEpisodes(res.data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEpisodes();
+  const fetchEpisodes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getEpisodesBySeason(seasonId);
+      setEpisodes(res.data);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách tập:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [seasonId]);
+
+  // Load lại danh sách khi seasonId thay đổi hoặc có tín hiệu refresh
+  useEffect(() => {
+    fetchEpisodes();
+  }, [fetchEpisodes, refreshTrigger]);
 
   if (loading)
     return (
@@ -33,7 +38,15 @@ const EpisodeList = ({ seasonId, onEditEpisode }) => {
       </div>
     );
 
-  console.log(episodes);
+  const handleDelete = async (id) => {
+    try {
+      await deleteEpisode(id);
+      message.success("Đã xóa tập phim!");
+      fetchEpisodes(); // Load lại list sau khi xóa
+    } catch (error) {
+      message.error("Lỗi khi xóa tập!");
+    }
+  };
 
   if (episodes.length === 0)
     return <Empty description="Trống" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
@@ -58,7 +71,7 @@ const EpisodeList = ({ seasonId, onEditEpisode }) => {
             <Popconfirm
               key="del"
               title="Xóa tập này?"
-              onConfirm={() => message.success("Đã xóa")}
+              onConfirm={() => handleDelete(item.id)}
               okButtonProps={{ danger: true }}
             >
               <Button type="text" danger icon={<DeleteOutlined />} size="small">

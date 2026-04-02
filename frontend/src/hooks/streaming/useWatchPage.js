@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { message } from "antd";
 import { useParams, useSearchParams } from "react-router-dom";
+
 import {
-  getWatchDataBySlug,
   getEpisodesBySeason,
-} from "../../modules/streaming/mock/watchData";
+  getMovieBySlug,
+} from "../../services/movieService";
 import { calcTargetSeasonIdAndTargetEpisodes } from "../../utils/streaming/common";
 
 export const useWatchPage = () => {
@@ -34,18 +35,21 @@ export const useWatchPage = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
-    setTimeout(() => {
-      const data = getWatchDataBySlug(slug);
-      if (data) {
-        setProductionData(data.production);
+    getMovieBySlug(slug)
+      .then((production) => {
+        setProductionData(production);
+
+        const mappedData = {
+          production: production,
+          episodes: production.episodes || [],
+        };
 
         let { targetSeasonId, targetEpisodes } =
-          calcTargetSeasonIdAndTargetEpisodes(data, currentEpNumber);
+          calcTargetSeasonIdAndTargetEpisodes(mappedData, currentEpNumber);
 
         setCurrentSeasonId(targetSeasonId);
         setEpisodeList(targetEpisodes);
 
-        // Logic xác định Episode từ URL
         if (currentEpNumber) {
           const foundEp = targetEpisodes.find(
             (e) => e.episode_number.toString() === currentEpNumber.toString(),
@@ -55,9 +59,14 @@ export const useWatchPage = () => {
         } else {
           setCurrentEpisode(targetEpisodes[0]);
         }
-      }
-      setLoading(false);
-    }, 500);
+      })
+      .catch((err) => {
+        console.error(err);
+        messageApi.error("Không thể tải phim!");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [slug]);
 
   // --- EFFECT 2: SYNC EPISODE FROM URL ---

@@ -18,7 +18,7 @@ import {
   TypeTag,
 } from "../../components/adminContent/ProductionTags";
 import AnonymousBanner from "../../assets/anonymousBanner.png";
-import mockDB from "../../modules/streaming/mock/mockDB";
+import { getMovies, getMovieBySlug } from "../../services/movieService";
 
 const ContentTable = () => {
   const actionRef = useRef();
@@ -28,6 +28,24 @@ const ContentTable = () => {
   const [currentManagerItem, setCurrentManagerItem] = useState(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [currentDetailItem, setCurrentDetailItem] = useState(null);
+
+  const getMovieDetail = async (key, record) => {
+    try {
+      const fullData = await getMovieBySlug(record.slug);
+      if (key === "view") {
+        setCurrentDetailItem(fullData);
+        setDetailDrawerOpen(true);
+      } else if (key === "manage") {
+        setCurrentManagerItem(fullData);
+        setManagerDrawerOpen(true);
+      } else if (key === "edit") {
+        setEditingProduction(fullData);
+        setModalCreateOpen(true);
+      }
+    } catch (error) {
+      message.error("Lỗi khi tải dữ liệu chi tiết phim!");
+    }
+  };
 
   const columns = [
     {
@@ -93,10 +111,7 @@ const ContentTable = () => {
           <Button
             icon={<EyeOutlined />}
             size="small"
-            onClick={() => {
-              setCurrentDetailItem(record);
-              setDetailDrawerOpen(true);
-            }}
+            onClick={() => getMovieDetail("view", record)}
           />
         </Tooltip>,
         <Tooltip title="Sửa thông tin" key="edit">
@@ -105,10 +120,7 @@ const ContentTable = () => {
             ghost
             icon={<EditOutlined />}
             size="small"
-            onClick={() => {
-              setEditingProduction(record);
-              setModalCreateOpen(true);
-            }}
+            onClick={() => getMovieDetail("edit", record)}
           />
         </Tooltip>,
         <Tooltip title="Quản lý Content" key="manage">
@@ -116,10 +128,7 @@ const ContentTable = () => {
             icon={<SettingOutlined />}
             size="small"
             className="text-purple-600 border-purple-600"
-            onClick={() => {
-              setCurrentManagerItem(record);
-              setManagerDrawerOpen(true);
-            }}
+            onClick={() => getMovieDetail("manage", record)}
           >
             {record.type === "series" ? "Mùa" : "File"}
           </Button>
@@ -145,7 +154,7 @@ const ContentTable = () => {
         columns={columns}
         actionRef={actionRef}
         request={async (params) => {
-          let data = mockDB.getAllProductions();
+          let data = await getMovies();
           if (params.title)
             data = data.filter((item) =>
               item.title.toLowerCase().includes(params.title.toLowerCase()),
@@ -193,7 +202,10 @@ const ContentTable = () => {
         destroyOnClose
       >
         {currentManagerItem && (
-          <SeasonManager production={currentManagerItem} />
+          <SeasonManager
+            production={currentManagerItem}
+            refreshData={() => getMovieDetail("manage", currentManagerItem)}
+          />
         )}
       </Drawer>
       <Drawer

@@ -60,7 +60,7 @@ const ProductionDetail = ({ data }) => {
                 Thời lượng:{" "}
                 <strong>
                   {data.type === "movie"
-                    ? `${Math.floor((data.movie?.duration || 0) / 60)} phút`
+                    ? `${Math.floor((data.movies?.duration || 0) / 60)} phút`
                     : `${data.series?.total_seasons || 0} mùa`}
                 </strong>
               </div>
