@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
 
-const Header = () => {
+const         Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 

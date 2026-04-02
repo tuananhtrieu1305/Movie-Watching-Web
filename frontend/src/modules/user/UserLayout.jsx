@@ -1,13 +1,18 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { FaUser, FaHistory, FaHeart, FaBell, FaCog } from 'react-icons/fa';
+import { FaUser, FaHistory, FaHeart, FaBell, FaCog, FaWallet } from 'react-icons/fa';
 import { FaCrown } from 'react-icons/fa6';
+import Header from '../../components/layout/Header';
+import { useAuth } from '../auth/hooks/useAuth';
 
 const UserLayout = () => {
+    const { user } = useAuth();
+
     // Danh sách tabs navigation
     const tabs = [
         { id: 'profile', icon: <FaUser />, label: 'Profile', path: '/user/profile' },
         { id: 'history', icon: <FaHistory />, label: 'Continue Watching', path: '/user/history' },
+        { id: 'transactions', icon: <FaWallet />, label: 'Lịch sử giao dịch', path: '/user/transactions' },
         { id: 'favorites', icon: <FaHeart />, label: 'Watch List', path: '/user/favorites' },
         { id: 'plans', icon: <FaCrown />, label: 'Nâng Cấp VIP', path: '/user/plans' },
         { id: 'notifications', icon: <FaBell />, label: 'Notification', path: '/user/notifications' },
@@ -16,10 +21,11 @@ const UserLayout = () => {
 
     return (
         <div className="min-h-screen bg-[#1a1a1d] text-gray-200 font-sans pb-20">
+            <Header />
 
             {/* 1. Top Header - Greeting */}
             <div className="pt-24 pb-6 text-center">
-                <h1 className="text-3xl font-medium text-white">Hi, vinhngu</h1>
+                <h1 className="text-3xl font-medium text-white">Hi, {user?.username || 'bạn'}</h1>
             </div>
 
             {/* 2. Navigation Tabs */}
