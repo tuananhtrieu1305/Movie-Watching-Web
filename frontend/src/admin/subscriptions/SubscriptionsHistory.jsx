@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Input,
@@ -11,6 +11,7 @@ import {
   Statistic,
   Avatar,
   Switch,
+  message,
 } from "antd";
 import {
   SearchOutlined,
@@ -20,115 +21,53 @@ import {
   ClockCircleOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { adminApi } from "../services/adminApi";
 
 const { Search } = Input;
 const { Option } = Select;
 
-// Mock data based on database schema
-const mockSubscriptions = [
-  {
-    id: 1,
-    user_id: 2,
-    username: "john_doe",
-    avatar_url: "/avatars/john.jpg",
-    plan_id: 1,
-    plan_name: "VIP Basic 1 Tháng",
-    plan_code: "vip_1_month",
-    start_date: "2024-01-01 00:00:00",
-    end_date: "2024-01-31 23:59:59",
-    status: "expired",
-    auto_renew: true,
-    created_at: "2024-01-01 03:30:00",
-  },
-  {
-    id: 2,
-    user_id: 3,
-    username: "jane_smith",
-    avatar_url: "/avatars/jane.jpg",
-    plan_id: 2,
-    plan_name: "VIP Pro 6 Tháng",
-    plan_code: "vip_6_month",
-    start_date: "2024-01-02 00:00:00",
-    end_date: "2024-07-01 23:59:59",
-    status: "active",
-    auto_renew: true,
-    created_at: "2024-01-02 07:20:00",
-  },
-  {
-    id: 3,
-    user_id: 4,
-    username: "michael_brown",
-    avatar_url: "/avatars/michael.jpg",
-    plan_id: 3,
-    plan_name: "VIP Premium 1 Năm",
-    plan_code: "vip_1_year",
-    start_date: "2024-01-03 00:00:00",
-    end_date: "2025-01-02 23:59:59",
-    status: "active",
-    auto_renew: true,
-    created_at: "2024-01-03 09:45:00",
-  },
-  {
-    id: 4,
-    user_id: 5,
-    username: "sarah_jones",
-    avatar_url: "/avatars/sarah.jpg",
-    plan_id: 1,
-    plan_name: "VIP Basic 1 Tháng",
-    plan_code: "vip_1_month",
-    start_date: "2024-01-04 00:00:00",
-    end_date: "2024-02-03 23:59:59",
-    status: "cancelled",
-    auto_renew: false,
-    cancellation_reason: "Không muốn tiếp tục sử dụng",
-    created_at: "2024-01-04 04:15:00",
-  },
-  {
-    id: 5,
-    user_id: 6,
-    username: "david_wilson",
-    avatar_url: "/avatars/david.jpg",
-    plan_id: 2,
-    plan_name: "VIP Pro 6 Tháng",
-    plan_code: "vip_6_month",
-    start_date: "2024-01-05 00:00:00",
-    end_date: "2024-07-04 23:59:59",
-    status: "active",
-    auto_renew: true,
-    created_at: "2024-01-05 02:30:00",
-  },
-  {
-    id: 6,
-    user_id: 7,
-    username: "lisa_taylor",
-    avatar_url: "/avatars/lisa.jpg",
-    plan_id: 1,
-    plan_name: "VIP Basic 1 Tháng",
-    plan_code: "vip_1_month",
-    start_date: "2024-01-06 00:00:00",
-    end_date: "2024-02-05 23:59:59",
-    status: "expired",
-    auto_renew: true,
-    created_at: "2024-01-06 06:20:00",
-  },
-];
-
 const SubscriptionsHistory = () => {
-  const [subscriptions] = useState(mockSubscriptions);
-  const [loading] = useState(false);
+  const { accessToken } = useAuth();
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
 
-  // Filter subscriptions
-  const filteredSubscriptions = subscriptions.filter((s) => {
-    const matchSearch = s.username
-      .toLowerCase()
-      .includes(searchText.toLowerCase());
+  const loadSubscriptions = async () => {
+    if (!accessToken) return;
+
+    setLoading(true);
+    try {
+      const data = await adminApi.getSubscriptions(accessToken);
+      const normalized = (data.subscriptions || []).map((item) => ({
+        ...item,
+        username: item.users?.username || "-",
+        avatar_url: item.users?.avatar_url || null,
+        plan_name: item.subscription_plans?.name || "-",
+        plan_code: item.subscription_plans?.code || "",
+      }));
+      setSubscriptions(normalized);
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không tải được lịch sử subscription");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSubscriptions();
+  }, [accessToken]);
+
+  const filteredSubscriptions = useMemo(() => {
+    return subscriptions.filter((s) => {
+      const matchSearch = s.username.toLowerCase().includes(searchText.toLowerCase());
     const matchStatus = statusFilter === "all" || s.status === statusFilter;
     const matchPlan = planFilter === "all" || s.plan_code === planFilter;
     return matchSearch && matchStatus && matchPlan;
-  });
+    });
+  }, [subscriptions, searchText, statusFilter, planFilter]);
 
   // Statistics
   const stats = {
@@ -157,7 +96,7 @@ const SubscriptionsHistory = () => {
         text: "Đã hủy",
       },
     };
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.active;
     return (
       <Tag color={config.color} icon={config.icon}>
         {config.text}
@@ -173,7 +112,7 @@ const SubscriptionsHistory = () => {
       vip_1_year: "gold",
     };
     return (
-      <Tag color={colors[planCode]} icon={<CrownOutlined />}>
+      <Tag color={colors[planCode] || "default"} icon={<CrownOutlined />}>
         {planName}
       </Tag>
     );
@@ -332,7 +271,7 @@ const SubscriptionsHistory = () => {
           rowKey="id"
           loading={loading}
           pagination={{
-            pageSize: 3,
+            pageSize: 8,
             showSizeChanger: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} của ${total} đăng ký`,
