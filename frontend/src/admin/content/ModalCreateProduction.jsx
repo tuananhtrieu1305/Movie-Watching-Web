@@ -24,6 +24,18 @@ const ModalCreateProduction = ({
           genres: initialData.genres?.map((g) => g.id) || [],
           type: initialData.type,
           status: initialData.status || "ongoing",
+
+          poster_url: initialData.poster_url,
+          banner_url: initialData.banner_url,
+          country: initialData.country,
+          duration:
+            initialData.movies?.duration !== undefined &&
+            initialData.movies?.duration !== null
+              ? initialData.movies.duration
+              : initialData.episodes?.[0]?.duration
+                ? Math.floor(initialData.episodes[0].duration / 60)
+                : "",
+
           actors:
             initialData.actors?.map((a) => ({
               name: a.name,
@@ -57,16 +69,23 @@ const ModalCreateProduction = ({
       );
       formData.append("is_premium", values.is_premium || false);
 
-      // BỔ SUNG CÁC TRƯỜNG BỊ THIẾU Ở ĐÂY:
       if (values.release_year)
         formData.append("release_year", values.release_year);
       if (values.description)
         formData.append("description", values.description);
       if (values.country) formData.append("country", values.country);
       if (values.language) formData.append("language", values.language);
-
+      if (values.duration !== undefined && values.duration !== null)
+        formData.append("duration", values.duration);
       if (values.actors && values.actors.length > 0) {
         formData.append("actors", JSON.stringify(values.actors));
+      }
+
+      if (values.video && values.video.length > 0) {
+        // Vì values.video đã là một mảng, ta truy cập thẳng vào phần tử [0]
+        const videoFile = values.video[0].originFileObj;
+        formData.append("video", videoFile);
+        console.log("Đã attach file thành công:", videoFile.name);
       }
 
       // Xử lý tạo mới hoặc cập nhật
@@ -130,6 +149,7 @@ const ModalCreateProduction = ({
                     setType={setType}
                     initialData={initialData}
                     status={status}
+                    form={form}
                   />
                 ),
               },

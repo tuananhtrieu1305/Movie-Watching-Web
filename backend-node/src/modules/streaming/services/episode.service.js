@@ -49,6 +49,7 @@ export const createEpisodeService = async (data, file) => {
       episode_number: Number(data.episode_number),
       title: data.title,
       duration: Number(data.duration || 0),
+      thumbnail_url: data.thumbnail_url || null,
       video_url: videoUrl,
     },
   });
@@ -78,6 +79,7 @@ export const updateEpisodeService = async (id, data, file) => {
       : undefined,
     title: data.title,
     duration: data.duration ? Number(data.duration) : undefined,
+    thumbnail_url: data.thumbnail_url !== undefined ? data.thumbnail_url : undefined,
     updated_at: new Date(),
   };
 

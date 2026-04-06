@@ -2,7 +2,7 @@ import { Modal, Form, InputNumber, message, Row, Col } from "antd";
 import { createSeason } from "../../services/movieService";
 import { useState } from "react";
 
-const ModalSaveSeason = ({ open, onCancel }) => {
+const ModalSaveSeason = ({ open, onCancel, seriesId }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();

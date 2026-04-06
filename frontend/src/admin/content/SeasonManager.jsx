@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { Collapse, Button, Empty, message, Popconfirm } from "antd";
 import {
@@ -79,15 +80,27 @@ const SeasonManager = ({ production, refreshData }) => {
         ) : (
           <div className="border p-4 rounded shadow-sm flex justify-between items-center">
             <div className="flex gap-4">
-              <div className="w-24 h-16 bg-black rounded flex items-center justify-center text-white">
-                <PlayCircleOutlined className="text-2xl" />
+              <div className="w-24 h-16 bg-black rounded flex items-center justify-center text-white relative overflow-hidden">
+                {movieEpisode.thumbnail_url && (
+                  <img
+                    src={movieEpisode.thumbnail_url}
+                    alt="Thumbnail"
+                    className="w-full h-full object-cover absolute top-0 left-0 opacity-60"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                )}
+                <PlayCircleOutlined className="text-2xl z-10" />
               </div>
               <div className="flex flex-col justify-center">
                 <div className="font-bold">
                   {movieEpisode.title || "Full Movie"}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {Math.floor((movieEpisode.duration || 0) / 60)} phút
+                  {movieEpisode.duration >= 60
+                    ? `${Math.floor(movieEpisode.duration / 60)} phút`
+                    : `${movieEpisode.duration} giây`}
                 </div>
               </div>
             </div>

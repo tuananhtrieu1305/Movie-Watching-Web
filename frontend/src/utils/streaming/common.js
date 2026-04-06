@@ -3,7 +3,9 @@ import { getEpisodesBySeason } from "../../services/movieService";
 export const calcDurationDisplay = (production) => {
   const durationDisplay =
     production.type === "movie"
-      ? `${Math.floor((production.movies?.duration || 0) / 60)} min`
+      ? production.movies?.duration >= 60
+        ? `${Math.floor((production.movies?.duration || 0) / 60)} phút`
+        : `${production.movies?.duration || 0} giây`
       : `${production.series?.total_seasons || 0} Seasons`;
 
   return durationDisplay;

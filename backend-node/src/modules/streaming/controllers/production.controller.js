@@ -10,10 +10,14 @@ import {
 
 export const uploadMovieController = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).send("Chưa chọn file video!");
+    const { type } = req.body;
+    if (!req.file && (!type || type === "movie")) {
+      console.log("⚠️ [400 Bad Request]: Không nhận được file video từ FE cho phim lẻ!");
+      return res.status(400).send("Chưa chọn file video cho phim lẻ!");
+    }
     const result = await uploadMovieService(req.file, req.body);
     res.json({
-      message: "Upload thành công! Đang xử lý video ngầm.",
+      message: type === "series" ? "Tạo phim bộ thành công!" : "Upload thành công! Đang xử lý video ngầm.",
       data: result,
     });
   } catch (error) {

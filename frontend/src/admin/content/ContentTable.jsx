@@ -18,7 +18,11 @@ import {
   TypeTag,
 } from "../../components/adminContent/ProductionTags";
 import AnonymousBanner from "../../assets/anonymousBanner.png";
-import { getMovies, getMovieBySlug } from "../../services/movieService";
+import {
+  getMovies,
+  getMovieBySlug,
+  deleteProduction,
+} from "../../services/movieService";
 
 const ContentTable = () => {
   const actionRef = useRef();
@@ -44,6 +48,18 @@ const ContentTable = () => {
       }
     } catch (error) {
       message.error("Lỗi khi tải dữ liệu chi tiết phim!");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteProduction(id);
+      message.success("Đã xóa phim và dọn sạch bộ nhớ R2!");
+
+      actionRef.current?.reload();
+    } catch (error) {
+      console.error(error);
+      message.error("Lỗi khi xóa phim!");
     }
   };
 
@@ -136,10 +152,7 @@ const ContentTable = () => {
         <Popconfirm
           key="del"
           title="Xóa phim này?"
-          onConfirm={() => {
-            message.success("Đã xóa!");
-            actionRef.current?.reload();
-          }}
+          onConfirm={() => handleDelete(record.id)}
           okButtonProps={{ danger: true }}
         >
           <Button danger icon={<DeleteOutlined />} size="small" />

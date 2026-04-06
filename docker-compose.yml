@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: movie_streaming_db
     ports:
-      - "3307:3306"
+      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
       - ./database:/docker-entrypoint-initdb.d
@@ -43,7 +43,7 @@ services:
       - ./backend-node/.env
     volumes:
       - ./backend-python/video-processor:/app
-    command: sh -c "pip install -r requirements.txt && uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload"
+    command: sh -c "pip install -r requirements.txt && uvicorn main:app --app-dir src --host 0.0.0.0 --port 8001 --reload"
 
   # Python AI Service
   ai-chatbot:

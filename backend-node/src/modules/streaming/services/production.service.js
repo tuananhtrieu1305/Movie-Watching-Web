@@ -1,18 +1,48 @@
 import prisma from "../../../core/database/prisma.js";
-import { uploadFileToR2 } from "../../../core/storage/upload.helper.js";
+import {
+  deleteFilesFromR2,
+  uploadFileToR2,
+} from "../../../core/storage/upload.helper.js";
 import axios from "axios";
 
+const generateCleanSlug = (title) => {
+  return title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Xóa dấu tiếng Việt
+    .replace(/[^a-z0-9]+/g, "-") // Thay khoảng trắng và ký tự đặc biệt bằng dấu gạch ngang
+    .replace(/(^-|-$)+/g, ""); // Xóa gạch ngang ở đầu và cuối
+};
+
 export const uploadMovieService = async (file, metadata) => {
-  const { title, description, release_year, is_premium, type } = metadata;
+  const {
+    title,
+    description,
+    release_year,
+    is_premium,
+    type,
+    poster_url,
+    banner_url,
+    country,
+    language,
+    genres,
+    actors,
+    duration,
+  } = metadata;
 
-  // 1. Upload video lên R2
-  const fileName = await uploadFileToR2(file, "raw/movies");
+  // 1. Upload video gốc lên R2
+  let fileName = null;
+  if (file) {
+    fileName = await uploadFileToR2(file, "raw/movies");
+  }
 
-  const slug = title.toLowerCase().replace(/ /g, "-") + "-" + Date.now();
+  // 2. Tạo Slug đẹp không chứa Date.now()
+  const slug = generateCleanSlug(title);
   let firstEpisodeId = null;
 
-  // 2. Lưu DB
+  // 3. Lưu toàn bộ dữ liệu vào DB
   const newProduction = await prisma.$transaction(async (tx) => {
+    // Tạo Vỏ Phim
     const production = await tx.productions.create({
       data: {
         title,
@@ -20,40 +50,106 @@ export const uploadMovieService = async (file, metadata) => {
         description,
         type: type || "movie",
         release_year: release_year ? parseInt(release_year) : null,
-        is_premium: is_premium === "true",
-        status: "ongoing",
+        is_premium: is_premium === "true" || is_premium === true,
+        status: metadata.status || "ongoing",
+        poster_url: poster_url || null,
+        banner_url: banner_url || null,
+        country: country || null,
+        language: language || null,
       },
     });
 
+    // Lưu Thể loại (Genres)
+    if (genres) {
+      const genreIds = typeof genres === "string" ? JSON.parse(genres) : genres;
+      if (genreIds.length > 0) {
+        await tx.production_genres.createMany({
+          data: genreIds.map((gId) => ({
+            production_id: production.id,
+            genre_id: Number(gId),
+          })),
+        });
+      }
+    }
+
+    // Lưu Diễn viên (Actors)
+    if (actors) {
+      const actorList =
+        typeof actors === "string" ? JSON.parse(actors) : actors;
+      for (const [index, actor] of actorList.entries()) {
+        const actorSlug = generateCleanSlug(actor.name) + "-" + Date.now();
+        let dbActor = await tx.actors.findFirst({
+          where: { name: actor.name },
+        });
+
+        if (!dbActor) {
+          dbActor = await tx.actors.create({
+            data: {
+              name: actor.name,
+              slug: actorSlug,
+              avatar_url: actor.avatar_url,
+            },
+          });
+        } else {
+          if (actor.avatar_url && actor.avatar_url !== dbActor.avatar_url) {
+            dbActor = await tx.actors.update({
+              where: { id: dbActor.id },
+              data: { avatar_url: actor.avatar_url },
+            });
+          }
+        }
+        await tx.production_actors.create({
+          data: {
+            production_id: production.id,
+            actor_id: dbActor.id,
+            character_name: actor.character,
+            display_order: index,
+          },
+        });
+      }
+    }
+
+    // Tạo Tập phim và Lưu Thời lượng
     if (type === "movie" || !type) {
-      await tx.movies.create({ data: { id: production.id, duration: 0 } });
+      const movieDuration = duration ? parseInt(duration) : 0;
+
+      await tx.movies.create({
+        data: { id: production.id, duration: movieDuration },
+      });
+
       const episode = await tx.episodes.create({
         data: {
           production_id: production.id,
           episode_number: 1,
           title: "Full Movie",
           video_url: fileName,
-          duration: 0,
+          duration: movieDuration, // Đã tính bằng giây từ frontend
         },
       });
       firstEpisodeId = episode.id;
+    } else if (type === "series") {
+      // Khởi tạo bảng Series với 0 season
+      await tx.series.create({
+        data: { id: production.id, total_seasons: 0 },
+      });
     }
     return production;
   });
 
-  // 3. Gọi Python
-  try {
-    if (firstEpisodeId && fileName) {
-      axios
-        .post("http://video_service:8001/process-video", {
-          file_name: fileName,
-          production_id: newProduction.id,
-          episode_id: firstEpisodeId,
-        })
-        .catch((err) => console.error("⚠️ Python Service Error:", err.message));
-    }
-  } catch (e) {
-    console.error("Lỗi gọi Python:", e);
+  // 4. Gọi Python xử lý Video ngầm
+  if (firstEpisodeId && fileName) {
+    console.log(`🔥 Đã lưu DB. Đang gửi file ${fileName} sang Python xử lý...`);
+    axios
+      .post("http://video_service:8001/process-video", {
+        file_name: fileName,
+        production_id: newProduction.id,
+        episode_id: firstEpisodeId,
+      })
+      .catch((err) => console.error("⚠️ Lỗi gọi Python:", err.message));
+  } else {
+    console.log(
+      "⚠️ Cảnh báo: Không có file video được tải lên, bỏ qua bước gọi Python.",
+    );
   }
 
   return newProduction;
@@ -72,6 +168,7 @@ export const updateProductionService = async (id, metadata) => {
     banner_url,
     country,
     language,
+    duration, // BỔ SUNG DURATION VÀO ĐÂY
   } = metadata;
 
   return await prisma.$transaction(async (tx) => {
@@ -89,12 +186,30 @@ export const updateProductionService = async (id, metadata) => {
     if (country !== undefined) updateData.country = country;
     if (language !== undefined) updateData.language = language;
 
+    // 1. Cập nhật bảng Productions (Lớp vỏ)
     const updated = await tx.productions.update({
       where: { id: Number(id) },
       data: updateData,
     });
 
-    // Genres
+    // 2. Cập nhật bảng Movies (Thời lượng)
+    // Nếu có gửi duration lên, ta update vào bảng movies
+    if (duration !== undefined) {
+      // Dùng upsert đề phòng trường hợp phim cũ bị lỗi chưa có record trong bảng movies
+      await tx.movies.upsert({
+        where: { id: Number(id) },
+        update: { duration: parseInt(duration) },
+        create: { id: Number(id), duration: parseInt(duration) },
+      });
+
+      // Đồng thời cập nhật thời lượng cho tập 1 của phim lẻ đó
+      await tx.episodes.updateMany({
+        where: { production_id: Number(id), episode_number: 1 },
+        data: { duration: parseInt(duration) }, // Frontend đã gửi lên bằng giây
+      });
+    }
+
+    // 3. Genres (Giữ nguyên logic của bạn)
     if (genres) {
       const genreIds = typeof genres === "string" ? JSON.parse(genres) : genres;
       await tx.production_genres.deleteMany({
@@ -110,7 +225,7 @@ export const updateProductionService = async (id, metadata) => {
       }
     }
 
-    // Actors
+    // 4. Actors (Cập nhật dùng Clean Slug)
     if (actors) {
       const actorList =
         typeof actors === "string" ? JSON.parse(actors) : actors;
@@ -119,8 +234,8 @@ export const updateProductionService = async (id, metadata) => {
       });
 
       for (const [index, actor] of actorList.entries()) {
-        const slug =
-          actor.name.toLowerCase().replace(/ /g, "-") + "-" + Date.now();
+        const slug = generateCleanSlug(actor.name) + "-" + Date.now(); // Dùng Clean Slug
+
         let dbActor = await tx.actors.findFirst({
           where: { name: actor.name },
         });
@@ -153,7 +268,106 @@ export const updateProductionService = async (id, metadata) => {
 };
 
 export const deleteProductionService = async (id) => {
-  return await prisma.productions.delete({ where: { id: Number(id) } });
+  // 1. Lấy thông tin phim và các tập để biết đường dẫn file
+  const production = await prisma.productions.findUnique({
+    where: { id: Number(id) },
+    include: { 
+      episodes: true,
+      series: {
+        include: {
+          seasons: {
+            include: {
+              productions: {
+                include: { episodes: true }
+              }
+            }
+          }
+        }
+      }
+    },
+  });
+
+  if (!production) throw new Error("Phim không tồn tại!");
+
+  // Gom tất cả các tập của phim (nếu là series thì gom tất cả tập từ tất cả season)
+  const allEpisodes = [];
+  if (production.episodes) allEpisodes.push(...production.episodes);
+  
+  const seasonShellIds = [];
+  if (production.series?.seasons) {
+    for (const season of production.series.seasons) {
+      seasonShellIds.push(season.id);
+      if (season.productions?.episodes) {
+        allEpisodes.push(...season.productions.episodes);
+      }
+    }
+  }
+
+  // 2. Gom các lệnh dọn dẹp kho Cloudflare R2
+  const R2_DOMAIN = process.env.R2_PUBLIC_DOMAIN;
+  const deletePromises = [];
+
+  // Xóa các file Video (Tìm trong tất cả các tập của phim/season)
+  if (allEpisodes.length > 0) {
+    allEpisodes.forEach((ep) => {
+      if (ep.video_url) {
+        let baseFileName = "";
+
+        // Trường hợp 1: DB lưu link HLS (Webhook đã update thành công)
+        if (
+          ep.video_url.includes(R2_DOMAIN) &&
+          ep.video_url.includes(".m3u8")
+        ) {
+          const urlWithoutDomain = ep.video_url.replace(`${R2_DOMAIN}/`, "");
+          const folderPrefix = urlWithoutDomain.replace("playlist.m3u8", ""); // VD: hls/123/
+          deletePromises.push(deleteFilesFromR2(folderPrefix));
+
+          // Suy luận ra tên file gốc để xóa rác: "hls/123/" -> "123"
+          const parts = folderPrefix.split("/");
+          baseFileName = parts[parts.length - 2];
+        }
+        // Trường hợp 2: DB lưu link RAW (Webhook bị lỗi hoặc chưa kịp chạy)
+        else if (ep.video_url.startsWith("raw/")) {
+          deletePromises.push(deleteFilesFromR2(ep.video_url));
+
+          // Suy luận ra thư mục HLS: "raw/movies/123.mp4" -> "123"
+          const fileNameWithExt = ep.video_url.split("/").pop();
+          baseFileName = fileNameWithExt.split(".")[0];
+        }
+
+        // BẮT BUỘC: Xóa chéo tàn dư dựa trên baseFileName vừa suy luận được
+        if (baseFileName) {
+          // Xóa thư mục HLS (Phòng khi Python đã cắt xong nhưng DB chưa nhận được m3u8)
+          deletePromises.push(deleteFilesFromR2(`hls/${baseFileName}/`));
+
+          // Xóa file mp4 gốc (Phòng khi DB đã nhận m3u8 nhưng file mp4 gốc vẫn còn nằm trên R2)
+          deletePromises.push(
+            deleteFilesFromR2(`raw/movies/${baseFileName}.mp4`),
+          );
+          deletePromises.push(
+            deleteFilesFromR2(`raw/episodes/${baseFileName}.mp4`),
+          );
+        }
+      }
+    });
+  }
+
+  // Chạy xóa file R2 ngầm (không dùng await để tránh bắt user phải chờ)
+  Promise.all(deletePromises).catch((err) =>
+    console.error("Lỗi Promise dọn rác R2:", err),
+  );
+
+  // 3. Xóa dữ liệu trong MySQL (Nhờ Cascade, episodes/actors/genres sẽ tự bay màu)
+  return await prisma.$transaction(async (tx) => {
+    // 3.1 Xóa các mảng vỏ của Season trước
+    if (seasonShellIds.length > 0) {
+      await tx.productions.deleteMany({
+        where: { id: { in: seasonShellIds } },
+      });
+    }
+    // 3.2 Xóa mảng vỏ gốc (vỏ Movie/vỏ Series)
+    return await tx.productions.delete({ where: { id: Number(id) } });
+  });
 };
 
 export const getMoviesService = async () => {

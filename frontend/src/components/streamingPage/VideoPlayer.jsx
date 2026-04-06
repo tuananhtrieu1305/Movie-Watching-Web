@@ -1,12 +1,8 @@
-import {
-  SettingOutlined,
-  ExpandOutlined,
-  StepForwardOutlined,
-  BulbOutlined,
-  PlayCircleFilled,
-} from "@ant-design/icons";
+import { StepForwardOutlined, BulbOutlined } from "@ant-design/icons";
 import { Switch, Button, Tooltip, message } from "antd";
 import { useEffect, useRef } from "react";
+import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { historyApi } from "../../modules/user/services/historyApi";
 
 const VideoPlayer = (props) => {
   const {
@@ -18,6 +14,64 @@ const VideoPlayer = (props) => {
     setSettings,
   } = props;
   const videoRef = useRef(null);
+  const { isAuthenticated, accessToken } = useAuth();
+
+  // Ref để tracking debounce update lịch sử
+  const lastSyncTimeRef = useRef(0);
+  const watchedDurationRef = useRef(0);
+
+  // Sync lịch sử khi pause hoặc mỗi 10 giây
+  const syncHistory = async (
+    currentTime,
+    force = false,
+    isCompleted = false,
+  ) => {
+    if (!isAuthenticated || !accessToken || !currentEpisode?.id) return;
+
+    const now = Date.now();
+    // Gửi sync nếu force hoặc đã qua 10s kể từ lần gửi cuối
+    if (force || now - lastSyncTimeRef.current > 10000) {
+      try {
+        await historyApi.updateHistory(accessToken, {
+          episode_id: currentEpisode.id,
+          last_position: Math.floor(currentTime),
+          watched_duration: Math.floor(watchedDurationRef.current),
+          total_duration: videoRef.current?.duration ? Math.floor(videoRef.current.duration) : 0,
+          is_completed: isCompleted,
+        });
+        lastSyncTimeRef.current = now;
+      } catch (err) {
+        console.error("Lỗi đồng bộ lịch sử:", err);
+      }
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    const { currentTime } = videoRef.current;
+
+    // Tăng thời gian đã xem (thêm 0.25s mỗi event timeupdate tùy browsers)
+    // Tạm bỏ qua độ chính xác tuyệt đối, chỉ đếm cho event
+    // Cách an toàn hơn: gửi thẳng currentTime lên
+    syncHistory(currentTime);
+  };
+
+  const handlePause = () => {
+    if (videoRef.current) {
+      syncHistory(videoRef.current.currentTime, true);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (!videoRef.current) return;
+
+    // Nếu có tham số pos trên URL (từ trang lịch sử truyền sang)
+    const searchParams = new URLSearchParams(window.location.search);
+    const pos = searchParams.get("pos");
+    if (pos && !isNaN(pos)) {
+      videoRef.current.currentTime = Number(pos);
+    }
+  };
 
   // 1. Xử lý Autoplay mỗi khi đổi tập
   useEffect(() => {
@@ -34,6 +88,10 @@ const VideoPlayer = (props) => {
 
   // 2. Xử lý khi video kết thúc (Auto Next)
   const handleVideoEnded = () => {
+    if (videoRef.current) {
+      syncHistory(videoRef.current.currentTime, true, true);
+    }
+
     if (settings.autoNext) {
       message.loading("Tự động chuyển tập tiếp theo sau 3s...", 2);
       setTimeout(() => {
@@ -60,7 +118,10 @@ const VideoPlayer = (props) => {
           src={currentEpisode.video_url}
           controls
           className="w-full h-full object-contain"
-          poster="https://wallpapers.com/images/hd/stranger-things-4-poster-vkd6148332151654.jpg"
+          poster={currentEpisode.thumbnail_url}
+          onLoadedMetadata={handleLoadedMetadata}
+          onTimeUpdate={handleTimeUpdate}
+          onPause={handlePause}
           onEnded={handleVideoEnded}
         />
       </div>
@@ -89,14 +150,6 @@ const VideoPlayer = (props) => {
                 size="small"
                 checked={settings.autoNext}
                 onChange={() => toggleSetting("autoNext")}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Auto Skip Intro</span>
-              <Switch
-                size="small"
-                checked={settings.autoSkipIntro}
-                onChange={() => toggleSetting("autoSkipIntro")}
               />
             </div>
           </div>
