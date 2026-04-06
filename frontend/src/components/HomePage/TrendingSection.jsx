@@ -135,9 +135,9 @@ const TrendingSection = () => {
   const currentData = trendingData[activeTab];
 
   const tabs = [
-    { id: "today", label: "Hôm Nay" },
-    { id: "week", label: "Tuần Này" },
-    { id: "month", label: "Tháng Này" },
+    { id: "today", label: "Today" },
+    { id: "week", label: "This Week" },
+    { id: "month", label: "This Month" },
   ];
 
   const getTrendIcon = (trend) => {
@@ -224,8 +224,8 @@ const TrendingSection = () => {
         ))}
       </div>
 
-      <Link to="/trending" className="trending-view-all">
-        Xem Toàn Bộ Top 100
+      <Link to="/movies?trending=true&sort=rating" className="trending-view-all">
+        View All Top 100
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
         </svg>

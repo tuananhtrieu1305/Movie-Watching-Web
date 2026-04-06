@@ -14,7 +14,7 @@ const Footer = () => {
                             CINEWAVE
                         </h2>
                         <p className="text-gray-400 text-sm leading-relaxed">
-                            Trải nghiệm điện ảnh đỉnh cao ngay tại nhà. Kho phim khổng lồ, chất lượng 4K, không quảng cáo làm phiền.
+                            Ultimate cinematic experience at home. Massive library, 4K quality, no interruptions.
                         </p>
                         <div className="flex gap-4 pt-2">
                             <SocialIcon icon={<FaFacebook />} />
@@ -26,33 +26,33 @@ const Footer = () => {
 
                     {/* Col 2: Khám phá */}
                     <div>
-                        <h3 className="text-white font-bold mb-6">Khám phá</h3>
+                        <h3 className="text-white font-bold mb-6">Explore</h3>
                         <ul className="space-y-3 text-sm text-gray-400">
-                            <li><Link to="/movies" className="hover:text-teal-400 transition-colors">Phim lẻ mới</Link></li>
-                            <li><Link to="/series" className="hover:text-teal-400 transition-colors">Phim bộ độc quyền</Link></li>
-                            <li><Link to="/charts" className="hover:text-teal-400 transition-colors">Bảng xếp hạng</Link></li>
-                            <li><Link to="/coming-soon" className="hover:text-teal-400 transition-colors">Sắp chiếu</Link></li>
+                            <li><Link to="/movies" className="hover:text-teal-400 transition-colors">New Movies</Link></li>
+                            <li><Link to="/series" className="hover:text-teal-400 transition-colors">Exclusive Series</Link></li>
+                            <li><Link to="/charts" className="hover:text-teal-400 transition-colors">Top Charts</Link></li>
+                            <li><Link to="/coming-soon" className="hover:text-teal-400 transition-colors">Coming Soon</Link></li>
                         </ul>
                     </div>
 
                     {/* Col 3: Hỗ trợ */}
                     <div>
-                        <h3 className="text-white font-bold mb-6">Hỗ trợ</h3>
+                        <h3 className="text-white font-bold mb-6">Support</h3>
                         <ul className="space-y-3 text-sm text-gray-400">
-                            <li><Link to="/help" className="hover:text-teal-400 transition-colors">Trung tâm trợ giúp</Link></li>
-                            <li><Link to="/plans" className="hover:text-teal-400 transition-colors">Gói dịch vụ</Link></li>
-                            <li><Link to="/faq" className="hover:text-teal-400 transition-colors">Câu hỏi thường gặp</Link></li>
-                            <li><Link to="/contact" className="hover:text-teal-400 transition-colors">Liên hệ</Link></li>
+                            <li><Link to="/help" className="hover:text-teal-400 transition-colors">Help Center</Link></li>
+                            <li><Link to="/plans" className="hover:text-teal-400 transition-colors">Subscription Plans</Link></li>
+                            <li><Link to="/faq" className="hover:text-teal-400 transition-colors">FAQ</Link></li>
+                            <li><Link to="/contact" className="hover:text-teal-400 transition-colors">Contact Us</Link></li>
                         </ul>
                     </div>
 
                     {/* Col 4: Thông tin */}
                     <div>
-                        <h3 className="text-white font-bold mb-6">Thông tin</h3>
+                        <h3 className="text-white font-bold mb-6">Information</h3>
                         <ul className="space-y-3 text-sm text-gray-400">
-                            <li><Link to="/terms" className="hover:text-teal-400 transition-colors">Điều khoản sử dụng</Link></li>
-                            <li><Link to="/privacy" className="hover:text-teal-400 transition-colors">Chính sách bảo mật</Link></li>
-                            <li><Link to="/copyright" className="hover:text-teal-400 transition-colors">Bản quyền</Link></li>
+                            <li><Link to="/terms" className="hover:text-teal-400 transition-colors">Terms of Use</Link></li>
+                            <li><Link to="/privacy" className="hover:text-teal-400 transition-colors">Privacy Policy</Link></li>
+                            <li><Link to="/copyright" className="hover:text-teal-400 transition-colors">Copyright</Link></li>
                         </ul>
                     </div>
                 </div>

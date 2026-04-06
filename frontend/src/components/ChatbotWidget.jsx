@@ -7,8 +7,8 @@ const ChatbotWidget = () => {
     {
       id: 1,
       type: "bot",
-      text: "Chào bạn! Mình có thể giúp tìm phim, gợi ý theo thể loại/diễn viên, hoặc tóm tắt (không spoil).",
-      suggestion: 'Gợi ý: "Gợi ý phim hành động giống Biệt Đội Đáp Phá"',
+      text: "Hello! I can help you find movies, suggest genres/actors, or summarize plots (no spoilers).",
+      suggestion: 'Suggestion: "Suggest action movies like The Dark Knight"',
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -40,7 +40,7 @@ const ChatbotWidget = () => {
       const botMessage = {
         id: Date.now() + 1,
         type: "bot",
-        text: "Đang xử lý yêu cầu của bạn...",
+        text: "Processing your request...",
       };
       setMessages((prev) => [...prev, botMessage]);
     }, 500);
@@ -95,7 +95,7 @@ const ChatbotWidget = () => {
                 <div className="chatbot-title">Movie Assistant</div>
                 <div className="chatbot-status">
                   <span className="status-dot"></span>
-                  Online • trả lời nhanh
+                  Online • fast response
                 </div>
               </div>
             </div>
@@ -148,7 +148,7 @@ const ChatbotWidget = () => {
           <div className="chatbot-input-container">
             <textarea
               className="chatbot-input"
-              placeholder="Nhập tin nhắn... "
+              placeholder="Type a message... "
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}

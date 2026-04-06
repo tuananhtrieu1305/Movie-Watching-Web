@@ -19,12 +19,12 @@ const UserMenu = () => {
     }, []);
 
     const menuItems = [
-        { icon: <FaUser />, label: 'Tài Khoản', path: '/user/profile' },
-        { icon: <FaHistory />, label: 'Lịch Sử', path: '/user/history' },
-        { icon: <FaHeart />, label: 'Yêu Thích', path: '/user/favorites' },
-        { icon: <FaCrown />, label: 'Nâng Cấp VIP', path: '/user/plans' },
-        { icon: <FaBell />, label: 'Thông Báo', path: '/user/notifications' },
-        { icon: <FaCog />, label: 'Cài Đặt', path: '/user/settings' },
+        { icon: <FaUser />, label: 'Account', path: '/user/profile' },
+        { icon: <FaHistory />, label: 'History', path: '/user/history' },
+        { icon: <FaHeart />, label: 'Favorites', path: '/user/favorites' },
+        { icon: <FaCrown />, label: 'Upgrade to VIP', path: '/user/plans' },
+        { icon: <FaBell />, label: 'Notifications', path: '/user/notifications' },
+        { icon: <FaCog />, label: 'Settings', path: '/user/settings' },
     ];
 
     return (
@@ -72,7 +72,7 @@ const UserMenu = () => {
                             to="/login"
                             className="flex items-center gap-2 text-white hover:text-gray-300 text-sm font-bold transition-colors px-2 py-1"
                         >
-                            Đăng Xuất <FaArrowRight />
+                            Logout <FaArrowRight />
                         </Link>
                     </div>
                 </div>

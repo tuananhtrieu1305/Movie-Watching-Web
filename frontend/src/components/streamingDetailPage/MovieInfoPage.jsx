@@ -6,7 +6,7 @@ import { getWatchDataBySlug } from "../../modules/streaming/mock/watchData";
 import InfoHero from "./InfoHero";
 import RelatedMovies from "../streamingPage/RelatedMovies";
 import RecommendedList from "../streamingPage/RecommendedList";
-import CommentSection from "../streamingPage/CommentSection";
+import CommentSection from "../comments/CommentSection";
 
 const MovieInfoPage = () => {
   const { slug } = useParams();

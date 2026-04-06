@@ -5,6 +5,7 @@ import MainLayout from "../components/layout/MainLayout";
 
 // 2. Import Discovery Pages
 import HomePage from "../modules/discovery/HomePage";
+import BrowsePage from "../modules/discovery/BrowsePage/index";
 import UserLayout from "../modules/user/UserLayout";
 import ProfilePage from "../modules/user/pages/ProfilePage";
 import HistoryPage from "../modules/user/pages/HistoryPage";
@@ -45,9 +46,16 @@ export const router = createBrowserRouter([
       // --- USER SECTION (Nested routes) ---
 
       {
-        // :slug là tham số động (VD: /watch/stranger-things-s4)
         path: "watch/:slug",
         element: <WatchPageWrapper />,
+      },
+      {
+        path: "movies",
+        element: <BrowsePage />,
+      },
+      {
+        path: "series",
+        element: <BrowsePage />,
       },
     ],
   },

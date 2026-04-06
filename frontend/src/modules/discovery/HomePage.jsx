@@ -19,28 +19,28 @@ const HomePage = () => {
 
         {/* Movie Sections */}
         <CategorySection
-          title="Phim Đề Xuất Cho Bạn"
-          viewAllLink="/recommended"
+          title="Recommended for You"
+          viewAllLink="/movies?sort=rating"
         />
 
         <CategorySection
-          title="Phim Mới Cập Nhật"
-          viewAllLink="/new-releases"
+          title="Recently Updated"
+          viewAllLink="/movies?sort=newest"
         />
 
         <CategorySection
-          title="Phim Bộ Hot"
-          viewAllLink="/trending-series"
+          title="Hot TV Series"
+          viewAllLink="/movies?type=series"
         />
 
         <CategorySection
-          title="Phim Hành Động"
-          viewAllLink="/category/action"
+          title="Action Movies"
+          viewAllLink="/movies?genre=Action&type=movie"
         />
 
         <CategorySection
-          title="Phim Hoạt Hình"
-          viewAllLink="/category/animation"
+          title="Animation Movies"
+          viewAllLink="/movies?genre=Animation&type=movie"
         />
       </div>
     </div>

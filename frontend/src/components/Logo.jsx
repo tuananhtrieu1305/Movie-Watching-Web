@@ -11,7 +11,7 @@ const Logo = (props) => {
           theme == "dark" ? "text-white" : "text-black"
         }`}
       >
-        Logo Here
+        NETFLICK
       </span>
     </div>
   );

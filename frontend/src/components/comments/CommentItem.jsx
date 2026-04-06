@@ -14,7 +14,7 @@ const CommentItem = ({ data, userMap }) => {
   // --- 1. TRA CỨU THÔNG TIN NGƯỜI DÙNG ---
   // Dùng authorId từ data để lấy thông tin chi tiết từ userMap
   const author = userMap[data.authorId] || {
-    name: "Người dùng ẩn",
+    name: "Anonymous",
     avatar: "https://ui-avatars.com/api/?name=Hidden&background=333",
     roles: [],
     profileUrl: "#",
@@ -97,7 +97,7 @@ const CommentItem = ({ data, userMap }) => {
 
           {/* Badge VIP/Admin */}
           {author.roles.includes("vip") && (
-            <span className="text-yellow-500 text-xs" title="Thành viên VIP">
+            <span className="text-yellow-500 text-xs" title="VIP Member">
               ♾️
             </span>
           )}
@@ -149,7 +149,7 @@ const CommentItem = ({ data, userMap }) => {
                   className="bg-gray-800/90 hover:bg-red-900/80 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transition-all transform hover:scale-105 backdrop-blur-sm flex items-center gap-2"
                 >
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                  Nội dung Spoil - Bấm để xem
+                  Spoiler — Click to reveal
                 </button>
               </div>
             )}
@@ -166,7 +166,7 @@ const CommentItem = ({ data, userMap }) => {
               size={14}
               className={`transition-transform group-active/like:scale-75 ${interaction.hasLiked ? "fill-blue-500" : ""}`}
             />
-            <span>{likesCount > 0 ? likesCount : "Thích"}</span>
+            <span>{likesCount > 0 ? likesCount : "Like"}</span>
           </button>
 
           <button
@@ -185,7 +185,7 @@ const CommentItem = ({ data, userMap }) => {
             className={`flex items-center gap-1.5 hover:text-white transition-colors ${isReplying ? "text-blue-400" : ""}`}
           >
             <MessageSquare size={14} />
-            <span>Trả lời</span>
+            <span>Reply</span>
           </button>
 
           <button className="ml-auto hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
@@ -213,7 +213,7 @@ const CommentItem = ({ data, userMap }) => {
                 className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 font-semibold pl-2 border-l-2 border-transparent hover:border-gray-700 transition-all"
               >
                 <div className="w-4 h-[1px] bg-gray-600"></div>
-                Xem {replies.length} câu trả lời <ChevronDown size={14} />
+                View {replies.length} {replies.length === 1 ? "reply" : "replies"} <ChevronDown size={14} />
               </button>
             ) : (
               <div className="pl-4 border-l-2 border-gray-800 space-y-4 pt-2">
@@ -226,7 +226,7 @@ const CommentItem = ({ data, userMap }) => {
                   onClick={() => setShowReplies(false)}
                   className="flex items-center gap-1 text-xs text-gray-500 hover:text-white mt-2 pb-2"
                 >
-                  <ChevronUp size={12} /> Thu gọn
+                  <ChevronUp size={12} /> Collapse
                 </button>
               </div>
             )}

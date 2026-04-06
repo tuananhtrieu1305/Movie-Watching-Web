@@ -29,7 +29,7 @@ const InfoHero = ({ production }) => {
 
   const durationDisplay = calcDurationDisplay(production);
 
-  console.log(production);
+
 
   return (
     <>
@@ -117,7 +117,7 @@ const InfoHero = ({ production }) => {
 
               {/* Actor List */}
               <h2 className="text-white font-bold text-lg mt-6 mb-2">
-                Danh sách diễn viên
+                Cast
               </h2>
               <ActorList actors={production.actors} />
             </div>
@@ -129,40 +129,40 @@ const InfoHero = ({ production }) => {
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-400">Quốc gia:</span>
+                <span className="text-gray-400">Country:</span>
                 <span className="text-white text-right">
                   {production.country}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Ngôn ngữ:</span>
+                <span className="text-gray-400">Language:</span>
                 <span className="text-white text-right">
                   {production.language || "English"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Ra mắt:</span>
+                <span className="text-gray-400">Released:</span>
                 <span className="text-white text-right">
                   {production.release_year}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Trạng thái:</span>
+                <span className="text-gray-400">Status:</span>
                 <span className="text-white text-right capitalize">
                   {production.status}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Đánh giá:</span>
+                <span className="text-gray-400">Rating:</span>
                 <span className="text-white text-right">
-                  {production.rating_avg} ({production.rating_count})
+                  {production.rating_avg}/10 ({production.rating_count} votes)
                 </span>
               </div>
 
               <div className="border-t border-white/10 my-3"></div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-gray-400">Thể loại:</span>
+                <span className="text-gray-400">Genres:</span>
                 <div className="flex flex-wrap gap-1.5">
                   <GenreTags genres={production.genres} />
                 </div>

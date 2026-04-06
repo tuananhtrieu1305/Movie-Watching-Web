@@ -11,7 +11,7 @@ const SeasonSelector = ({
   return (
     <div className="mt-6 mb-6">
       <h3 className="text-[#ffdd95] font-bold text-lg mb-3">
-        Xem thêm các mùa khác của phim này
+        Watch other seasons of this movie
       </h3>
 
       <div className="flex flex-wrap gap-3">
@@ -42,7 +42,7 @@ const SeasonSelector = ({
               <span
                 className={`relative z-10 font-bold ${isActive ? "text-[#ffdd95]" : "text-gray-300 group-hover:text-white"}`}
               >
-                {season.title || `Mùa ${season.season_number}`}
+                {season.title || `Season ${season.season_number}`}
               </span>
             </div>
           );

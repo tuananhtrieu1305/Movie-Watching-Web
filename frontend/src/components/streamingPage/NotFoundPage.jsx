@@ -7,7 +7,7 @@ const NotFoundPage = () => {
     <Result
       status="404"
       title={<span className="text-black font-bold text-3xl">404</span>}
-      subTitle={<span className="text-black">Trang này không tồn tại</span>}
+      subTitle={<span className="text-black">This page does not exist</span>}
       extra={
         <Button
           type="primary"
@@ -15,7 +15,7 @@ const NotFoundPage = () => {
             navigate("/");
           }}
         >
-          Trang chủ
+          Home
         </Button>
       }
     />

@@ -197,7 +197,7 @@ const HeroSlider = () => {
                 {/* Genres */}
                 <div className="hero-genres">
                   {movie.genres.map((genre, idx) => (
-                    <Link key={idx} to={`/genre/${genre}`} className="genre-tag">
+                    <Link key={idx} to={`/movies?genre=${genre}`} className="genre-tag">
                       {genre}
                     </Link>
                   ))}
@@ -212,7 +212,7 @@ const HeroSlider = () => {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M8 5v14l11-7z" />
                     </svg>
-                    <span>Xem Ngay</span>
+                    <span>Watch Now</span>
                   </Link>
                   <button className="hero-btn hero-btn-secondary">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -1,101 +1,91 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 export default function RatingBar({
-  max = 10,
-  onChange, // Hàm callback để gửi giá trị ra ngoài
+  max = 5,
+  onChange,
   initialValue = 0,
 }) {
-  const [rating, setRating] = useState(initialValue);
+  // Store rating as a 0–5 integer
+  const [rating, setRating] = useState(
+    initialValue > 5 ? Math.round(initialValue / 2) : initialValue
+  );
   const [hoverRating, setHoverRating] = useState(0);
-  const barRef = useRef(null);
 
-  // Tính toán giá trị dựa trên vị trí chuột
-  const calculateRating = (e) => {
-    if (!barRef.current) return 0;
+  const displayed = hoverRating > 0 ? hoverRating : rating;
 
-    const { left, width } = barRef.current.getBoundingClientRect();
-    // Tính tọa độ X của chuột so với thanh bar
-    const x = e.clientX - left;
-
-    // Tính phần trăm và quy đổi ra thang điểm max (ví dụ 10)
-    let newRating = Math.ceil((x / width) * max);
-
-    // Giới hạn giá trị trong khoảng 0 -> max
-    if (newRating < 0) newRating = 0;
-    if (newRating > max) newRating = max;
-
-    return newRating;
+  const handleClick = (val) => {
+    // Allow de-select by clicking the same star
+    const next = val === rating ? 0 : val;
+    setRating(next);
+    if (onChange) onChange(next * 2); // emit on /10 scale
   };
 
-  const handleMouseMove = (e) => {
-    const val = calculateRating(e);
-    setHoverRating(val);
-  };
-
-  const handleClick = (e) => {
-    const val = calculateRating(e);
-    setRating(val);
-    if (onChange) onChange(val); // Gửi giá trị ra ngoài component cha
-  };
-
-  const handleMouseLeave = () => {
-    setHoverRating(0); // Reset hover khi chuột rời đi
-  };
-
-  // Giá trị hiển thị: Nếu đang hover thì lấy hoverRating, nếu không thì lấy rating đã chọn
-  const displayRating = hoverRating > 0 ? hoverRating : rating;
-
-  // Tính % độ rộng của thanh màu
-  const fillPercentage = (displayRating / max) * 100;
-
-  // Màu sắc: Thay đổi màu dựa trên điểm số (tùy chọn)
-  const getColor = (value) => {
-    if (value <= 4) return "bg-red-500";
-    if (value <= 7) return "bg-yellow-500";
-    return "bg-green-500";
+  const getStarColor = (index) => {
+    if (index <= displayed) {
+      if (displayed <= 2) return "text-red-500";
+      if (displayed <= 3) return "text-yellow-400";
+      return "text-yellow-300";
+    }
+    return "text-gray-600";
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4">
-      {/* Hiển thị số điểm */}
-      <div className="flex justify-between mb-2 text-white font-medium">
-        <span>Đánh giá của bạn</span>
-        <span className="text-xl">
-          {displayRating}/{max}
+    <div className="w-full">
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-white font-medium text-sm">Your Rating</span>
+        <span className="text-lg font-bold text-yellow-300">
+          {displayed > 0 ? `${displayed * 2}/10` : "—/10"}
         </span>
       </div>
 
-      {/* Vùng thanh trượt */}
-      <div
-        ref={barRef}
-        className="relative h-4 w-full bg-gray-700 rounded-full cursor-pointer overflow-hidden group"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
-      >
-        {/* Layer 1: Các vạch chia (Grid) - để trang trí */}
-        <div className="absolute inset-0 z-10 flex justify-between px-[1px]">
-          {[...Array(max)].map((_, i) => (
-            <div
-              key={i}
-              className="w-[1px] h-full bg-[#1a1c22]/50 first:hidden"
-            />
-          ))}
-        </div>
+      {/* Stars row */}
+      <div className="flex items-center gap-1">
+        {[...Array(max)].map((_, i) => {
+          const val = i + 1;
+          return (
+            <button
+              key={val}
+              type="button"
+              onClick={() => handleClick(val)}
+              onMouseEnter={() => setHoverRating(val)}
+              onMouseLeave={() => setHoverRating(0)}
+              className={`transition-all duration-100 hover:scale-125 focus:outline-none ${getStarColor(val)}`}
+              aria-label={`Rate ${val * 2} out of 10`}
+            >
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill={val <= displayed ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="drop-shadow-sm"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+          );
+        })}
 
-        {/* Layer 2: Thanh hiển thị (Fill) */}
-        <div
-          className={`h-full transition-all duration-75 ease-out rounded-full ${getColor(displayRating)}`}
-          style={{ width: `${fillPercentage}%` }}
-        />
-
-        {/* Layer 3: Hiệu ứng bóng mờ khi hover (Optional) */}
-        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        {/* Reset button */}
+        {rating > 0 && (
+          <button
+            type="button"
+            onClick={() => { setRating(0); if (onChange) onChange(0); }}
+            className="ml-2 text-gray-500 hover:text-gray-300 text-xs transition-colors"
+            title="Clear rating"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
-      <div className="flex justify-between mt-1 text-xs text-gray-500">
-        <span>0</span>
-        <span>{max}</span>
+      {/* Scale hint */}
+      <div className="flex mt-2 text-xs text-gray-600 gap-1">
+        <span>Bad</span>
+        <span className="flex-1 text-center">···</span>
+        <span>Amazing</span>
       </div>
     </div>
   );
