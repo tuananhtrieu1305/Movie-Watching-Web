@@ -12,7 +12,7 @@ const EpisodeSelector = ({ episodes, currentEpisodeId, onEpisodeClick }) => {
       <div className="p-3 bg-[#202022] border-b border-gray-800">
         <div className="flex justify-between items-center mb-2">
           <span className="text-gray-200 text-sm font-semibold flex items-center gap-2">
-            <UnorderedListOutlined /> Danh sách tập phim
+            <UnorderedListOutlined /> Episode List
           </span>
         </div>
         <Input

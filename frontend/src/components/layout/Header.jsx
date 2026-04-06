@@ -24,10 +24,10 @@ const Header = () => {
   }, []);
 
   const navLinks = [
-    { name: "Trang chủ", path: "/" },
-    { name: "Phim bộ", path: "/series" },
-    { name: "Phim lẻ", path: "/movies" },
-    { name: "Mới nhất", path: "/latest" },
+    { name: "Home", path: "/" },
+    { name: "Series", path: "/movies?type=series" },
+    { name: "Movies", path: "/movies?type=movie" },
+    { name: "Latest", path: "/movies?sort=newest" },
   ];
 
   return (
@@ -54,7 +54,7 @@ const Header = () => {
             <FaSearch className="text-gray-400 text-sm" />
             <input
               type="text"
-              placeholder="Tìm kiếm phim, diễn viên"
+              placeholder="Search movies, actors..."
               className="bg-transparent border-none text-white text-sm w-full focus:outline-none placeholder-gray-500"
             />
           </div>
@@ -95,7 +95,7 @@ const Header = () => {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white hover:text-[#ffdd95] transition-colors"
               >
                 <FaSignInAlt />
-                <span className="hidden sm:inline">Đăng nhập</span>
+                <span className="hidden sm:inline">Sign In</span>
               </Link>
 
               {/* Register Button */}
@@ -104,7 +104,7 @@ const Header = () => {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#ffdd95] text-gray-900 rounded-full hover:bg-[#ffd175] transition-colors shadow-lg hover:shadow-xl"
               >
                 <FaUserPlus />
-                <span className="hidden sm:inline">Đăng ký</span>
+                <span className="hidden sm:inline">Sign Up</span>
               </Link>
             </>
           )}

@@ -37,14 +37,14 @@ const CategorySection = ({ title, movies = [], viewAllLink }) => {
   // Mock data nếu không có movies
   const defaultMovies = Array.from({ length: 6 }, (_, i) => ({
     id: i + 1,
-    title: `Phim ${i + 1}`,
+    title: `Movie ${i + 1}`,
     originalTitle: `Movie ${i + 1}`,
     slug: `movie-${i + 1}`,
     poster: `https://images.unsplash.com/photo-${1536440136628 + i * 100000}-849c177e76a1?w=300&h=450&fit=crop`,
     quality: i % 2 === 0 ? "HD" : "4K",
     year: 2024,
     rating: (7 + Math.random() * 2).toFixed(1),
-    episode: i % 3 === 0 ? `Tập ${i + 1}` : null,
+    episode: i % 3 === 0 ? `Episode ${i + 1}` : null,
   }));
 
   const displayMovies = movies.length > 0 ? movies : defaultMovies;
@@ -55,7 +55,7 @@ const CategorySection = ({ title, movies = [], viewAllLink }) => {
         <h2 className="category-title">{title}</h2>
         {viewAllLink && (
           <Link to={viewAllLink} className="category-view-all">
-            Xem tất cả
+            View All
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
             </svg>

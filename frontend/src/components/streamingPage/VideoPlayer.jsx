@@ -35,7 +35,7 @@ const VideoPlayer = (props) => {
   // 2. Xử lý khi video kết thúc (Auto Next)
   const handleVideoEnded = () => {
     if (settings.autoNext) {
-      message.loading("Tự động chuyển tập tiếp theo sau 3s...", 2);
+      message.loading("Auto-playing next episode in 3s...", 2);
       setTimeout(() => {
         onNextEpisode();
       }, 3000); // Đợi 3 giây rồi chuyển
@@ -45,7 +45,7 @@ const VideoPlayer = (props) => {
   // 3. Hàm cập nhật toggle
   const toggleSetting = (key) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
-    message.success(`Đã ${!settings[key] ? "bật" : "tắt"} ${key}`);
+    message.success(`${key} ${!settings[key] ? "enabled" : "disabled"}`);
   };
 
   return (
@@ -69,9 +69,9 @@ const VideoPlayer = (props) => {
       <div className="bg-[#18181b] p-3 flex flex-wrap items-center justify-between border-b border-gray-800 gap-2">
         <div className="flex items-center gap-4 text-gray-300 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-[#ffdd95] font-bold">Bạn đang xem:</span>
+            <span className="text-[#ffdd95] font-bold">You are watching:</span>
             <span className="text-white font-medium">
-              Tập {currentEpisode.episode_number}
+              Episode {currentEpisode.episode_number}
             </span>
           </div>
           <div className="hidden md:flex items-center gap-4 ml-4 border-l border-gray-700 pl-4">
@@ -124,7 +124,7 @@ const VideoPlayer = (props) => {
             className="!bg-[#ffdd95] !text-[#111] border-[#ffdd95] hover:!bg-[#ffdd95]/80"
             onClick={onNextEpisode}
           >
-            Tập tiếp theo
+            Next Episode
           </Button>
         </div>
       </div>

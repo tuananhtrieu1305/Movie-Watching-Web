@@ -4,7 +4,7 @@ import VideoPlayer from "../../components/streamingPage/VideoPlayer";
 import EpisodeSelector from "../../components/streamingPage/EpisodeSelector";
 import MovieInfo from "../../components/streamingPage/MovieInfo";
 import SeasonSelector from "../../components/streamingPage/SeasonSelector";
-import CommentSection from "../../components/streamingPage/CommentSection";
+import CommentSection from "../../components/comments/CommentSection";
 import RecommendedList from "../../components/streamingPage/RecommendedList";
 import RelatedMovies from "../../components/streamingPage/RelatedMovies";
 import { useWatchPage } from "../../hooks/streaming/useWatchPage";
@@ -112,7 +112,7 @@ const WatchPage = () => {
             className={`mt-8 grid grid-cols-1 xl:grid-cols-12 gap-6 transition-opacity duration-300 ${isLightOff ? "opacity-10" : "opacity-100"}`}
           >
             <div className="xl:col-span-9">
-              <CommentSection />
+             <CommentSection/>
             </div>
 
             <div className="xl:col-span-3">

@@ -51,7 +51,7 @@ const MovieInfo = ({ production }) => {
         {/* 3. Info Grid (Compact) */}
         <div className="space-y-3 text-sm text-gray-400 bg-[#121212] p-3 rounded-lg border border-gray-800/50">
           <div className="flex justify-between items-center pb-2 border-b border-gray-800">
-            <span>Đánh giá:</span>
+            <span>Rating:</span>
             <div className="flex items-center gap-1">
               <span className="text-white font-bold">
                 {production.rating_avg}
@@ -65,20 +65,20 @@ const MovieInfo = ({ production }) => {
             </div>
           </div>
           <div className="flex justify-between">
-            <span>Thời lượng:</span>
+            <span>Duration:</span>
             <span className="text-gray-200">{durationDisplay}</span>
           </div>
           <div className="pt-2 border-t border-gray-800">
             <p className="mb-1">
-              <span className="text-gray-500">Loại:</span>{" "}
+              <span className="text-gray-500">Type:</span>{" "}
               <span className="text-white uppercase">{production.type}</span>
             </p>
             <p className="mb-1">
-              <span className="text-gray-500">Quốc gia:</span>{" "}
+              <span className="text-gray-500">Country:</span>{" "}
               {production.country}
             </p>
             <p>
-              <span className="text-gray-500">Thể loại:</span> {genreNames}
+              <span className="text-gray-500">Genres:</span> {genreNames}
             </p>
           </div>
         </div>
@@ -89,7 +89,7 @@ const MovieInfo = ({ production }) => {
               icon={<AppstoreAddOutlined />}
               className="bg-[#2a2a2d] border-none text-gray-300 w-full hover:!border-[#ffdd95] hover:!text-[#ffdd95]"
             >
-              Chi tiết
+              Details
             </Button>
           </Link>
         </div>
