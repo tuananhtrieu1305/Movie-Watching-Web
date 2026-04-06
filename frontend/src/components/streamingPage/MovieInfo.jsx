@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Button, Rate } from "antd";
 import {
   AppstoreAddOutlined,
@@ -6,30 +7,17 @@ import {
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import useShareUrl from "../../hooks/streaming/useShareUrl";
+import useWatchlist from "../../hooks/streaming/useWatchlist";
 import { calcDurationDisplay } from "../../utils/streaming/common";
-import { useAuth } from "../../modules/auth/hooks/useAuth";
-import { watchlistApi } from "../../modules/user/services/watchlistApi";
 
 const MovieInfo = ({ production }) => {
   const { handleCopyUrl, contextHolder } = useShareUrl();
-  const { accessToken, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const { toggleWatchlist, isInWatchlist, loading } = useWatchlist(
+    production?.id,
+  );
 
   const genreNames = production.genres?.map((g) => g.name).join(", ") || "";
   const durationDisplay = calcDurationDisplay(production);
-
-  const handleAddWatchlist = async () => {
-    if (!isAuthenticated || !accessToken) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      await watchlistApi.addToWatchlist(accessToken, production.id);
-    } catch (error) {
-      console.error("Add watchlist error:", error);
-    }
-  };
 
   return (
     <>
@@ -52,10 +40,11 @@ const MovieInfo = ({ production }) => {
           <Button
             type="primary"
             icon={<HeartFilled />}
-            onClick={handleAddWatchlist}
-            className="!bg-[#ffdd95] border-none !text-[#111] w-full hover:!bg-[#ffdd95]/80"
+            onClick={toggleWatchlist}
+            loading={loading}
+            className={`border-none w-full ${isInWatchlist ? "!bg-red-500 hover:!bg-red-400 !text-white" : "!bg-[#ffdd95] !text-[#111] hover:!bg-[#ffdd95]/80"}`}
           >
-            Add List
+            {isInWatchlist ? "In List" : "Add List"}
           </Button>
           <Button
             icon={<ShareAltOutlined />}

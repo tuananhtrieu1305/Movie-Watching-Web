@@ -1,12 +1,8 @@
-import express from "express";
-import prisma from "./src/core/database/prisma.js";
-
-const app = express();
-app.get("/", (req, res) => res.send("test"));
-
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 async function run() {
-  await prisma.$connect();
-  console.log("Prisma connected");
-  app.listen(3005, () => console.log("Server running"));
+  const mov1 = await prisma.movie.findFirst({ where: { title: 'Test Phim Lẻ' }, include: { episodes: true } });
+  const mov2 = await prisma.movie.findFirst({ where: { title: 'Test Phim Bộ' }, include: { episodes: true } });
+  console.log(JSON.stringify({ mov1, mov2 }, null, 2));
 }
 run();

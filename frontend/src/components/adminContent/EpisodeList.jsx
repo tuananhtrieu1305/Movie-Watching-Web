@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useCallback } from "react";
 import { List, Button, Empty, Spin, Popconfirm, message } from "antd";
 import {
@@ -82,14 +83,30 @@ const EpisodeList = ({ seasonId, onEditEpisode, refreshTrigger }) => {
         >
           <List.Item.Meta
             avatar={
-              <PlayCircleOutlined className="text-xl text-gray-400 mt-2" />
+              <div className="w-16 h-10 bg-black rounded flex items-center justify-center text-white relative overflow-hidden mt-1">
+                {item.thumbnail_url && (
+                  <img
+                    src={item.thumbnail_url}
+                    alt="Thumbnail"
+                    className="w-full h-full object-cover absolute top-0 left-0 opacity-60"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                )}
+                <PlayCircleOutlined className="text-xl z-10" />
+              </div>
             }
             title={
               <span className="font-medium">
                 Tập {item.episode_number}: {item.title}
               </span>
             }
-            description={`${Math.floor(item.duration / 60)} phút - ${item.views_count || 0} views`}
+            description={
+              item.duration >= 60
+                ? `${Math.floor(item.duration / 60)} phút`
+                : `${item.duration} giây`
+            }
           />
         </List.Item>
       )}

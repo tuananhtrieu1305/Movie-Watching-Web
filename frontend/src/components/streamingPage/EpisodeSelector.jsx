@@ -56,9 +56,9 @@ const EpisodeSelector = ({ episodes, currentEpisodeId, onEpisodeClick }) => {
                   </div>
                   {/* Thời lượng (nếu có) */}
                   <div className="text-[10px] text-white mt-0.5 group-hover:text-gray-400">
-                    {ep.duration
-                      ? `${Math.floor(ep.duration / 60)} min`
-                      : "24m"}
+                    {ep.duration >= 60
+                      ? `${Math.floor(ep.duration / 60)} phút`
+                      : `${ep.duration} giây`}
                   </div>
                 </div>
 
