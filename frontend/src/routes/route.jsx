@@ -9,6 +9,7 @@ import BrowsePage from "../modules/discovery/BrowsePage/index";
 import UserLayout from "../modules/user/UserLayout";
 import ProfilePage from "../modules/user/pages/ProfilePage";
 import HistoryPage from "../modules/user/pages/HistoryPage";
+import TransactionsPage from "../modules/user/pages/TransactionsPage";
 import FavoritesPage from "../modules/user/pages/FavoritesPage";
 import NotificationsPage from "../modules/user/pages/NotificationsPage";
 import SettingsPage from "../modules/user/pages/SettingsPage";
@@ -31,6 +32,17 @@ import WatchPageWrapper from "../modules/streaming/WatchPageWrapper";
 import UsersManagement from "../admin/users/UsersManagement";
 import TransactionsManagement from "../admin/transactions/TransactionsManagement";
 import SubscriptionsHistory from "../admin/subscriptions/SubscriptionsHistory";
+import { useAuth } from "../modules/auth/hooks/useAuth";
+
+const RequireAdmin = ({ children }) => {
+  const { isAuthenticated, isBootstrapping, user } = useAuth();
+
+  if (isBootstrapping) return null;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== "admin") return <Navigate to="/" replace />;
+
+  return children;
+};
 
 export const router = createBrowserRouter([
   // --- NHÓM 1: PUBLIC (Có Header/Footer) ---
@@ -76,6 +88,10 @@ export const router = createBrowserRouter([
         element: <HistoryPage />,
       },
       {
+        path: "transactions",
+        element: <TransactionsPage />,
+      },
+      {
         path: "favorites",
         element: <FavoritesPage />,
       },
@@ -100,7 +116,11 @@ export const router = createBrowserRouter([
   // --- NHÓM 2: ADMIN (Giao diện riêng) ---
   {
     path: "/admin",
-    element: <AdminPage />,
+    element: (
+      <RequireAdmin>
+        <AdminPage />
+      </RequireAdmin>
+    ),
     children: [
       {
         index: true,

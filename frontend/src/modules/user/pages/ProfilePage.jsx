@@ -1,98 +1,380 @@
-import React from 'react';
-import { FaUser, FaPencilAlt, FaExclamationTriangle } from 'react-icons/fa';
+import { useEffect, useState } from "react";
+import { FaUser, FaPencilAlt, FaEye, FaEyeSlash, FaCrown } from "react-icons/fa";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { paymentApi } from "../../payment/services/paymentApi";
 
 const ProfilePage = () => {
-    return (
-        <div>
-            {/* Section Title */}
-            <div className="flex items-center gap-2 mb-6">
-                <FaUser className="text-xl text-white" />
-                <h2 className="text-2xl font-bold text-white">Edit Profile</h2>
-            </div>
+  const { user, updateProfile, accessToken } = useAuth();
+  const defaultAvatar =
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&h=300";
 
-            {/* Form Container */}
-            <div className="bg-[#2a2a2d] rounded-lg p-8 grid grid-cols-1 md:grid-cols-3 gap-8 shadow-lg">
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
 
-                {/* --- LEFT COLUMN: INPUTS --- */}
-                <div className="md:col-span-2 space-y-6">
+  const [formData, setFormData] = useState({
+    username: user?.username || "",
+    avatar_url: user?.avatar_url || "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-                    {/* Email Field */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Email Address</label>
-                        <input
-                            type="email"
-                            defaultValue="student@gmail.com"
-                            className="w-full bg-white text-gray-900 rounded px-4 py-2.5 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
-                        />
-                        <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-                            You will be able to change the email ONCE ONLY. So please update your account with your Correct email address.
-                        </p>
-                    </div>
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
-                    {/* Not Verified Warning Box */}
-                    <div className="bg-[#1f1f22] border border-gray-700 rounded p-4 flex gap-3 items-start">
-                        <FaExclamationTriangle className="text-gray-500 mt-1" />
-                        <div>
-                            <h4 className="text-gray-400 font-bold text-sm">Not Verified</h4>
-                            <p className="text-white text-sm mt-1">
-                                Your account has not been verified. <span className="text-yellow-500 cursor-pointer hover:underline">Click here</span> to resend verification email.
-                            </p>
-                        </div>
-                    </div>
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
 
-                    {/* Name Field */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Your Name</label>
-                        <input
-                            type="text"
-                            defaultValue="vinhngu"
-                            className="w-full bg-white text-gray-900 rounded px-4 py-2.5 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
-                        />
-                    </div>
+  useEffect(() => {
+    const fetchCurrentSubscription = async () => {
+      if (!accessToken) {
+        setSubscriptionLoading(false);
+        return;
+      }
 
-                    {/* Joined Date Field (Read Only) */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Joined</label>
-                        <div className="w-full bg-[#1f1f22] text-gray-400 rounded px-4 py-2.5 border border-gray-700">
-                            20/10/2025
-                        </div>
-                    </div>
+      try {
+        const data = await paymentApi.getCurrentSubscription(accessToken);
+        setSubscriptionInfo(data.subscription);
+      } catch {
+        setSubscriptionInfo(null);
+      } finally {
+        setSubscriptionLoading(false);
+      }
+    };
 
-                    {/* Save Button */}
-                    <div className="pt-4">
-                        <button className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2.5 px-6 rounded transition-colors">
-                            Save Changes
-                        </button>
-                    </div>
+    fetchCurrentSubscription();
+  }, [accessToken]);
 
-                </div>
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-                {/* --- RIGHT COLUMN: AVATAR --- */}
-                <div className="md:col-span-1 flex flex-col items-center pt-2">
-                    <div className="relative group cursor-pointer">
-                        {/* Avatar Image */}
-                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#2a2a2d] shadow-xl">
-                            <img
-                                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&h=300"
-                                alt="Avatar"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
-                        {/* Edit Icon Button */}
-                        <div className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg hover:bg-gray-200 transition-colors text-gray-800">
-                            <FaPencilAlt size={14} />
-                        </div>
-                    </div>
+  const validateForm = () => {
+    if (!formData.username && !formData.newPassword && !formData.avatar_url) {
+      setMessage({
+        type: "error",
+        text: "Vui lòng nhập ít nhất một trường (username, avatar hoặc mật khẩu mới)",
+      });
+      return false;
+    }
 
-                    <p className="text-xs text-gray-500 mt-4 text-center">
-                        Click icon to upload new avatar.<br />Max size: 2MB.
-                    </p>
-                </div>
+    if (formData.newPassword && !formData.currentPassword) {
+      setMessage({
+        type: "error",
+        text: "Vui lòng nhập mật khẩu hiện tại để đổi mật khẩu",
+      });
+      return false;
+    }
 
-            </div>
+    if (formData.newPassword !== formData.confirmPassword) {
+      setMessage({
+        type: "error",
+        text: "Mật khẩu xác nhận không khớp",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage({ type: "", text: "" });
+
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const payload = {};
+
+      if (formData.username && formData.username !== user?.username) {
+        payload.username = formData.username;
+      }
+
+      if (formData.newPassword) {
+        payload.password = formData.newPassword;
+      }
+
+      if (formData.avatar_url && formData.avatar_url !== user?.avatar_url) {
+        payload.avatar_url = formData.avatar_url;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        setMessage({ type: "info", text: "Không có thay đổi nào" });
+        setLoading(false);
+        return;
+      }
+
+      await updateProfile(payload);
+      setMessage({
+        type: "success",
+        text: "Cập nhật hồ sơ thành công!",
+      });
+
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error.response?.data?.message || "Cập nhật thất bại",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Section: Profile Info */}
+      <div>
+        <div className="flex items-center gap-2 mb-6">
+          <FaUser className="text-xl text-white" />
+          <h2 className="text-2xl font-bold text-white">Thông tin tài khoản</h2>
         </div>
-    );
+
+        <div className="bg-[#2a2a2d] rounded-lg p-8 grid grid-cols-1 md:grid-cols-3 gap-8 shadow-lg">
+          {/* LEFT: INFO */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Email (Read-only) */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={user?.email || "(Chưa đồng bộ email, đăng xuất/đăng nhập lại)"}
+                disabled
+                className="w-full bg-gray-600 text-gray-300 rounded px-4 py-2.5 outline-none cursor-not-allowed font-medium"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Email không thể thay đổi
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Avatar URL
+              </label>
+              <input
+                type="url"
+                name="avatar_url"
+                value={formData.avatar_url}
+                onChange={handleInputChange}
+                placeholder="https://..."
+                className="w-full bg-white text-gray-900 rounded px-4 py-2.5 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
+              />
+            </div>
+
+            {/* Username */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Tên đăng nhập
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                placeholder="Nhập tên đăng nhập mới"
+                className="w-full bg-white text-gray-900 rounded px-4 py-2.5 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
+              />
+            </div>
+
+            {/* Joined Date */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Ngày tham gia
+              </label>
+              <div className="w-full bg-[#1f1f22] text-gray-400 rounded px-4 py-2.5 border border-gray-700">
+                {user?.created_at
+                  ? new Date(user.created_at).toLocaleDateString("vi-VN")
+                  : "N/A"}
+              </div>
+            </div>
+
+            {/* Current VIP Plan */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Gói đang sử dụng
+              </label>
+              <div className="w-full bg-[#1f1f22] text-gray-300 rounded px-4 py-2.5 border border-gray-700 flex items-center gap-2">
+                <FaCrown className="text-yellow-400" />
+                {subscriptionLoading
+                  ? "Đang tải..."
+                  : subscriptionInfo?.hasActiveSubscription
+                    ? `${subscriptionInfo.planName || "VIP"} (${subscriptionInfo.planCode?.toUpperCase() || "VIP"})`
+                    : "Free"}
+              </div>
+            </div>
+
+            {/* Remaining VIP Days */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Số ngày VIP còn lại
+              </label>
+              <div className="w-full bg-[#1f1f22] text-gray-300 rounded px-4 py-2.5 border border-gray-700">
+                {subscriptionLoading
+                  ? "Đang tải..."
+                  : subscriptionInfo?.hasActiveSubscription
+                    ? `${subscriptionInfo.remainingDays} ngày`
+                    : "0 ngày"}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: AVATAR */}
+          <div className="md:col-span-1 flex flex-col items-center pt-2">
+            <div className="relative group cursor-pointer">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#2a2a2d] shadow-xl">
+                <img
+                  src={formData.avatar_url || user?.avatar_url || defaultAvatar}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg hover:bg-gray-200 transition-colors text-gray-800">
+                <FaPencilAlt size={14} />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-4 text-center">
+              Click biểu tượng để tải ảnh đại diện mới.
+              <br />
+              Tối đa 2MB.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Section: Change Password */}
+      <div>
+        <div className="flex items-center gap-2 mb-6">
+          <FaUser className="text-xl text-white" />
+          <h2 className="text-2xl font-bold text-white">Thay đổi mật khẩu</h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-[#2a2a2d] rounded-lg p-8 shadow-lg max-w-2xl">
+          {/* Message */}
+          {message.text && (
+            <div
+              className={`mb-6 p-4 rounded-lg text-sm font-medium ${
+                message.type === "success"
+                  ? "bg-green-500/20 text-green-300 border border-green-500"
+                  : message.type === "error"
+                    ? "bg-red-500/20 text-red-300 border border-red-500"
+                    : "bg-blue-500/20 text-blue-300 border border-blue-500"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+
+          <div className="space-y-5">
+            {/* Current Password */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Mật khẩu hiện tại
+              </label>
+              <div className="relative">
+                <input
+                  type={showPasswords.current ? "text" : "password"}
+                  name="currentPassword"
+                  value={formData.currentPassword}
+                  onChange={handleInputChange}
+                  placeholder="Nhập mật khẩu hiện tại"
+                  className="w-full bg-white text-gray-900 rounded px-4 py-2.5 pr-10 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("current")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900"
+                >
+                  {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Mật khẩu mới
+              </label>
+              <div className="relative">
+                <input
+                  type={showPasswords.new ? "text" : "password"}
+                  name="newPassword"
+                  value={formData.newPassword}
+                  onChange={handleInputChange}
+                  placeholder="Nhập mật khẩu mới"
+                  className="w-full bg-white text-gray-900 rounded px-4 py-2.5 pr-10 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("new")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900"
+                >
+                  {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Xác nhận mật khẩu mới
+              </label>
+              <div className="relative">
+                <input
+                  type={showPasswords.confirm ? "text" : "password"}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Xác nhận mật khẩu mới"
+                  className="w-full bg-white text-gray-900 rounded px-4 py-2.5 pr-10 outline-none focus:ring-2 focus:ring-yellow-500 font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("confirm")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900"
+                >
+                  {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-yellow-500 hover:bg-yellow-400 disabled:bg-yellow-600 disabled:cursor-not-allowed text-black font-bold py-2.5 px-6 rounded transition-colors"
+              >
+                {loading ? "Đang cập nhật..." : "Lưu thay đổi"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default ProfilePage;

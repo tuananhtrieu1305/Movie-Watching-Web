@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -9,10 +8,11 @@ import {
   FaSignInAlt,
 } from "react-icons/fa";
 import UserMenu from "../common/UserMenu";
+import { useAuth } from "../../modules/auth/hooks/useAuth";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // State quản lý trạng thái đăng nhập
+  const { isAuthenticated, isBootstrapping } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -39,9 +39,7 @@ const Header = () => {
       }`}
     >
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
-        {/* --- LEFT: Logo & Search & Nav --- */}
         <div className="flex items-center gap-6">
-          {/* Logo */}
           <Link
             to="/"
             className="text-2xl font-black text-[#ffdd95] tracking-tight hover:opacity-90 transition-opacity"
@@ -49,7 +47,6 @@ const Header = () => {
             NETFLICK
           </Link>
 
-          {/* Search Bar - Ngay sau Logo, kiểu như RoPhim */}
           <div className="hidden sm:flex items-center bg-gray-800/80 rounded-full px-4 py-2 gap-2 min-w-[200px] lg:min-w-[280px]">
             <FaSearch className="text-gray-400 text-sm" />
             <input
@@ -59,7 +56,6 @@ const Header = () => {
             />
           </div>
 
-          {/* Desktop Menu */}
           <nav className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
@@ -77,9 +73,8 @@ const Header = () => {
           </nav>
         </div>
 
-        {/* --- RIGHT: Auth buttons or User Menu --- */}
         <div className="flex items-center gap-4">
-          {isLoggedIn ? (
+          {isBootstrapping ? null : isAuthenticated ? (
             <>
               <button className="relative p-2 text-gray-300 hover:text-white transition-colors">
                 <FaBell className="text-xl" />
@@ -98,7 +93,6 @@ const Header = () => {
                 <span className="hidden sm:inline">Sign In</span>
               </Link>
 
-              {/* Register Button */}
               <Link
                 to="/register"
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#ffdd95] text-gray-900 rounded-full hover:bg-[#ffd175] transition-colors shadow-lg hover:shadow-xl"

@@ -6,18 +6,18 @@ import {
   ManOutlined,
   WomanOutlined,
 } from "@ant-design/icons";
-import Paragraph from "antd/es/skeleton/Paragraph";
 const ActorDetailModal = (props) => {
   const { selectedActor, setSelectedActor } = props;
+  console.log(selectedActor);
 
   const renderGender = (gender) => {
-    if (gender === "Female")
+    if (gender === "Female" || gender === "female")
       return (
         <Tag icon={<WomanOutlined />} color="magenta">
           Nữ
         </Tag>
       );
-    if (gender === "Male")
+    if (gender === "Male" || gender === "male")
       return (
         <Tag icon={<ManOutlined />} color="blue">
           Nam
@@ -72,7 +72,8 @@ const ActorDetailModal = (props) => {
               {selectedActor.birth_date && (
                 <Descriptions.Item label="Sinh nhật">
                   <span className="flex items-center gap-2">
-                    <CalendarOutlined /> {selectedActor.birth_date}
+                    <CalendarOutlined />{" "}
+                    {selectedActor.birth_date.substring(0, 10)}
                   </span>
                 </Descriptions.Item>
               )}
@@ -89,9 +90,9 @@ const ActorDetailModal = (props) => {
               <h4 className="font-bold  mb-2 border-b pb-1">Tiểu sử</h4>
               <div className=" p-3 rounded-lg border border-gray-100 max-h-[250px] overflow-y-auto custom-scrollbar">
                 {selectedActor.bio ? (
-                  <Paragraph className="text-gray-600 text-justify mb-0 whitespace-pre-wrap">
+                  <span className="text-white text-justify mb-0 whitespace-pre-wrap">
                     {selectedActor.bio}
-                  </Paragraph>
+                  </span>
                 ) : (
                   <span className="text-gray-400 italic">
                     Chưa có thông tin tiểu sử.
