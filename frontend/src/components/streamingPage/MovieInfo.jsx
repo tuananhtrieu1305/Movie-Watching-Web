@@ -1,15 +1,20 @@
+/* eslint-disable no-unused-vars */
 import { Button, Rate } from "antd";
 import {
   AppstoreAddOutlined,
   HeartFilled,
   ShareAltOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useShareUrl from "../../hooks/streaming/useShareUrl";
+import useWatchlist from "../../hooks/streaming/useWatchlist";
 import { calcDurationDisplay } from "../../utils/streaming/common";
 
 const MovieInfo = ({ production }) => {
   const { handleCopyUrl, contextHolder } = useShareUrl();
+  const { toggleWatchlist, isInWatchlist, loading } = useWatchlist(
+    production?.id,
+  );
 
   const genreNames = production.genres?.map((g) => g.name).join(", ") || "";
   const durationDisplay = calcDurationDisplay(production);
@@ -35,9 +40,11 @@ const MovieInfo = ({ production }) => {
           <Button
             type="primary"
             icon={<HeartFilled />}
-            className="!bg-[#ffdd95] border-none !text-[#111] w-full hover:!bg-[#ffdd95]/80"
+            onClick={toggleWatchlist}
+            loading={loading}
+            className={`border-none w-full ${isInWatchlist ? "!bg-red-500 hover:!bg-red-400 !text-white" : "!bg-[#ffdd95] !text-[#111] hover:!bg-[#ffdd95]/80"}`}
           >
-            Add List
+            {isInWatchlist ? "In List" : "Add List"}
           </Button>
           <Button
             icon={<ShareAltOutlined />}

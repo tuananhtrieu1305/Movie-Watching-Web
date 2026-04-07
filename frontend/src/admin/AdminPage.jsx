@@ -138,11 +138,12 @@ const AdminPage = () => {
         className="shadow-sm transition-all duration-300 ease-in-out transform-gpu will-change-transform"
       >
         <div className="flex items-center justify-center h-16">
-          {collapsed ? (
-            <img src={Logo_Icon} alt="Icon" className="h-8" />
-          ) : (
-            <Logo theme={"dark"} />
-          )}
+          <Link
+            to="/"
+            className="text-2xl font-black !text-[#ffdd95] tracking-tight hover:opacity-90 transition-opacity"
+          >
+            NETFLICK
+          </Link>
         </div>
         <Menu
           theme="dark"

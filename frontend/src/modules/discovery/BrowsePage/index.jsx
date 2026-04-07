@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { TYPES, COUNTRIES, SORT_OPTIONS } from "./constants";
 import { MOCK_MOVIES } from "./mockData";
@@ -9,7 +9,6 @@ import { MovieGrid } from "./components/MovieGrid";
 export default function BrowsePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const prevPathname = useRef(location.pathname);
 
   // Initialize state from URL
   const [selectedGenres, setSelectedGenres] = useState(() => {
@@ -57,18 +56,52 @@ export default function BrowsePage() {
     setSearchParams,
   ]);
 
-  // Handle path changes (e.g., clicking 'Series' in header while on /movies)
-  // Only resets type if the path actually changes and no type is in URL
+  // Handle path or search changes from external navigation (e.g., Header links)
+
   useEffect(() => {
-    if (prevPathname.current !== location.pathname) {
-      const typeParam = searchParams.get("type");
-      if (!typeParam) {
-        if (location.pathname.includes("/series")) setSelectedType("series");
-        else setSelectedType(null); // Defaults to All for /movies or others
-      }
-      prevPathname.current = location.pathname;
+    const urlGenres = searchParams.get("genre")
+      ? searchParams.get("genre").split(",")
+      : [];
+    const urlType =
+      searchParams.get("type") ||
+      (location.pathname.includes("/series") ? "series" : null);
+    const urlCountry = searchParams.get("country") || null;
+    const urlLang = searchParams.get("lang") || null;
+    const urlSort = searchParams.get("sort") || "trending";
+    const urlTrending = searchParams.get("trending") === "true";
+
+    if (
+      urlGenres.join(",") !== selectedGenres.join(",") ||
+      urlType !== selectedType ||
+      urlCountry !== selectedCountry ||
+      urlLang !== selectedLanguage ||
+      urlSort !== sortBy ||
+      urlTrending !== onlyTrending
+    ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedGenres(urlGenres);
+
+      setSelectedType(urlType);
+
+      setSelectedCountry(urlCountry);
+
+      setSelectedLanguage(urlLang);
+
+      setSortBy(urlSort);
+
+      setOnlyTrending(urlTrending);
     }
-  }, [location.pathname, searchParams]);
+  }, [
+    location.search,
+    location.pathname,
+    selectedGenres,
+    selectedType,
+    selectedCountry,
+    selectedLanguage,
+    sortBy,
+    onlyTrending,
+    searchParams,
+  ]);
 
   const toggleGenre = (g) =>
     setSelectedGenres((prev) =>
@@ -78,7 +111,9 @@ export default function BrowsePage() {
   const results = useMemo(() => {
     let list = MOCK_MOVIES;
     if (selectedGenres.length)
-      list = list.filter((m) => selectedGenres.some((g) => m.genre.includes(g)));
+      list = list.filter((m) =>
+        selectedGenres.some((g) => m.genre.includes(g)),
+      );
     if (selectedType) list = list.filter((m) => m.type === selectedType);
     if (selectedCountry)
       list = list.filter((m) => m.country === selectedCountry);
@@ -102,7 +137,10 @@ export default function BrowsePage() {
   ]);
 
   const activeFilters = [
-    ...selectedGenres.map((g) => ({ label: g, onRemove: () => toggleGenre(g) })),
+    ...selectedGenres.map((g) => ({
+      label: g,
+      onRemove: () => toggleGenre(g),
+    })),
     ...(selectedType
       ? [
           {

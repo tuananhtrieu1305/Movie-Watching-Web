@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Avatar, Button } from "antd";
 import { UserOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import AnonymousAvatar from "../../assets/anonymous.png";
@@ -7,6 +7,7 @@ import ActorDetailModal from "./ActorDetailModal";
 const ActorList = ({ actors }) => {
   const scrollRef = useRef(null);
   const [selectedActor, setSelectedActor] = useState(null);
+  console.log(actors);
 
   // Hàm xử lý cuộn
   const scroll = (direction) => {

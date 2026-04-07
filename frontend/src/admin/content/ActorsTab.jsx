@@ -3,7 +3,7 @@ import {
   MinusCircleOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { Button, Form, Input, Select } from "antd";
+import { Button, Form, Input } from "antd";
 
 const ActorsTab = () => {
   return (

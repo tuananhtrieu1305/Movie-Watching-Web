@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Input,
@@ -9,10 +9,10 @@ import {
   Row,
   Col,
   Statistic,
-  DatePicker,
   Button,
   Modal,
   Descriptions,
+  message,
 } from "antd";
 import {
   SearchOutlined,
@@ -22,124 +22,56 @@ import {
   ClockCircleOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
+import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { adminApi } from "../services/adminApi";
 
 const { Search } = Input;
 const { Option } = Select;
-const { RangePicker } = DatePicker;
-
-// Mock data based on database schema
-const mockTransactions = [
-  {
-    id: 1,
-    transaction_code: "TXN001",
-    user_id: 2,
-    username: "john_doe",
-    plan_name: "VIP Basic 1 Tháng",
-    amount: 99000,
-    discount_amount: 30000,
-    final_amount: 69000,
-    status: "success",
-    payment_method: "momo",
-    vip_start_date: "2024-01-01 00:00:00",
-    vip_end_date: "2024-01-31 23:59:59",
-    created_at: "2024-01-01 03:30:00",
-  },
-  {
-    id: 2,
-    transaction_code: "TXN002",
-    user_id: 3,
-    username: "jane_smith",
-    plan_name: "VIP Pro 6 Tháng",
-    amount: 540000,
-    discount_amount: 141000,
-    final_amount: 399000,
-    status: "success",
-    payment_method: "vnpay",
-    vip_start_date: "2024-01-02 00:00:00",
-    vip_end_date: "2024-07-01 23:59:59",
-    created_at: "2024-01-02 07:20:00",
-  },
-  {
-    id: 3,
-    transaction_code: "TXN003",
-    user_id: 4,
-    username: "michael_brown",
-    plan_name: "VIP Premium 1 Năm",
-    amount: 990000,
-    discount_amount: 291000,
-    final_amount: 699000,
-    status: "success",
-    payment_method: "credit_card",
-    vip_start_date: "2024-01-03 00:00:00",
-    vip_end_date: "2025-01-02 23:59:59",
-    created_at: "2024-01-03 09:45:00",
-  },
-  {
-    id: 4,
-    transaction_code: "TXN004",
-    user_id: 5,
-    username: "sarah_jones",
-    plan_name: "VIP Basic 1 Tháng",
-    amount: 99000,
-    discount_amount: 30000,
-    final_amount: 69000,
-    status: "pending",
-    payment_method: "zalopay",
-    vip_start_date: null,
-    vip_end_date: null,
-    created_at: "2024-01-04 04:15:00",
-  },
-  {
-    id: 5,
-    transaction_code: "TXN005",
-    user_id: 6,
-    username: "david_wilson",
-    plan_name: "VIP Pro 6 Tháng",
-    amount: 540000,
-    discount_amount: 141000,
-    final_amount: 399000,
-    status: "failed",
-    payment_method: "momo",
-    vip_start_date: null,
-    vip_end_date: null,
-    created_at: "2024-01-05 02:30:00",
-  },
-  {
-    id: 6,
-    transaction_code: "TXN006",
-    user_id: 7,
-    username: "lisa_taylor",
-    plan_name: "VIP Basic 1 Tháng",
-    amount: 99000,
-    discount_amount: 30000,
-    final_amount: 69000,
-    status: "cancelled",
-    payment_method: "vnpay",
-    vip_start_date: null,
-    vip_end_date: null,
-    created_at: "2024-01-06 06:20:00",
-  },
-];
 
 const TransactionsManagement = () => {
-  const [transactions] = useState(mockTransactions);
-  const [loading] = useState(false);
+  const { accessToken } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  // Filter transactions
-  const filteredTransactions = transactions.filter((t) => {
-    const matchSearch =
-      t.transaction_code.toLowerCase().includes(searchText.toLowerCase()) ||
-      t.username.toLowerCase().includes(searchText.toLowerCase());
+  const loadTransactions = async () => {
+    if (!accessToken) return;
+
+    setLoading(true);
+    try {
+      const data = await adminApi.getTransactions(accessToken);
+      const normalized = (data.transactions || []).map((item) => ({
+        ...item,
+        username: item.users?.username || "-",
+        plan_name: item.subscription_plans?.name || "-",
+      }));
+      setTransactions(normalized);
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không tải được danh sách giao dịch");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTransactions();
+  }, [accessToken]);
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((t) => {
+      const matchSearch =
+        t.transaction_code.toLowerCase().includes(searchText.toLowerCase()) ||
+        t.username.toLowerCase().includes(searchText.toLowerCase());
     const matchStatus = statusFilter === "all" || t.status === statusFilter;
     const matchMethod =
       methodFilter === "all" || t.payment_method === methodFilter;
     return matchSearch && matchStatus && matchMethod;
-  });
+    });
+  }, [transactions, searchText, statusFilter, methodFilter]);
 
   // Statistics
   const stats = {
@@ -183,7 +115,7 @@ const TransactionsManagement = () => {
         text: "Đã hủy",
       },
     };
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.pending;
     return (
       <Tag color={config.color} icon={config.icon}>
         {config.text}
@@ -205,7 +137,7 @@ const TransactionsManagement = () => {
       zalopay: "ZaloPay",
       credit_card: "Thẻ tín dụng",
     };
-    return <Tag color={colors[method]}>{labels[method]}</Tag>;
+    return <Tag color={colors[method] || "default"}>{labels[method] || method}</Tag>;
   };
 
   // View transaction details
@@ -356,12 +288,8 @@ const TransactionsManagement = () => {
             onChange={setMethodFilter}
           >
             <Option value="all">Tất cả PT</Option>
-            <Option value="momo">MoMo</Option>
             <Option value="vnpay">VNPay</Option>
-            <Option value="zalopay">ZaloPay</Option>
-            <Option value="credit_card">Thẻ tín dụng</Option>
           </Select>
-          <RangePicker placeholder={["Từ ngày", "Đến ngày"]} />
         </Space>
       </Card>
 
@@ -373,7 +301,7 @@ const TransactionsManagement = () => {
           rowKey="id"
           loading={loading}
           pagination={{
-            pageSize: 3,
+            pageSize: 8,
             showSizeChanger: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} của ${total} giao dịch`,

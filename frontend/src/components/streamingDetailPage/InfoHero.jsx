@@ -1,5 +1,6 @@
 import { Button } from "antd";
 import {
+  CheckOutlined,
   PlayCircleFilled,
   PlusOutlined,
   ShareAltOutlined,
@@ -16,6 +17,7 @@ import {
 import ActorList from "../../components/adminContent/ActorList";
 import DescriptionBox from "../../components/adminContent/DescriptionBox";
 import useShareUrl from "../../hooks/streaming/useShareUrl";
+import useWatchlist from "../../hooks/streaming/useWatchlist";
 import {
   calcDurationDisplay,
   createWatchNowUrl,
@@ -23,13 +25,16 @@ import {
 
 const InfoHero = ({ production }) => {
   const { handleCopyUrl, contextHolder } = useShareUrl();
+  const { toggleWatchlist, isInWatchlist, loading } = useWatchlist(
+    production?.id,
+  );
   if (!production) return null;
+
+  console.log(production);
 
   let firstEpLink = createWatchNowUrl(production);
 
   const durationDisplay = calcDurationDisplay(production);
-
-
 
   return (
     <>
@@ -66,9 +71,7 @@ const InfoHero = ({ production }) => {
 
               {/* Tags Row */}
               <div className="flex flex-wrap items-center gap-3">
-                <PremiumTag>
-                  {production.is_premium ? "VIP" : "Free"}
-                </PremiumTag>
+                <PremiumTag isPremium={production.is_premium} />
                 <StatusTag status={production.status} />
                 <TypeTag type={production.type} />
                 <span className="text-white font-medium flex items-center gap-1 text-sm">
@@ -96,10 +99,12 @@ const InfoHero = ({ production }) => {
                 <Button
                   shape="round"
                   size="large"
-                  icon={<PlusOutlined />}
-                  className="bg-white/10 text-white border-white/20 hover:!bg-white/20 hover:!text-[#ffdd95] font-bold px-6 h-12 text-lg backdrop-blur-md hover:!border-[#ffdd95]"
+                  onClick={toggleWatchlist}
+                  loading={loading}
+                  icon={isInWatchlist ? <CheckOutlined /> : <PlusOutlined />}
+                  className={`border-white/20 font-bold px-6 h-12 text-lg backdrop-blur-md ${isInWatchlist ? "bg-red-500/20 text-red-500 hover:!bg-red-500/40 hover:!text-red-400 hover:!border-red-400" : "bg-white/10 text-white hover:!bg-white/20 hover:!text-[#ffdd95] hover:!border-[#ffdd95]"}`}
                 >
-                  Add to List
+                  {isInWatchlist ? "In List" : "Add to List"}
                 </Button>
                 <Button
                   shape="round"
@@ -116,9 +121,7 @@ const InfoHero = ({ production }) => {
               <DescriptionBox description={production.description} />
 
               {/* Actor List */}
-              <h2 className="text-white font-bold text-lg mt-6 mb-2">
-                Cast
-              </h2>
+              <h2 className="text-white font-bold text-lg mt-6 mb-2">Cast</h2>
               <ActorList actors={production.actors} />
             </div>
 
