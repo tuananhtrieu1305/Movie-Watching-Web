@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FaUser,
@@ -9,14 +9,13 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 import { FaCrown } from "react-icons/fa6";
+import defaultAvatar from "../../assets/anonymous.png";
 import { useAuth } from "../../modules/auth/hooks/useAuth";
 
 const UserMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const { user, logout } = useAuth();
-  const defaultAvatar =
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100";
 
   // Xử lý click ra ngoài thì đóng menu
   useEffect(() => {
@@ -34,7 +33,6 @@ const UserMenu = () => {
     { icon: <FaHistory />, label: "History", path: "/user/history" },
     { icon: <FaHeart />, label: "Favorites", path: "/user/favorites" },
     { icon: <FaCrown />, label: "Upgrade to VIP", path: "/user/plans" },
-    { icon: <FaBell />, label: "Notifications", path: "/user/notifications" },
     { icon: <FaCog />, label: "Settings", path: "/user/settings" },
   ];
 

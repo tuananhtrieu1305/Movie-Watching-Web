@@ -1,7 +1,6 @@
 import {
   AppstoreOutlined,
   ExceptionOutlined,
-  TeamOutlined,
   UserOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -13,8 +12,6 @@ import {
 import { Layout, Menu, Dropdown, Space, Avatar } from "antd";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import React, { useState, memo } from "react";
-import Logo from "../components/Logo";
-import Logo_Icon from "../assets/react.svg";
 import AnonymousAvatar from "../assets/anonymous.png";
 
 const { Content, Sider, Header: AntHeader } = Layout;
@@ -35,7 +32,7 @@ const MemoizedHeader = memo(({ collapsed, onToggle }) => {
     },
   ];
 
-  const urlAvatar = ``;
+  const urlAvatar = `https://marketplace.canva.com/tXH-Q/MAG7IGtXH-Q/1/tl/canva-MAG7IGtXH-Q.jpg`;
 
   return (
     <AntHeader className="!p-0 flex items-center justify-between shadow-sm sticky top-0 z-10 ">
@@ -85,7 +82,6 @@ const AdminPage = () => {
       transactions: "transactions",
       subscriptions: "subscriptions",
       content: "content",
-      community: "community",
     };
     return keyMap[lastSegment] || "analytics";
   };
@@ -118,11 +114,6 @@ const AdminPage = () => {
       key: "content",
       icon: <ExceptionOutlined />,
     },
-    {
-      label: <Link to="/admin/community">Community Management</Link>,
-      key: "community",
-      icon: <TeamOutlined />,
-    },
   ];
 
   const handleToggle = () => setCollapsed(!collapsed);
@@ -137,12 +128,16 @@ const AdminPage = () => {
         theme="dark"
         className="shadow-sm transition-all duration-300 ease-in-out transform-gpu will-change-transform"
       >
-        <div className="flex items-center justify-center h-16">
+        <div className="flex items-center justify-center h-16 overflow-hidden">
           <Link
             to="/"
-            className="text-2xl font-black !text-[#ffdd95] tracking-tight hover:opacity-90 transition-opacity"
+            className="flex items-center justify-center text-2xl font-black !text-[#ffdd95] tracking-tight hover:opacity-90 transition-opacity"
           >
-            NETFLICK
+            {collapsed ? (
+              <img src="/vite.svg" alt="Logo" className="w-8 h-8" />
+            ) : (
+              "NETFLICK"
+            )}
           </Link>
         </div>
         <Menu
