@@ -76,11 +76,6 @@ const Header = () => {
         <div className="flex items-center gap-4">
           {isBootstrapping ? null : isAuthenticated ? (
             <>
-              <button className="relative p-2 text-gray-300 hover:text-white transition-colors">
-                <FaBell className="text-xl" />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-gray-900"></span>
-              </button>
-
               <UserMenu />
             </>
           ) : (

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
@@ -14,7 +15,8 @@ const HeroSlider = () => {
       slug: "the-dark-knight",
       description:
         "Hai anh em cùng cha khác mẹ, Jonny và James, đã xa cách từ lâu, buộc phải tái ngộ sau cái chết đầy bí ẩn của người cha. Trong hành trình tìm kiếm sự thật, những bí mật bị chôn vùi dần lộ diện, hé mở một âm mưu có thể xé rạch gia đình họ mãi mãi.",
-      backdrop: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920",
+      backdrop:
+        "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920",
       rating: 6.5,
       year: 2024,
       duration: "2h 04m",
@@ -37,7 +39,8 @@ const HeroSlider = () => {
       slug: "inception",
       description:
         "Gru và gia đình đối mặt với một kẻ thù mới đầy nguy hiểm trong cuộc phiêu lưu hoành tráng nhất từ trước đến nay. Cùng với đội quân Minions trung thành, họ phải ngăn chặn một âm mưu đe dọa cả thế giới.",
-      backdrop: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=1920",
+      backdrop:
+        "https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=1920",
       rating: 7.2,
       year: 2024,
       duration: "1h 34m",
@@ -60,7 +63,8 @@ const HeroSlider = () => {
       slug: "parasite",
       description:
         "Quay trở lại ngày đầu tiên của cuộc xâm lược, khi thế giới biết đến những sinh vật săn mồi bằng âm thanh. Một cô gái phải tìm cách sống sót trong thành phố New York đầy hỗn loạn và chết chóc.",
-      backdrop: "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=1920",
+      backdrop:
+        "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=1920",
       rating: 7.8,
       year: 2024,
       duration: "1h 39m",
@@ -83,7 +87,8 @@ const HeroSlider = () => {
       slug: "spirited-away",
       description:
         "Wade Wilson đối mặt với một mối đe dọa lớn hơn bao giờ hết và phải hợp tác với một phiên bản Wolverine từ vũ trụ khác. Cùng nhau, họ phải ngăn chặn một kế hoạch có thể hủy diệt đa vũ trụ.",
-      backdrop: "https://images.unsplash.com/photo-1549989476-69a92fa57c36?w=1920",
+      backdrop:
+        "https://images.unsplash.com/photo-1549989476-69a92fa57c36?w=1920",
       rating: 8.5,
       year: 2024,
       duration: "2h 08m",
@@ -106,7 +111,8 @@ const HeroSlider = () => {
       slug: "avengers-endgame",
       description:
         "Paul Atreides đoàn tụ với Chani và người Fremen trong cuộc hành trình báo thù những kẻ đã hủy hoại gia đình mình. Đối mặt với sự lựa chọn giữa tình yêu và số phận của vũ trụ, anh phải ngăn chặn một tương lai khủng khiếp mà chỉ mình anh có thể nhìn thấy.",
-      backdrop: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920",
+      backdrop:
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920",
       rating: 8.9,
       year: 2024,
       duration: "2h 46m",
@@ -161,11 +167,13 @@ const HeroSlider = () => {
 
   return (
     <div className="hero-slider">
-      <div 
-        className="hero-slides-container" 
-        style={{ 
+      <div
+        className="hero-slides-container"
+        style={{
           transform: `translateX(-${currentIndex * 100}%)`,
-          transition: isTransitioning ? 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
+          transition: isTransitioning
+            ? "transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
+            : "none",
         }}
       >
         {slidesWithClone.map((movie, index) => (
@@ -188,7 +196,9 @@ const HeroSlider = () => {
                   <span className="meta-badge meta-imdb">
                     <span className="imdb-label">IMDb</span> {movie.rating}
                   </span>
-                  <span className="meta-badge meta-quality">{movie.quality}</span>
+                  <span className="meta-badge meta-quality">
+                    {movie.quality}
+                  </span>
                   <span className="meta-badge meta-age">{movie.ageRating}</span>
                   <span className="meta-text">{movie.year}</span>
                   <span className="meta-text">{movie.duration}</span>
@@ -197,7 +207,11 @@ const HeroSlider = () => {
                 {/* Genres */}
                 <div className="hero-genres">
                   {movie.genres.map((genre, idx) => (
-                    <Link key={idx} to={`/movies?genre=${genre}`} className="genre-tag">
+                    <Link
+                      key={idx}
+                      to={`/movies?genre=${genre}`}
+                      className="genre-tag"
+                    >
                       {genre}
                     </Link>
                   ))}
@@ -208,19 +222,39 @@ const HeroSlider = () => {
 
                 {/* Action Buttons */}
                 <div className="hero-actions">
-                  <Link to={`/watch/${movie.slug}`} className="hero-btn hero-btn-play">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <Link
+                    to={`/watch/${movie.slug}`}
+                    className="hero-btn hero-btn-play"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M8 5v14l11-7z" />
                     </svg>
                     <span>Watch Now</span>
                   </Link>
                   <button className="hero-btn hero-btn-secondary">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                     </svg>
                   </button>
                   <button className="hero-btn hero-btn-secondary">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                     </svg>
                   </button>

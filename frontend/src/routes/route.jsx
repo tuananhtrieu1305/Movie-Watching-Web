@@ -26,7 +26,6 @@ import CheckoutPage from "../modules/payment/pages/CheckoutPage";
 import AdminPage from "../admin/AdminPage";
 import AnalyticsDashboard from "../admin/analytics/AnalyticsDashboard";
 import ContentTable from "../admin/content/ContentTable";
-import Test3 from "../admin/community/Test";
 import NotFoundPage from "../components/streamingPage/NotFoundPage";
 import WatchPageWrapper from "../modules/streaming/WatchPageWrapper";
 import UsersManagement from "../admin/users/UsersManagement";
@@ -141,10 +140,6 @@ export const router = createBrowserRouter([
       {
         path: "/admin/content",
         element: <ContentTable />,
-      },
-      {
-        path: "community",
-        element: <Test3 />,
       },
     ],
   },
