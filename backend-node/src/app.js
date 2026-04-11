@@ -20,7 +20,7 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: [allowedOrigins, "https://netflick.fun"],
     credentials: true,
   }),
 );
