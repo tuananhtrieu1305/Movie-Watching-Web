@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { TYPES, COUNTRIES, SORT_OPTIONS } from "./constants";
 import { MOCK_MOVIES } from "./mockData";
@@ -11,102 +11,67 @@ export default function BrowsePage() {
   const location = useLocation();
 
   // Initialize state from URL
-  const [selectedGenres, setSelectedGenres] = useState(() => {
+  const selectedGenres = useMemo(() => {
     const genres = searchParams.get("genre");
     return genres ? genres.split(",") : [];
-  });
+  }, [searchParams]);
 
-  const [selectedType, setSelectedType] = useState(() => {
+  const selectedType = useMemo(() => {
     const typeParam = searchParams.get("type");
     if (typeParam) return typeParam;
     if (location.pathname.includes("/series")) return "series";
-    // Defaults to null (All) for /movies or other paths
     return null;
-  });
+  }, [searchParams, location.pathname]);
 
-  const [selectedCountry, setSelectedCountry] = useState(
-    searchParams.get("country") || null,
-  );
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    searchParams.get("lang") || null,
-  );
-  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "trending");
-  const [onlyTrending, setOnlyTrending] = useState(
-    searchParams.get("trending") === "true",
-  );
+  const selectedCountry = searchParams.get("country");
+  const selectedLanguage = searchParams.get("lang");
+  const sortBy = searchParams.get("sort") || "trending";
+  const onlyTrending = searchParams.get("trending") === "true";
 
-  // Update URL when state changes
-  useEffect(() => {
-    const params = {};
-    if (selectedGenres.length) params.genre = selectedGenres.join(",");
-    if (selectedType) params.type = selectedType;
-    if (selectedCountry) params.country = selectedCountry;
-    if (selectedLanguage) params.lang = selectedLanguage;
-    if (sortBy !== "trending") params.sort = sortBy;
-    if (onlyTrending) params.trending = "true";
+  // Helper method to update URLSearchParams
+  const updateFilters = (updates) => {
+    const newParams = new URLSearchParams(searchParams);
 
-    setSearchParams(params, { replace: true });
-  }, [
-    selectedGenres,
-    selectedType,
-    selectedCountry,
-    selectedLanguage,
-    sortBy,
-    onlyTrending,
-    setSearchParams,
-  ]);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (
+        value === null ||
+        value === false ||
+        value === undefined ||
+        value === "" ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
+        newParams.delete(key);
+      } else {
+        newParams.set(
+          key,
+          Array.isArray(value) ? value.join(",") : String(value),
+        );
+      }
+    });
 
-  // Handle path or search changes from external navigation (e.g., Header links)
-
-  useEffect(() => {
-    const urlGenres = searchParams.get("genre")
-      ? searchParams.get("genre").split(",")
-      : [];
-    const urlType =
-      searchParams.get("type") ||
-      (location.pathname.includes("/series") ? "series" : null);
-    const urlCountry = searchParams.get("country") || null;
-    const urlLang = searchParams.get("lang") || null;
-    const urlSort = searchParams.get("sort") || "trending";
-    const urlTrending = searchParams.get("trending") === "true";
-
-    if (
-      urlGenres.join(",") !== selectedGenres.join(",") ||
-      urlType !== selectedType ||
-      urlCountry !== selectedCountry ||
-      urlLang !== selectedLanguage ||
-      urlSort !== sortBy ||
-      urlTrending !== onlyTrending
-    ) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedGenres(urlGenres);
-
-      setSelectedType(urlType);
-
-      setSelectedCountry(urlCountry);
-
-      setSelectedLanguage(urlLang);
-
-      setSortBy(urlSort);
-
-      setOnlyTrending(urlTrending);
+    if (newParams.get("sort") === "trending") {
+      newParams.delete("sort"); // keep URL clean since it's the default
     }
-  }, [
-    location.search,
-    location.pathname,
-    selectedGenres,
-    selectedType,
-    selectedCountry,
-    selectedLanguage,
-    sortBy,
-    onlyTrending,
-    searchParams,
-  ]);
 
-  const toggleGenre = (g) =>
-    setSelectedGenres((prev) =>
-      prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g],
-    );
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const toggleGenre = (g) => {
+    const nextGenres = selectedGenres.includes(g)
+      ? selectedGenres.filter((x) => x !== g)
+      : [...selectedGenres, g];
+    updateFilters({ genre: nextGenres });
+  };
+
+  const setSelectedType = (type) => updateFilters({ type });
+  const setSelectedCountry = (country) => updateFilters({ country });
+  const setSelectedLanguage = (lang) => updateFilters({ lang });
+  const setSortBy = (sort) => updateFilters({ sort });
+  const setOnlyTrending = (trending) => updateFilters({ trending });
+
+  const clearAll = () => {
+    setSearchParams({}, { replace: true });
+  };
 
   const results = useMemo(() => {
     let list = MOCK_MOVIES;
@@ -164,14 +129,6 @@ export default function BrowsePage() {
       ? [{ label: "🔥 Trending", onRemove: () => setOnlyTrending(false) }]
       : []),
   ];
-
-  const clearAll = () => {
-    setSelectedGenres([]);
-    setSelectedType(null);
-    setSelectedCountry(null);
-    setSelectedLanguage(null);
-    setOnlyTrending(false);
-  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white pt-20 pb-16">

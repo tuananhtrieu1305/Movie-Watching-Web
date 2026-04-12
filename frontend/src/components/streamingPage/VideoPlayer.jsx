@@ -1,6 +1,8 @@
+/* eslint-disable no-unused-vars */
 import { StepForwardOutlined, BulbOutlined } from "@ant-design/icons";
-import { Switch, Button, Tooltip, message } from "antd";
-import { useEffect, useRef } from "react";
+import { Switch, Button, Tooltip, message, Modal } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../modules/auth/hooks/useAuth";
 import { historyApi } from "../../modules/user/services/historyApi";
 
@@ -14,7 +16,12 @@ const VideoPlayer = (props) => {
     setSettings,
   } = props;
   const videoRef = useRef(null);
-  const { isAuthenticated, accessToken } = useAuth();
+  const { isAuthenticated, accessToken, user } = useAuth();
+  const navigate = useNavigate();
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const isPreview =
+    new URLSearchParams(window.location.search).get("preview") === "true";
 
   // Ref để tracking debounce update lịch sử
   const lastSyncTimeRef = useRef(0);
@@ -36,7 +43,9 @@ const VideoPlayer = (props) => {
           episode_id: currentEpisode.id,
           last_position: Math.floor(currentTime),
           watched_duration: Math.floor(watchedDurationRef.current),
-          total_duration: videoRef.current?.duration ? Math.floor(videoRef.current.duration) : 0,
+          total_duration: videoRef.current?.duration
+            ? Math.floor(videoRef.current.duration)
+            : 0,
           is_completed: isCompleted,
         });
         lastSyncTimeRef.current = now;
@@ -49,6 +58,12 @@ const VideoPlayer = (props) => {
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
     const { currentTime } = videoRef.current;
+
+    // Nếu đang ở chế độ preview và xem tới 30 giây thì dừng và hiện modal
+    if (isPreview && currentTime >= 30) {
+      videoRef.current.pause();
+      setIsModalVisible(true);
+    }
 
     // Tăng thời gian đã xem (thêm 0.25s mỗi event timeupdate tùy browsers)
     // Tạm bỏ qua độ chính xác tuyệt đối, chỉ đếm cho event
@@ -110,6 +125,33 @@ const VideoPlayer = (props) => {
     <div
       className={`relative w-full bg-black rounded-xl overflow-hidden shadow-2xl transition-all duration-300 ${isLightOff ? "z-50" : ""}`}
     >
+      <Modal
+        title={
+          <span className="text-xl font-bold text-yellow-500">
+            Yêu cầu đăng ký VIP
+          </span>
+        }
+        open={isModalVisible}
+        closable={false}
+        centered
+        footer={[
+          <Button
+            key="register"
+            type="primary"
+            size="large"
+            className="bg-yellow-500 hover:!bg-yellow-600 text-black border-none font-bold"
+            onClick={() => navigate("/user/plans")}
+          >
+            Đăng ký gói VIP
+          </Button>,
+        ]}
+      >
+        <p className="text-white text-base py-4 font-medium">
+          Bạn đã xem hết 30s xem trước. Để tiếp tục xem trọn bộ phim VIP này,
+          vui lòng đăng ký gói VIP.
+        </p>
+      </Modal>
+
       {/* 1. Màn hình Video */}
       <div className="aspect-video w-full bg-black relative group">
         <video

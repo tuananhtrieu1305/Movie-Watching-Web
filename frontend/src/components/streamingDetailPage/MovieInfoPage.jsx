@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Spin } from "antd";
+import { Spin, message } from "antd";
 import { useParams } from "react-router-dom";
 import { getMovieBySlug, getPopularMovies } from "../../services/movieService";
 
@@ -13,6 +13,7 @@ const MovieInfoPage = () => {
   const [loading, setLoading] = useState(true);
   const [productionData, setProductionData] = useState(null);
   const [popularList, setPopularList] = useState([]);
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -26,7 +27,7 @@ const MovieInfoPage = () => {
       })
       .catch((err) => {
         console.error(err);
-        message.error("Lỗi tải thông tin phim!");
+        messageApi.error("Lỗi tải thông tin phim!");
       })
       .finally(() => {
         setLoading(false);
@@ -43,31 +44,34 @@ const MovieInfoPage = () => {
   const related = productionData?.related || [];
 
   return (
-    <div className="min-h-screen bg-[#121212] text-gray-300 font-sans pb-10">
-      {/* 1. HERO SECTION  */}
-      <InfoHero production={productionData} />
+    <>
+      {contextHolder}
+      <div className="min-h-screen bg-[#121212] text-gray-300 font-sans pb-10">
+        {/* 1. HERO SECTION  */}
+        <InfoHero production={productionData} />
 
-      {/* 2. MAIN CONTENT LAYOUT */}
-      <div className="container mx-auto px-4 max-w-[1400px]">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-          {/* --- CỘT TRÁI --- */}
-          <div className="xl:col-span-9 space-y-10">
-            <div className="border-t border-gray-800 pt-6">
-              <RelatedMovies movies={related} />
+        {/* 2. MAIN CONTENT LAYOUT */}
+        <div className="container mx-auto px-4 max-w-[1400px]">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+            {/* --- CỘT TRÁI --- */}
+            <div className="xl:col-span-9 space-y-10">
+              <div className="border-t border-gray-800 pt-6">
+                <RelatedMovies movies={related} />
+              </div>
+
+              <CommentSection />
             </div>
 
-            <CommentSection />
-          </div>
-
-          {/* --- CỘT PHẢI --- */}
-          <div className="xl:col-span-3">
-            <div className="sticky top-4">
-              <RecommendedList list={popularList} />
+            {/* --- CỘT PHẢI --- */}
+            <div className="xl:col-span-3">
+              <div className="sticky top-4">
+                <RecommendedList list={popularList} />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

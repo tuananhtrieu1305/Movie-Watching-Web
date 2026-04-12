@@ -22,17 +22,23 @@ import {
   calcDurationDisplay,
   createWatchNowUrl,
 } from "../../utils/streaming/common";
+import { useAuth } from "../../modules/auth/hooks/useAuth";
 
 const InfoHero = ({ production }) => {
   const { handleCopyUrl, contextHolder } = useShareUrl();
   const { toggleWatchlist, isInWatchlist, loading } = useWatchlist(
     production?.id,
   );
+  const { user } = useAuth();
+  
   if (!production) return null;
 
   console.log(production);
 
   let firstEpLink = createWatchNowUrl(production);
+  if (production.is_premium && !user?.is_premium) {
+    firstEpLink += firstEpLink.includes("?") ? "&preview=true" : "?preview=true";
+  }
 
   const durationDisplay = calcDurationDisplay(production);
 

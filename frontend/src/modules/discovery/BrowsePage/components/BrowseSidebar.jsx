@@ -90,7 +90,7 @@ export function BrowseSidebar({
           <SidebarChip
             label="🔥 Trending Only"
             active={onlyTrending}
-            onClick={() => setOnlyTrending((v) => !v)}
+            onClick={() => setOnlyTrending(!onlyTrending)}
           />
         </SidebarSection>
 
