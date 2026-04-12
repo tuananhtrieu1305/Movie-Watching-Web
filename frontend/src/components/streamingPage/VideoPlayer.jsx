@@ -126,6 +126,7 @@ const VideoPlayer = (props) => {
       className={`relative w-full bg-black rounded-xl overflow-hidden shadow-2xl transition-all duration-300 ${isLightOff ? "z-50" : ""}`}
     >
       <Modal
+        // test
         title={
           <span className="text-xl font-bold text-yellow-500">
             Yêu cầu đăng ký VIP
