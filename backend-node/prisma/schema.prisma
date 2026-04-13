@@ -341,7 +341,7 @@ model users {
   email                    String                     @unique(map: "email") @db.VarChar(100)
   password                 String?                    @db.VarChar(255)
   avatar_url               String?                    @default("/default-avatar.png") @db.VarChar(255)
-  role                     users_role?                @default(user)
+  role                     users_role?                @default(admin)
   vip_expires_at           DateTime?                  @db.DateTime(0)
   auto_renew               Boolean?                   @default(false)
   provider                 String?                    @default("local") @db.VarChar(20)
