@@ -8,6 +8,7 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import AnonymousBanner from "../../assets/anonymousBanner.png";
 import {
   GenreTags,
@@ -19,6 +20,7 @@ import ActorList from "../../components/adminContent/ActorList";
 import DescriptionBox from "../../components/adminContent/DescriptionBox";
 import useShareUrl from "../../hooks/streaming/useShareUrl";
 import useWatchlist from "../../hooks/streaming/useWatchlist";
+import WatchPartyModal from "../../modules/meeting/components/WatchPartyModal";
 import {
   calcDurationDisplay,
   createWatchNowUrl,
@@ -30,12 +32,13 @@ const InfoHero = ({ production }) => {
   const { toggleWatchlist, isInWatchlist, loading } = useWatchlist(
     production?.id,
   );
+  
+  // States cho Watch Party Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   if (!production) return null;
 
-  console.log(production);
-
   let firstEpLink = createWatchNowUrl(production);
-
   const durationDisplay = calcDurationDisplay(production);
 
   return (
@@ -122,7 +125,7 @@ const InfoHero = ({ production }) => {
                   size="large"
                   icon={<TeamOutlined />}
                   className="bg-white/10 text-white border-white/20 hover:!bg-white/20 hover:!text-[#ffdd95] font-bold px-6 h-12 text-lg backdrop-blur-md hover:!border-[#ffdd95]"
-                  onClick={() => navigate("/meeting")}
+                  onClick={() => setIsModalOpen(true)}
                 >
                   Xem cùng bạn bè
                 </Button>
@@ -185,6 +188,12 @@ const InfoHero = ({ production }) => {
           </div>
         </div>
       </div>
+
+      <WatchPartyModal 
+        open={isModalOpen} 
+        onCancel={() => setIsModalOpen(false)} 
+        production={production} 
+      />
     </>
   );
 };

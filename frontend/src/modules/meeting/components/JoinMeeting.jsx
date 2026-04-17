@@ -10,7 +10,7 @@ export default function JoinMeeting() {
   const navigate = useNavigate();
 
   // Lấy hàm setToken từ Context để lưu chìa khóa WebRTC
-  const { setToken } = useMeetingContext();
+  const { setToken, setIsHost, setParticipantId, setMeetingId: setGlobalMeetingId } = useMeetingContext();
 
   const handleJoin = async (e) => {
     e.preventDefault();
@@ -29,6 +29,9 @@ export default function JoinMeeting() {
       // Giả sử API trả về object có chứa token: { token: "..." }
       if (data && data.token) {
         setToken(data.token);
+        setIsHost(false); // Người tham gia phòng mặc định là Khách
+        setGlobalMeetingId(cleanMeetingId);
+        setParticipantId(data.participant?.id || "guest-temp");
 
         // 3. Đã có đủ "vũ khí", giờ mới tự tin bước vào phòng!
         navigate(`/meeting/${cleanMeetingId}`);
