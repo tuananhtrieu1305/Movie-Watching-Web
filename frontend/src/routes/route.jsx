@@ -33,6 +33,12 @@ import TransactionsManagement from "../admin/transactions/TransactionsManagement
 import SubscriptionsHistory from "../admin/subscriptions/SubscriptionsHistory";
 import { useAuth } from "../modules/auth/hooks/useAuth";
 
+// 6. Import Meeting Pages
+import MeetingContext from "../modules/meeting/MeetingContext";
+import MeetingPage from "../modules/meeting/MeetingPage";
+import ActiveMeeting from "../modules/meeting/components/ActiveMeeting";
+import { Outlet } from "react-router-dom";
+
 const RequireAdmin = ({ children }) => {
   const { isAuthenticated, isBootstrapping, user } = useAuth();
 
@@ -67,6 +73,24 @@ export const router = createBrowserRouter([
       {
         path: "series",
         element: <BrowsePage />,
+      },
+      {
+        path: "meeting",
+        element: (
+          <MeetingContext>
+            <Outlet />
+          </MeetingContext>
+        ),
+        children: [
+          {
+            index: true,
+            element: <MeetingPage />,
+          },
+          {
+            path: ":meetingId",
+            element: <ActiveMeeting />,
+          },
+        ],
       },
     ],
   },

@@ -1,79 +1,190 @@
-import React, { useState } from "react";
-import { USERS, COMMENTS } from "../../utils/MockData";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { AuthContext } from "../../modules/auth/context/AuthContext";
+import { getComments, createComment } from "../../services/commentService";
+import socket from "../../services/socket";
 import CommentInput from "./CommentInput";
 import CommentItem from "./CommentItem";
 
-const CommentSection = () => {
-  const [comments, setComments] = useState(COMMENTS);
-  const currentUser = USERS["current_user"];
+const CommentSection = ({ productionId }) => {
+  const { accessToken, user, isAuthenticated } = useContext(AuthContext);
 
-  // One-rating-per-user: track if current user has submitted a rated comment
-  const [hasRated, setHasRated] = useState(false);
-  const [savedRating, setSavedRating] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
-  const handleNewComment = (inputData) => {
-    // inputData = { content, rating } from CommentInput
-    const newComment = {
-      id: Date.now(),
-      authorId: currentUser.id,
-      content: {
-        text: inputData.content,
-        rating: inputData.rating,
-        isSpoiler: false,
-        episodeTag: null,
-      },
-      time: "Just now",
-      stats: { likes: 0, dislikes: 0, repliesCount: 0 },
-      interaction: { hasLiked: false, hasDisliked: false },
-      replies: [],
+  // ── Fetch initial comments ────────────────────────────
+  const fetchComments = useCallback(async () => {
+    if (!productionId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getComments(productionId, { limit: 10 }, accessToken);
+      setComments(data.comments || []);
+      setNextCursor(data.nextCursor || null);
+    } catch (err) {
+      console.error("fetchComments error:", err);
+      setError("Không thể tải bình luận. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  }, [productionId, accessToken]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
+  // ── Socket realtime connection ────────────────────────
+  useEffect(() => {
+    if (!productionId) return;
+
+    socket.connect();
+    socket.emit("join_production", productionId);
+
+    const handleNewComment = (comment) => {
+      if (comment.production_id !== productionId) return;
+      setComments((prev) => {
+        if (prev.some((c) => c.id === comment.id)) return prev;
+        return [comment, ...prev];
+      });
     };
 
-    setComments([newComment, ...comments]);
+    socket.on("new_comment", handleNewComment);
 
-    // Lock rating after first rated submission
-    if (inputData.rating > 0 && !hasRated) {
-      setHasRated(true);
-      setSavedRating(inputData.rating);
+    return () => {
+      socket.emit("leave_production", productionId);
+      socket.off("new_comment", handleNewComment);
+      socket.disconnect();
+    };
+  }, [productionId]);
+
+  // ── Load more (cursor pagination) ────────────────────
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const data = await getComments(productionId, { cursor: nextCursor, limit: 10 }, accessToken);
+      setComments((prev) => [...prev, ...(data.comments || [])]);
+      setNextCursor(data.nextCursor || null);
+    } catch (err) {
+      console.error("loadMore error:", err);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
+  // ── Submit new comment ────────────────────────────────
+  const handleNewComment = async (inputData) => {
+    if (!isAuthenticated) {
+      setSubmitError("Bạn cần đăng nhập để bình luận.");
+      return;
+    }
+    setSubmitError(null);
+    try {
+      const newComment = await createComment(
+        {
+          productionId,
+          content: inputData.content,
+          isSpoiler: inputData.isSpoiler || false,
+        },
+        accessToken
+      );
+      // Prepend mới vào đầu danh sách nếu chưa tồn tại (tránh trùng với socket)
+      setComments((prev) => {
+        if (prev.some(c => c.id === newComment.id)) return prev;
+        return [newComment, ...prev];
+      });
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Gửi bình luận thất bại.";
+      setSubmitError(msg);
+      console.error("createComment error:", err);
+    }
+  };
+
+  // ── Render ────────────────────────────────────────────
   return (
     <div className="text-white pt-6">
-      <div>
-        {/* HEADER */}
-        <div className="flex items-center gap-3 mb-6">
-          <h2 className="text-xl font-bold text-white">Comments</h2>
-          <span className="bg-[#1a1c22] text-gray-300 px-3 py-1 rounded-full text-xs font-mono border border-gray-700">
-            {comments.length}
-          </span>
-        </div>
+      {/* HEADER */}
+      <div className="flex items-center gap-3 mb-6">
+        <h2 className="text-xl font-bold text-white">Bình luận</h2>
+        <span className="bg-[#1a1c22] text-gray-300 px-3 py-1 rounded-full text-xs font-mono border border-gray-700">
+          {comments.length}{nextCursor ? "+" : ""}
+        </span>
+      </div>
 
-        {/* INPUT (stars now live inside action bar) */}
+      {/* INPUT — chỉ hiện nếu đã login */}
+      {isAuthenticated ? (
         <CommentInput
-          currentUser={currentUser}
+          currentUser={user}
           onSubmit={handleNewComment}
-          hasRated={hasRated}
-          savedRating={savedRating}
         />
-
-        {/* COMMENT LIST */}
-        <div className="flex flex-col gap-2 mt-4">
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              data={comment}
-              userMap={USERS}
-            />
-          ))}
+      ) : (
+        <div className="bg-[#1a1c22] border border-gray-700 rounded-xl p-4 text-center text-gray-400 text-sm mb-4">
+          <span>Vui lòng </span>
+          <a href="/login" className="text-yellow-400 hover:underline font-medium">đăng nhập</a>
+          <span> để bình luận.</span>
         </div>
+      )}
+
+      {/* Submit error */}
+      {submitError && (
+        <div className="mt-2 text-red-400 text-sm bg-red-900/20 border border-red-800 rounded-lg px-4 py-2">
+          {submitError}
+        </div>
+      )}
+
+      {/* COMMENT LIST */}
+      <div className="flex flex-col gap-2 mt-4">
+        {loading && (
+          <div className="text-center text-gray-500 py-8 animate-pulse">
+            Đang tải bình luận...
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="text-center text-red-400 py-6">
+            {error}
+            <button
+              onClick={fetchComments}
+              className="ml-2 text-yellow-400 underline text-sm"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && comments.map((comment) => (
+          <CommentItem
+            key={comment.id}
+            data={comment}
+            productionId={productionId}
+            accessToken={accessToken}
+            currentUserId={user?.id}
+          />
+        ))}
 
         {/* EMPTY STATE */}
-        {comments.length === 0 && (
+        {!loading && !error && comments.length === 0 && (
           <div className="text-center text-gray-500 py-10">
-            No comments yet. Be the first to comment!
+            Chưa có bình luận nào. Hãy là người đầu tiên!
           </div>
         )}
       </div>
+
+      {/* LOAD MORE */}
+      {nextCursor && !loading && (
+        <div className="text-center mt-6">
+          <button
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="px-6 py-2 rounded-lg bg-[#1a1c22] border border-gray-700 text-gray-300 text-sm hover:border-yellow-500 hover:text-yellow-400 transition-all disabled:opacity-50"
+          >
+            {loadingMore ? "Đang tải..." : "Xem thêm bình luận"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
