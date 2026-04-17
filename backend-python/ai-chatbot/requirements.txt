@@ -9,6 +9,8 @@ langchain
 langchain-openai
 langchain-community
 langchain-chroma
+langchain-huggingface
+langchain-google-genai
 
 # ── Vector Store ─────────────────────────────────────────────
 chromadb
@@ -16,6 +18,7 @@ chromadb
 # ── Database Drivers ─────────────────────────────────────────
 pymongo
 mysql-connector-python
+motor
 
 # ── Embedding & Reranking ────────────────────────────────────
 sentence-transformers

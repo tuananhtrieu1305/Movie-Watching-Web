@@ -4,8 +4,14 @@ Module chat service — orchestrate RAG pipeline cho một request chat.
 Cung cấp class ChatService kết nối: history → retrieval → generation → history.
 """
 
-from src.schemas import ChatRequest, ChatResponse
+import time
+import asyncio
+from src.schemas import ChatRequest, ChatResponse, ChatMessage, MessageRole
+from src.retrieval.retriever import Retriever
+from src.generation.generator import ResponseGenerator
+from src.history.repository import ChatHistoryRepository
 from src.logger import get_logger
+from src.config import CHAT_RETRIEVAL_TIMEOUT_SECONDS, CHAT_LLM_TIMEOUT_SECONDS
 
 logger = get_logger(__name__)
 
@@ -28,7 +34,10 @@ class ChatService:
         response = service.process(chat_request)
     """
 
-    def __init__(self, retriever, generator, history_repo):
+    def __init__(self, 
+                 retriever: Retriever, 
+                 generator: ResponseGenerator, 
+                 history_repo: ChatHistoryRepository):
         """
         Khởi tạo ChatService với dependencies đã inject.
 
@@ -37,9 +46,15 @@ class ChatService:
             generator (ResponseGenerator): Instance ResponseGenerator.
             history_repo (ChatHistoryRepository): Instance ChatHistoryRepository.
         """
-        pass
+        self._retriever = retriever
+        self._generator = generator
+        self._history_repo = history_repo
+        
+        logger.info("ChatService đã nhận đủ tool: [Retriever, Generator, HistoryRepo]. Sẵn sàng phục vụ!")
+        
+        
 
-    def process(self, request: ChatRequest) -> ChatResponse:
+    async def process(self, request: ChatRequest) -> ChatResponse:
         """
         Xử lý một request chat qua toàn bộ RAG pipeline.
 
@@ -65,4 +80,92 @@ class ChatService:
         Raises:
             Exception: Khi pipeline thất bại ở bất kỳ bước nào.
         """
-        pass
+        start_time = time.time()
+        user_id = request.user_id
+        query = request.message
+        conv_id = request.conversation_id
+
+        try:
+            logger.info(f"[ChatService] Bắt đầu xử lý request từ user_id: {user_id}")
+            
+            # 1: Quản lý Conversation
+            if not conv_id:
+                conv_id = await self._history_repo.create_conversation(user_id)
+                logger.info(f"[ChatService] Khởi tạo conversation mới. ID: {conv_id}")
+            else:
+                logger.debug(f"[ChatService] Tiếp tục conversation hiện tại. ID: {conv_id}")
+
+            # 2: Lưu tin nhắn User
+            user_msg = ChatMessage(role=MessageRole.USER, content=query)
+            await self._history_repo.add_message(conv_id, user_msg)
+            logger.info(f"[ChatService] Đã lưu tin nhắn user. Query: '{query[:50]}...'")
+
+            # 3: Lấy ngữ cảnh hội thoại (History)
+            recent_history = await self._history_repo.get_recent_messages(conv_id, limit=10)
+            logger.debug(f"[ChatService] Đã truy xuất {len(recent_history)} tin nhắn lịch sử.")
+
+            # 4: Truy xuất tài liệu (Retrieval)
+            logger.debug("[ChatService] Bắt đầu truy xuất ngữ cảnh (Retrieval)...")
+            retriever_start = time.time()
+            
+            try:
+                retrieved_chunks = await asyncio.wait_for(
+                    self._retriever.retrieve(query),
+                    timeout=CHAT_RETRIEVAL_TIMEOUT_SECONDS,
+                )
+            except (asyncio.TimeoutError, TimeoutError) as e:
+                raise TimeoutError(
+                    f"Retrieval timeout after {CHAT_RETRIEVAL_TIMEOUT_SECONDS}s"
+                ) from e
+            
+            logger.info(f"[ChatService] Truy xuất hoàn tất: {len(retrieved_chunks)} chunks trong {time.time() - retriever_start:.2f}s.")
+
+            # 5: Sinh câu trả lời (Generation)
+            logger.debug("[ChatService] Bắt đầu sinh câu trả lời (Generation)...")
+            llm_start = time.time()
+            
+            try:
+                answer = await asyncio.wait_for(
+                    self._generator.generate(
+                        query=query,
+                        retrieved_chunks=retrieved_chunks,
+                        chat_history=recent_history,
+                    ),
+                    timeout=CHAT_LLM_TIMEOUT_SECONDS,
+                )
+            except (asyncio.TimeoutError, TimeoutError) as e:
+                raise TimeoutError(
+                    f"LLM timeout after {CHAT_LLM_TIMEOUT_SECONDS}s"
+                ) from e
+            
+            logger.info(f"[ChatService] Sinh câu trả lời hoàn tất trong {time.time() - llm_start:.2f}s.")
+
+            # 6: Lưu tin nhắn Assistant
+            ai_msg = ChatMessage(role=MessageRole.ASSISTANT, content=answer)
+            await self._history_repo.add_message(conv_id, ai_msg)
+            logger.debug("[ChatService] Đã lưu tin nhắn phản hồi của assistant.")
+
+            # 7: Trả về Response
+            # sources = []
+            # if retrieved_chunks:
+            #     sources = list(set([chunk.metadata.get("source", "Unknown") for chunk in retrieved_chunks]))
+            source_list = []
+            for chunk in retrieved_chunks:
+                source_list.append({
+                    "production_id": chunk.production_id,
+                    "title": chunk.metadata.get("title", "Không rõ"),
+                    "score": chunk.score
+                })
+
+            total_time = time.time() - start_time
+            logger.info(f"[ChatService] Hoàn tất xử lý request cho user {user_id}. Tổng thời gian: {total_time:.2f}s.")
+
+            return ChatResponse(
+                conversation_id=conv_id,
+                answer=answer,
+                sources=source_list
+            )
+
+        except Exception as e:
+            logger.error(f"[ChatService] Lỗi xử lý request cho user {user_id} tại conversation {conv_id}: {str(e)}", exc_info=True)
+            raise e

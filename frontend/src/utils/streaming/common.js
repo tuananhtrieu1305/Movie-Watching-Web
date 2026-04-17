@@ -1,5 +1,3 @@
-import { getEpisodesBySeason } from "../../modules/streaming/mock/watchData";
-
 export const calcDurationDisplay = (production) => {
   const durationDisplay =
     production.type === "movie"
@@ -30,6 +28,10 @@ export const calcTargetSeasonIdAndTargetEpisodes = (
   let targetSeasonId = null;
   let targetEpisodes = [];
 
+  if (!data?.production) {
+    return { targetEpisodes, targetSeasonId };
+  }
+
   // Logic xử lý Series/Season
   if (data.production.type === "series") {
     // 1. Tìm season từ URL
@@ -53,8 +55,12 @@ export const calcTargetSeasonIdAndTargetEpisodes = (
       data.production.seasons?.[0]?.id;
 
     if (targetSeasonId !== defaultLoadedSeasonId) {
-      const res = getEpisodesBySeason(targetSeasonId);
-      targetEpisodes = res.data;
+      const targetSeason = data.production.seasons?.find(
+        (season) => season.id === targetSeasonId,
+      );
+      targetEpisodes = Array.isArray(targetSeason?.episodes)
+        ? targetSeason.episodes
+        : data.episodes;
     } else {
       targetEpisodes = data.episodes;
     }

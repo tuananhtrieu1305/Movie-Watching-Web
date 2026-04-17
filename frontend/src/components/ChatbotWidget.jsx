@@ -1,6 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import "../assets/chatbot.css";
 
+import { sendChatMessage } from "../services/chatbotService";
+
+import ReactMarkdown from "react-markdown";
+
+const USER_ID_STORAGE_KEY = "rag_user_id";
+const CONVERSATION_ID_STORAGE_KEY = "rag_conversation_id";
+
+const getOrCreateUserId = () => {
+  const existing = localStorage.getItem(USER_ID_STORAGE_KEY);
+  if (existing) return existing;
+
+  const userId = `web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  localStorage.setItem(USER_ID_STORAGE_KEY, userId);
+  return userId;
+};
+
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -12,6 +28,11 @@ const ChatbotWidget = () => {
     },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [conversationId, setConversationId] = useState(
+    () => localStorage.getItem(CONVERSATION_ID_STORAGE_KEY) || null,
+  );
+  const abortRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -22,28 +43,79 @@ const ChatbotWidget = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (inputValue.trim() === "") return;
+  useEffect(() => {
+    if (conversationId) {
+      localStorage.setItem(CONVERSATION_ID_STORAGE_KEY, conversationId);
+    } else {
+      localStorage.removeItem(CONVERSATION_ID_STORAGE_KEY);
+    }
+  }, [conversationId]);
 
-    // Add user message
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort?.();
+    };
+  }, []);
+
+  const handleSendMessage = async () => {
+    const messageText = inputValue.trim();
+    if (messageText === "" || isSending) return;
+
     const userMessage = {
       id: Date.now(),
       type: "user",
-      text: inputValue,
+      text: messageText,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
+    const placeholderBotId = Date.now() + 1;
+    const placeholderBotMessage = {
+      id: placeholderBotId,
+      type: "bot",
+      text: "Đang xử lý yêu cầu của bạn...",
+    };
 
-    // Simulate bot response (replace with actual API call)
-    setTimeout(() => {
-      const botMessage = {
-        id: Date.now() + 1,
-        type: "bot",
-        text: "Đang xử lý yêu cầu của bạn...",
-      };
-      setMessages((prev) => [...prev, botMessage]);
-    }, 500);
+    setMessages((prev) => [...prev, userMessage, placeholderBotMessage]);
+    setInputValue("");
+    setIsSending(true);
+
+    abortRef.current?.abort?.();
+    abortRef.current = new AbortController();
+
+    try {
+      const userId = getOrCreateUserId();
+      const response = await sendChatMessage({
+        userId,
+        message: messageText,
+        conversationId,
+        signal: abortRef.current.signal,
+      });
+
+      if (response?.conversation_id) {
+        setConversationId(response.conversation_id);
+      }
+
+      const answerText =
+        typeof response?.answer === "string" && response.answer.trim() !== ""
+          ? response.answer
+          : "Mình chưa có câu trả lời phù hợp lúc này.";
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === placeholderBotId ? { ...m, text: answerText } : m)),
+      );
+    } catch (err) {
+      const errorText =
+        err?.name === "AbortError"
+          ? "Yêu cầu đã bị hủy."
+          : err instanceof Error
+            ? err.message
+            : "Có lỗi xảy ra khi gọi hệ thống AI.";
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === placeholderBotId ? { ...m, text: errorText } : m)),
+      );
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -132,7 +204,9 @@ const ChatbotWidget = () => {
                 className={`chatbot-message ${message.type === "user" ? "user-message" : "bot-message"}`}
               >
                 <div className="message-content">
-                  <div className="message-text">{message.text}</div>
+                  <div className="message-text">
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
+                  </div>
                   {message.suggestion && (
                     <div className="message-suggestion">
                       {message.suggestion}
@@ -153,11 +227,12 @@ const ChatbotWidget = () => {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
+              disabled={isSending}
             />
             <button
               className="chatbot-send-btn"
               onClick={handleSendMessage}
-              disabled={inputValue.trim() === ""}
+              disabled={isSending || inputValue.trim() === ""}
               aria-label="Send message"
             >
               <svg

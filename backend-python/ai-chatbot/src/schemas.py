@@ -110,6 +110,8 @@ class RetrievedChunk(BaseModel):
         metadata (dict): Metadata đi kèm chunk (production_id, title, chunk_index, ...).
         score (float): Điểm relevance của chunk (từ similarity search hoặc reranker).
     """
+    production_id: str | int  # Rút trích rõ ràng để dễ làm Trích dẫn (Citation)
+    chunk_index: int
     content: str
     metadata: dict = {}
     score: float = 0.0
@@ -148,4 +150,4 @@ class IngestRequest(BaseModel):
         force_reload (bool): Nếu True, xóa toàn bộ dữ liệu cũ trong ChromaDB
             và ingest lại từ đầu. Nếu False, chỉ thêm mới/cập nhật.
     """
-    force_reload: bool = False
+    force_reload: bool = True

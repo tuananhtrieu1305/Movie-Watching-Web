@@ -12,11 +12,14 @@ import sys
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)-30s | %(message)s"
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+LOG_FORMAT_PREFIX = "%(asctime)s | "
+LOG_FORMAT_SUFFIX = " | %(name)-30s | %(message)s"
+LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 class ColorFormatter(logging.Formatter):
     """
     Tùy chỉnh Formatter để thêm màu sắc vào terminal dựa trên level của log.
+    Chỉ tô màu chữ LEVEL để log trông thanh lịch, dễ nhìn.
     """
-    # Mã màu ANSI
     GREY = "\x1b[38;20m"
     BLUE = "\x1b[34;20m"
     GREEN = "\x1b[32;20m"
@@ -25,17 +28,20 @@ class ColorFormatter(logging.Formatter):
     BOLD_RED = "\x1b[31;1m"
     RESET = "\x1b[0m"
 
-    # Map màu sắc với từng level
+    # Nhét màu bao quanh đúng biến levelname, giữ nguyên các phần khác
     FORMATS = {
-        logging.DEBUG: BLUE + LOG_FORMAT + RESET,
-        logging.INFO: GREEN + LOG_FORMAT + RESET,
-        logging.WARNING: YELLOW + LOG_FORMAT + RESET,
-        logging.ERROR: RED + LOG_FORMAT + RESET,
-        logging.CRITICAL: BOLD_RED + LOG_FORMAT + RESET
+        logging.DEBUG: LOG_FORMAT_PREFIX + BLUE + "%(levelname)-8s" + RESET + LOG_FORMAT_SUFFIX,
+        logging.INFO: LOG_FORMAT_PREFIX + GREEN + "%(levelname)-8s" + RESET + LOG_FORMAT_SUFFIX,
+        logging.WARNING: LOG_FORMAT_PREFIX + YELLOW + "%(levelname)-8s" + RESET + LOG_FORMAT_SUFFIX,
+        logging.ERROR: LOG_FORMAT_PREFIX + RED + "%(levelname)-8s" + RESET + LOG_FORMAT_SUFFIX,
+        logging.CRITICAL: LOG_FORMAT_PREFIX + BOLD_RED + "%(levelname)-8s" + RESET + LOG_FORMAT_SUFFIX
     }
 
     def format(self, record: logging.LogRecord) -> str:
-        log_fmt = self.FORMATS.get(record.levelno, self.GREY + LOG_FORMAT + self.RESET)
+        # Nếu không khớp level nào thì dùng màu xám mặc định
+        default_fmt = LOG_FORMAT_PREFIX + self.GREY + "%(levelname)-8s" + self.RESET + LOG_FORMAT_SUFFIX
+        log_fmt = self.FORMATS.get(record.levelno, default_fmt)
+        
         formatter = logging.Formatter(log_fmt, datefmt=LOG_DATE_FORMAT)
         return formatter.format(record)
 
@@ -71,6 +77,13 @@ def setup_logging(level: int = logging.INFO) -> None:
     console_handler.setFormatter(ColorFormatter()) # Gắn Formatter có màu sắc vào handler
 
     root_logger.addHandler(console_handler) # Thêm handler vào root logger
+    
+    # có thể đóng đoạn sau lại để log đầy đủ
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+    logging.getLogger("chromadb").setLevel(logging.WARNING)
 
 
 def get_logger(name: str) -> logging.Logger:
