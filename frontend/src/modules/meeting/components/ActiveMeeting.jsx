@@ -5,7 +5,6 @@ import {
 } from "@cloudflare/realtimekit-react";
 import { useMeetingContext } from "../MeetingContext";
 import MeetingUI from "../MeetingUI";
-import WhiteboardController from "./WhiteboardController";
 
 export default function ActiveMeeting() {
   const { token, hostId } = useMeetingContext();
@@ -71,7 +70,6 @@ export default function ActiveMeeting() {
     <div className="h-screen w-full bg-black">
       <RealtimeKitProvider value={meeting}>
         <MeetingUI meeting={meeting} />
-        <WhiteboardController meeting={meeting} hostId={hostId} />
       </RealtimeKitProvider>
     </div>
   );

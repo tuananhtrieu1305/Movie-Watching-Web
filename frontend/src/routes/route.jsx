@@ -53,7 +53,11 @@ export const router = createBrowserRouter([
   // --- NHÓM 1: PUBLIC (Có Header/Footer) ---
   {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <MeetingContext>
+        <MainLayout />
+      </MeetingContext>
+    ),
     errorElement: <NotFoundPage />,
     children: [
       {
@@ -76,11 +80,6 @@ export const router = createBrowserRouter([
       },
       {
         path: "meeting",
-        element: (
-          <MeetingContext>
-            <Outlet />
-          </MeetingContext>
-        ),
         children: [
           {
             index: true,
