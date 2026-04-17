@@ -21,7 +21,9 @@ export const uploadMovieController = async (req, res) => {
 
 export const getListMoviesController = async (req, res) => {
   try {
-    const movies = await getMoviesService();
+    const scope =
+      typeof req.query?.scope === "string" ? req.query.scope.trim() : "";
+    const movies = await getMoviesService({ scope });
     res.json(movies);
   } catch (error) {
     console.error("Get List Error:", error);

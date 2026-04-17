@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { message } from "antd";
 import { useParams, useSearchParams } from "react-router-dom";
-import {
-  getWatchDataBySlug,
-  getEpisodesBySeason,
-} from "../../modules/streaming/mock/watchData";
+import { getWatchDataBySlug } from "../../services/watchService";
 import { calcTargetSeasonIdAndTargetEpisodes } from "../../utils/streaming/common";
 
 export const useWatchPage = () => {
@@ -31,33 +28,59 @@ export const useWatchPage = () => {
   // --- EFFECT 1: FETCH INITIAL DATA ---
   useEffect(() => {
     window.scrollTo(0, 0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
+    const controller = new AbortController();
 
-    setTimeout(() => {
-      const data = getWatchDataBySlug(slug);
-      if (data) {
+    const load = async () => {
+      setLoading(true);
+
+      try {
+        const data = await getWatchDataBySlug(slug, {
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        if (!data) {
+          setProductionData(null);
+          setCurrentEpisode(null);
+          setCurrentSeasonId(null);
+          setEpisodeList([]);
+          return;
+        }
+
         setProductionData(data.production);
 
-        let { targetSeasonId, targetEpisodes } =
-          calcTargetSeasonIdAndTargetEpisodes(data, currentEpNumber);
+        const { targetSeasonId, targetEpisodes } =
+          calcTargetSeasonIdAndTargetEpisodes(data, currentSeasonParam);
 
-        setCurrentSeasonId(targetSeasonId);
-        setEpisodeList(targetEpisodes);
+        setCurrentSeasonId(targetSeasonId ?? null);
+        setEpisodeList(Array.isArray(targetEpisodes) ? targetEpisodes : []);
 
         // Logic xác định Episode từ URL
-        if (currentEpNumber) {
+        if (currentEpNumber && Array.isArray(targetEpisodes)) {
           const foundEp = targetEpisodes.find(
             (e) => e.episode_number.toString() === currentEpNumber.toString(),
           );
           if (foundEp) setCurrentEpisode(foundEp);
-          else setCurrentEpisode(targetEpisodes[0]);
+          else setCurrentEpisode(targetEpisodes[0] ?? null);
         } else {
-          setCurrentEpisode(targetEpisodes[0]);
+          setCurrentEpisode(targetEpisodes?.[0] ?? null);
         }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("Failed to load watch data by slug:", error);
+        setProductionData(null);
+        setCurrentEpisode(null);
+        setCurrentSeasonId(null);
+        setEpisodeList([]);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-      setLoading(false);
-    }, 500);
+    };
+
+    load();
+
+    return () => controller.abort();
   }, [slug]);
 
   // --- EFFECT 2: SYNC EPISODE FROM URL ---
@@ -95,34 +118,28 @@ export const useWatchPage = () => {
   const handleChangeSeason = (seasonId) => {
     if (seasonId === currentSeasonId) return;
 
-    setLoading(true);
-    setTimeout(() => {
-      const selectedSeason = productionData.seasons.find(
-        (s) => s.id === seasonId,
-      );
-      const newSeasonNum = selectedSeason?.season_number || 1;
+    const selectedSeason = productionData?.seasons?.find((s) => s.id === seasonId);
+    const newSeasonNum = selectedSeason?.season_number || 1;
+    const newEpisodes = Array.isArray(selectedSeason?.episodes)
+      ? selectedSeason.episodes
+      : [];
 
-      const res = getEpisodesBySeason(seasonId);
-      const newEpisodes = res.data || [];
+    setEpisodeList(newEpisodes);
+    setCurrentSeasonId(seasonId);
 
-      setEpisodeList(newEpisodes);
-      setCurrentSeasonId(seasonId);
+    if (newEpisodes.length > 0) {
+      const firstEp = newEpisodes[0];
+      setCurrentEpisode(firstEp);
+      setSearchParams({
+        ss: newSeasonNum,
+        ep: firstEp.episode_number,
+      });
+    } else {
+      setCurrentEpisode(null);
+      setSearchParams({ ss: newSeasonNum });
+    }
 
-      if (newEpisodes.length > 0) {
-        const firstEp = newEpisodes[0];
-        setCurrentEpisode(firstEp);
-        setSearchParams({
-          ss: newSeasonNum,
-          ep: firstEp.episode_number,
-        });
-      } else {
-        setCurrentEpisode(null);
-        setSearchParams({ ss: newSeasonNum });
-      }
-
-      setLoading(false);
-      messageApi.info(`Đã chuyển sang Mùa ${newSeasonNum}`);
-    }, 300);
+    messageApi.info(`Đã chuyển sang Mùa ${newSeasonNum}`);
   };
 
   const handleNextEpisode = () => {

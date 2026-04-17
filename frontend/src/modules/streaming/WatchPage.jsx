@@ -34,6 +34,17 @@ const WatchPage = () => {
     );
   }
 
+  if (!productionData) {
+    return (
+      <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center px-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Không tìm thấy dữ liệu phim</h2>
+          <p className="text-white/70">Slug không tồn tại hoặc chưa được đồng bộ.</p>
+        </div>
+      </div>
+    );
+  }
+
   const { related } = productionData;
   const relatedMoviesData = [
     ...related,

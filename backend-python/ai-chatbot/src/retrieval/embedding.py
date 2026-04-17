@@ -5,8 +5,12 @@ Cung cấp class EmbeddingService để khởi tạo embedding model
 và tạo vectors cho documents hoặc query.
 """
 
-from langchain.schema import Document
+# from langchain.schema import Document
+import os
+from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
 from src.logger import get_logger
+from src.config import EMBEDDING_MODEL_NAME, HF_TOKEN
 
 logger = get_logger(__name__)
 
@@ -28,6 +32,16 @@ class EmbeddingService:
         query_vector = service.embed_query("phim hành động hay")
     """
 
+    _instance = None # Biến tĩnh lưu trữ phiên bản duy nhất của class
+    _is_initialized: bool = False
+
+    def __new__(cls): # tuân thử Singleton
+        # Nếu chưa có ai tạo class này, thì cấp phát bộ nhớ mới
+        if cls._instance is None:
+            cls._instance = super(EmbeddingService, cls).__new__(cls)
+            cls._instance._is_initialized = False # Đánh dấu là chưa nạp model
+        return cls._instance
+    
     def __init__(self):
         """
         Khởi tạo EmbeddingService và load embedding model.
@@ -39,7 +53,37 @@ class EmbeddingService:
             ValueError: Khi API key không được cấu hình.
                 Log error cảnh báo thiếu API key.
         """
-        pass
+        if self._is_initialized:
+            return
+        
+        self._model_name = EMBEDDING_MODEL_NAME or "BAAI/bge-m3"
+        logger.info(f"Đang khởi tạo EmbeddingService với model: {self._model_name}")
+        logger.info("Quá trình này có thể mất một chút thời gian ở lần chạy đầu tiên để tải weights...")
+
+        self._is_initialized = True
+        
+        if HF_TOKEN:
+            os.environ["HF_TOKEN"] = HF_TOKEN
+            logger.info("Đã nhận diện HF_TOKEN, sẽ tải model với quyền xác thực.")
+        else:
+            logger.warning("Không có HF_TOKEN. Đang tải ẩn danh (có nguy cơ bị rate-limit).")
+            
+        try:
+            import torch
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            encode_kwargs = {'normalize_embeddings': True}
+
+            self._model = HuggingFaceEmbeddings( # Khởi tạo mô hình thông qua LangChain Wrapper
+                model_name=self._model_name,
+                model_kwargs={'device': device},
+                encode_kwargs=encode_kwargs
+            )
+            
+            logger.info(f"Load embedding model '{self._model_name}' thành công trên thiết bị: {device.upper()}")
+            
+        except Exception as e:
+            logger.error(f"Lỗi nghiêm trọng khi load embedding model {self._model_name}: {e}")
+            raise
 
     def get_model(self):
         """
@@ -49,7 +93,7 @@ class EmbeddingService:
             langchain_openai.OpenAIEmbeddings | HuggingFaceEmbeddings:
                 Embedding model sẵn sàng sử dụng.
         """
-        pass
+        return self._model
 
     def embed_documents(self, documents: list[Document]) -> list[list[float]]:
         """
@@ -68,7 +112,19 @@ class EmbeddingService:
             Exception: Khi API call thất bại.
                 Log error kèm batch index gây lỗi.
         """
-        pass
+        logger.info(f"Đang tiến hành dịch (embed) {len(documents)} chunks thành vector...")
+        try:
+            texts = [doc.page_content for doc in documents] # chỉ lấy phần content của Document
+            
+            # Gửi toàn bộ danh sách text lên model để băm thành vector (Batch processing)
+            vectors = self._model.embed_documents(texts)
+            
+            logger.info("Hoàn tất tạo vectors cho documents.")
+            return vectors
+        
+        except Exception as e:
+            logger.error(f"Lỗi trong quá trình embed_documents: {e}")
+            raise
 
     def embed_query(self, query: str) -> list[float]:
         """
@@ -83,4 +139,10 @@ class EmbeddingService:
         Raises:
             Exception: Khi API call thất bại. Log error kèm query.
         """
-        pass
+        try:
+            vector = self._model.embed_query(query)
+            return vector
+        
+        except Exception as e:
+            logger.error(f"Lỗi khi tạo embedding cho query '{query}': {e}")
+            raise

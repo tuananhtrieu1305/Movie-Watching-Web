@@ -5,7 +5,11 @@ Cung cấp class Reranker sử dụng cross-encoder model để đánh giá
 trực tiếp cặp (query, document) cho kết quả chính xác hơn.
 """
 
+import time
+import os
+from sentence_transformers import CrossEncoder
 from src.schemas import RetrievedChunk
+from src.config import RERANKER_MODEL_NAME
 from src.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,7 +47,23 @@ class Reranker:
             Exception: Khi không thể tải model.
                 Log error kèm tên model.
         """
-        pass
+        self._top_k = top_k
+        self._model_name = RERANKER_MODEL_NAME
+        
+        logger.info(f"Đang tải mô hình Cross-encoder: '{self._model_name}'...")
+        start_time = time.time()
+        
+        try:
+            self._model = CrossEncoder(self._model_name)
+            
+            elapsed_time = round(time.time() - start_time, 2)
+            logger.info(f"Tải mô hình Reranker hoàn tất trong {elapsed_time}s.")
+            
+        except Exception as e:
+            logger.error(f"Lỗi nghiêm trọng khi tải mô hình '{self._model_name}': {e}", exc_info=True)
+            raise RuntimeError(f"Không thể khởi tạo Reranker: {e}")
+        
+        
 
     def rerank(
         self,
@@ -74,4 +94,38 @@ class Reranker:
             Exception: Khi inference thất bại.
                 Log error kèm số chunks và query.
         """
-        pass
+        if not chunks:
+            logger.warning("Danh sách chunks rỗng, không có gì để rerank.")
+            return []
+
+        target_top_k = top_k if top_k is not None else self._top_k
+        logger.info(f"Đang rerank {len(chunks)} chunks cho query: '{query}' (lấy top {target_top_k})")
+
+        try:
+            start_time = time.time()
+
+            # Chuẩn bị dữ liệu đầu vào cho Cross-encoder
+            # Tạo các cặp: [(query, doc1), (query, doc2), ...]
+            sentence_pairs = [[query, chunk.content] for chunk in chunks]
+
+            scores = self._model.predict(sentence_pairs) # chấm điểm và trả về bảng điểm
+
+            for i, score in enumerate(scores):
+                chunks[i].score = float(score)
+
+            reranked_chunks = sorted(chunks, key=lambda x: x.score, reverse=True)
+
+            final_results = reranked_chunks[:target_top_k]
+
+            elapsed = round(time.time() - start_time, 2)
+            
+            if final_results:
+                max_s = final_results[0].score
+                min_s = final_results[-1].score
+                logger.info(f"Rerank hoàn tất trong {elapsed}s. Score range: [{min_s:.4f} - {max_s:.4f}]")
+
+            return final_results
+
+        except Exception as e:
+            logger.error(f"Lỗi trong quá trình rerank: {e}", exc_info=True)
+            return chunks[:target_top_k]

@@ -34,20 +34,7 @@ const MovieCard = ({ movie }) => {
 };
 
 const CategorySection = ({ title, movies = [], viewAllLink }) => {
-  // Mock data nếu không có movies
-  const defaultMovies = Array.from({ length: 6 }, (_, i) => ({
-    id: i + 1,
-    title: `Phim ${i + 1}`,
-    originalTitle: `Movie ${i + 1}`,
-    slug: `movie-${i + 1}`,
-    poster: `https://images.unsplash.com/photo-${1536440136628 + i * 100000}-849c177e76a1?w=300&h=450&fit=crop`,
-    quality: i % 2 === 0 ? "HD" : "4K",
-    year: 2024,
-    rating: (7 + Math.random() * 2).toFixed(1),
-    episode: i % 3 === 0 ? `Tập ${i + 1}` : null,
-  }));
-
-  const displayMovies = movies.length > 0 ? movies : defaultMovies;
+  const displayMovies = movies;
 
   return (
     <section className="category-section">
@@ -63,9 +50,11 @@ const CategorySection = ({ title, movies = [], viewAllLink }) => {
         )}
       </div>
       <div className="category-grid">
-        {displayMovies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
+        {displayMovies.length > 0 ? (
+          displayMovies.map((movie) => <MovieCard key={movie.id} movie={movie} />)
+        ) : (
+          <div className="text-white/70 text-sm">Chưa có dữ liệu.</div>
+        )}
       </div>
     </section>
   );

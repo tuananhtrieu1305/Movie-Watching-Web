@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Spin } from "antd";
 import { useParams } from "react-router-dom";
-import { getWatchDataBySlug } from "../../modules/streaming/mock/watchData";
+import { getWatchDataBySlug } from "../../services/watchService";
 
 import InfoHero from "./InfoHero";
 import RelatedMovies from "../streamingPage/RelatedMovies";
@@ -15,16 +15,30 @@ const MovieInfoPage = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    // Giả lập load data
-    setTimeout(() => {
-      const data = getWatchDataBySlug(slug);
-      if (data) {
-        setProductionData(data.production);
+    const controller = new AbortController();
+
+    const load = async () => {
+      setLoading(true);
+
+      try {
+        const data = await getWatchDataBySlug(slug, {
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+        setProductionData(data?.production ?? null);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("Failed to load movie info by slug:", error);
+        setProductionData(null);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-      setLoading(false);
-    }, 400);
+    };
+
+    load();
+
+    return () => controller.abort();
   }, [slug]);
 
   if (loading)
@@ -34,7 +48,20 @@ const MovieInfoPage = () => {
       </div>
     );
 
-  const { related } = productionData;
+  if (!productionData) {
+    return (
+      <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center px-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Không tìm thấy phim</h2>
+          <p className="text-white/70">Slug: {slug}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const related = Array.isArray(productionData.related)
+    ? productionData.related
+    : [];
 
   return (
     <div className="min-h-screen bg-[#121212] text-gray-300 font-sans pb-10">
