@@ -5,8 +5,9 @@ import {
   PlusOutlined,
   ShareAltOutlined,
   StarFilled,
+  TeamOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AnonymousBanner from "../../assets/anonymousBanner.png";
 import {
   GenreTags,
@@ -24,6 +25,7 @@ import {
 } from "../../utils/streaming/common";
 
 const InfoHero = ({ production }) => {
+  const navigate = useNavigate();
   const { handleCopyUrl, contextHolder } = useShareUrl();
   const { toggleWatchlist, isInWatchlist, loading } = useWatchlist(
     production?.id,
@@ -114,6 +116,15 @@ const InfoHero = ({ production }) => {
                   onClick={handleCopyUrl}
                 >
                   Share
+                </Button>
+                <Button
+                  shape="round"
+                  size="large"
+                  icon={<TeamOutlined />}
+                  className="bg-white/10 text-white border-white/20 hover:!bg-white/20 hover:!text-[#ffdd95] font-bold px-6 h-12 text-lg backdrop-blur-md hover:!border-[#ffdd95]"
+                  onClick={() => navigate("/meeting")}
+                >
+                  Xem cùng bạn bè
                 </Button>
               </div>
 

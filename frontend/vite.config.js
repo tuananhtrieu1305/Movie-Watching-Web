@@ -6,10 +6,12 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: true, // <--- DÒNG QUAN TRỌNG NHẤT: Cho phép truy cập từ bên ngoài
-    port: 5173, // Đảm bảo chạy đúng port này
+    host: true, // Cho phép truy cập từ mạng LAN
+    allowedHosts: true, // Mọi domain/ngrok đều được phép
+    cors: true, // Bật CORS
+    port: 5173,
     watch: {
-      usePolling: true, // Bắt buộc khi chạy trên máy ảo/Docker để hot-reload hoạt động
+      usePolling: true,
     },
   },
 });

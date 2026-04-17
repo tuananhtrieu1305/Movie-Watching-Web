@@ -3,66 +3,24 @@ import { Send } from "lucide-react";
 
 const MAX_LENGTH = 1000;
 
-function InlineStars({ value, hover, onHover, onLeave, onClick, locked }) {
-  return (
-    <div className="flex items-center gap-0.5" onMouseLeave={onLeave}>
-      {[1, 2, 3, 4, 5].map((star) => {
-        const active = star <= (hover > 0 ? hover : value);
-        const color = active
-          ? value <= 2 ? "text-red-400" : value <= 3 ? "text-orange-400" : "text-yellow-300"
-          : "text-gray-600";
-        return (
-          <button
-            key={star}
-            type="button"
-            disabled={locked}
-            onMouseEnter={() => !locked && onHover(star)}
-            onClick={() => !locked && onClick(star)}
-            className={`transition-all duration-100 focus:outline-none ${color} ${
-              locked ? "cursor-default" : "hover:scale-125 cursor-pointer"
-            }`}
-            aria-label={`${star * 2}/10`}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill={active ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-export default function CommentInput({ onSubmit, hasRated = false, savedRating = 0 }) {
+export default function CommentInput({ onSubmit }) {
   const [text, setText] = useState("");
-  const [rating, setRating] = useState(
-    savedRating > 5 ? Math.round(savedRating / 2) : savedRating
-  );
-  const [hoverStar, setHoverStar] = useState(0);
 
   const handleChange = (e) => {
     if (e.target.value.length <= MAX_LENGTH) setText(e.target.value);
   };
 
-  const handleStarClick = (val) => {
-    setRating(val === rating ? 0 : val);
-  };
-
   const handleSubmit = () => {
     if (!text.trim()) return;
-    if (onSubmit) onSubmit({ content: text, rating: rating * 2 });
+    if (onSubmit) onSubmit({ content: text });
     setText("");
   };
 
   const handleKeyDown = (e) => {
-    if (e.ctrlKey && e.key === "Enter") handleSubmit();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
   };
 
   const isNearLimit = text.length > MAX_LENGTH * 0.9;
@@ -97,31 +55,9 @@ export default function CommentInput({ onSubmit, hasRated = false, savedRating =
       </div>
 
       {/* ACTION BAR */}
-      <div className="flex items-center justify-between mt-3 gap-2">
+      <div className="flex items-center justify-end mt-3 gap-2">
 
-        {/* Center-left: Inline Stars */}
-        <div className="flex items-center gap-2">
-          <InlineStars
-            value={rating}
-            hover={hoverStar}
-            onHover={setHoverStar}
-            onLeave={() => setHoverStar(0)}
-            onClick={handleStarClick}
-            locked={hasRated}
-          />
-          <span className={`text-xs font-mono font-bold min-w-[36px] ${
-            rating > 0 ? "text-yellow-300" : "text-gray-600"
-          }`}>
-            {rating > 0 ? `${rating * 2}/10` : "—/10"}
-          </span>
-          {hasRated && (
-            <span className="text-[10px] bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded px-1.5 py-0.5 font-medium">
-              Rated
-            </span>
-          )}
-        </div>
-
-        {/* Right: Send Button */}
+        {/* Send Button */}
         <button
           onClick={handleSubmit}
           disabled={isEmpty}
