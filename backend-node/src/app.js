@@ -7,6 +7,7 @@ import paymentRoutes from "./modules/payment/payment.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import watchlistRoutes from "./modules/watchlist/watchlist.routes.js";
 import historyRoutes from "./modules/history/history.routes.js";
+import AdminAnalyticsRouter from "./modules/admin/analytics/route/analytics.route.js";
 import prisma from "./core/database/prisma.js";
 import cookieParser from "cookie-parser";
 
@@ -34,6 +35,7 @@ app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/watchlist", watchlistRoutes);
 app.use("/api/v1/history", historyRoutes);
+app.use("/api/admin/analytics", AdminAnalyticsRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello from Movie Streaming Backend!");

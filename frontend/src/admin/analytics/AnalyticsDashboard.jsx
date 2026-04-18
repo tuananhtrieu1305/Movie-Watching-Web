@@ -1,126 +1,193 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Progress,
-  Tag,
-  Select,
-  DatePicker,
+  Alert,
   Button,
-  Space,
-  Tabs,
+  Card,
+  Col,
   List,
-  Avatar,
-  Badge,
+  Progress,
+  Row,
+  Select,
+  Space,
+  Spin,
+  Statistic,
+  Tag,
+  Table,
+  Tabs,
 } from "antd";
 import {
-  EyeOutlined,
-  DollarOutlined,
-  UserOutlined,
-  RiseOutlined,
-  FallOutlined,
-  LineChartOutlined,
-  CloudServerOutlined,
+  AlertOutlined,
   CheckCircleOutlined,
-  SyncOutlined,
-  CloseCircleOutlined,
-  ThunderboltOutlined,
+  ClockCircleOutlined,
+  CloudServerOutlined,
+  DollarOutlined,
+  EyeOutlined,
+  FallOutlined,
   GlobalOutlined,
-  PlayCircleOutlined,
+  LineChartOutlined,
+  RiseOutlined,
+  SyncOutlined,
+  ThunderboltOutlined,
+  UserOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
+import { getAdminDashboardData } from "../../services/adminAnalyticsService";
 import "./analytics.css";
 
-const { RangePicker } = DatePicker;
-const { Option } = Select;
+const numberFormatter = new Intl.NumberFormat("vi-VN");
+const currencyFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
+const RANGE_OPTIONS = [
+  { value: "today", label: "Hôm nay" },
+  { value: "7days", label: "7 ngày qua" },
+  { value: "30days", label: "30 ngày qua" },
+  { value: "90days", label: "90 ngày qua" },
+];
+
+const EMPTY_DATA = {
+  traffic: {
+    visits: 0,
+    previousVisits: 0,
+    activeUsers: 0,
+    previousActiveUsers: 0,
+    conversionRate: 0,
+    previousConversionRate: 0,
+    avgWatchMinutes: 0,
+    previousAvgWatchMinutes: 0,
+  },
+  trafficTrend: [],
+  trafficSources: [],
+  revenueData: [],
+  systemOverview: [],
+  serviceStatus: [],
+  resourceUsage: [],
+  systemAlerts: [],
+};
+
+const round = (value, digits = 1) => {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+};
+
+const calcGrowth = (current, previous) => {
+  if (!previous) return 0;
+  return round(((current - previous) / previous) * 100, 1);
+};
+
+const formatKpiValue = (value, format) => {
+  if (format === "currency") return currencyFormatter.format(value);
+  if (format === "percent") return `${round(value, 2).toFixed(2)}%`;
+  if (format === "minutes") return `${numberFormatter.format(value)} phút`;
+  return numberFormatter.format(value);
+};
+
+const getStatusTag = (status) => {
+  if (status === "healthy") return <Tag color="green">Healthy</Tag>;
+  if (status === "warning") return <Tag color="gold">Warning</Tag>;
+  return <Tag color="red">Degraded</Tag>;
+};
+
+const normalizeDashboardData = (payload) => {
+  if (!payload || typeof payload !== "object") return EMPTY_DATA;
+
+  return {
+    traffic: {
+      ...EMPTY_DATA.traffic,
+      ...(payload.traffic || {}),
+    },
+    trafficTrend: Array.isArray(payload.trafficTrend) ? payload.trafficTrend : [],
+    trafficSources: Array.isArray(payload.trafficSources) ? payload.trafficSources : [],
+    revenueData: Array.isArray(payload.revenueData) ? payload.revenueData : [],
+    systemOverview: Array.isArray(payload.systemOverview) ? payload.systemOverview : [],
+    serviceStatus: Array.isArray(payload.serviceStatus) ? payload.serviceStatus : [],
+    resourceUsage: Array.isArray(payload.resourceUsage) ? payload.resourceUsage : [],
+    systemAlerts: Array.isArray(payload.systemAlerts) ? payload.systemAlerts : [],
+  };
+};
 
 const AnalyticsDashboard = () => {
   const [timeRange, setTimeRange] = useState("7days");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("analytics");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [lastUpdated, setLastUpdated] = useState("-");
+  const [dashboardData, setDashboardData] = useState(EMPTY_DATA);
 
-  // Mock data cho statistics
-  const statsData = [
-    {
-      title: "Tổng lượt truy cập",
-      value: 125436,
-      prefix: <EyeOutlined />,
-      suffix: "lượt",
-      trend: 12.5,
-      trendUp: true,
-    },
-    {
-      title: "Doanh thu tháng này",
-      value: 45678000,
-      prefix: <DollarOutlined />,
-      suffix: "đ",
-      trend: 8.3,
-      trendUp: true,
-      precision: 0,
-    },
-    {
-      title: "Người dùng hoạt động",
-      value: 8532,
-      prefix: <UserOutlined />,
-      suffix: "users",
-      trend: 3.2,
-      trendUp: false,
-    },
-    {
-      title: "Tổng thời gian xem",
-      value: 156789,
-      prefix: <PlayCircleOutlined />,
-      suffix: "giờ",
-      trend: 15.7,
-      trendUp: true,
-    },
-  ];
+  const fetchDashboard = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    setErrorMessage("");
 
-  // Traffic data by source
-  const trafficSources = [
-    { source: "Organic Search", visits: 45230, percentage: 42 },
-    { source: "Direct", visits: 28156, percentage: 26 },
-    { source: "Social Media", visits: 19845, percentage: 18 },
-    { source: "Referral", visits: 10234, percentage: 10 },
-    { source: "Paid Ads", visits: 4321, percentage: 4 },
-  ];
+    try {
+      const data = await getAdminDashboardData({ range: timeRange });
 
-  // Revenue data
-  const revenueData = [
-    {
-      key: 1,
-      period: "Tuần 1 - Tháng 2",
-      revenue: 12345000,
-      transactions: 156,
-      avgOrder: 79135,
-      growth: 15.2,
-    },
-    {
-      key: 2,
-      period: "Tuần 2 - Tháng 2",
-      revenue: 15678000,
-      transactions: 189,
-      avgOrder: 82952,
-      growth: 8.5,
-    },
-    {
-      key: 3,
-      period: "Tuần 3 - Tháng 2",
-      revenue: 13456000,
-      transactions: 167,
-      avgOrder: 80574,
-      growth: -5.3,
-    },
-    {
-      key: 4,
-      period: "Tuần 4 - Tháng 2",
-      revenue: 18234000,
-      transactions: 215,
-      avgOrder: 84786,
-      growth: 12.7,
-    },
-  ];
+      setDashboardData(normalizeDashboardData(data));
+      setLastUpdated(new Date().toLocaleString("vi-VN"));
+    } catch (error) {
+      setErrorMessage(error.message || "Không thể tải dữ liệu dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]);
+
+  const kpiData = useMemo(() => {
+    return [
+      {
+        key: "visits",
+        title: "Traffic",
+        value: Number(dashboardData.traffic.visits || 0),
+        previous: Number(dashboardData.traffic.previousVisits || 0),
+        icon: <EyeOutlined />,
+        format: "number",
+      },
+      {
+        key: "revenue",
+        title: "Revenue",
+        value: dashboardData.revenueData.reduce(
+          (sum, row) => sum + Number(row.revenue || 0),
+          0,
+        ),
+        previous: dashboardData.revenueData.reduce(
+          (sum, row) => sum + Number(row.revenue || 0),
+          0,
+        ) * 0.88,
+        icon: <DollarOutlined />,
+        format: "currency",
+      },
+      {
+        key: "activeUsers",
+        title: "Active Users",
+        value: Number(dashboardData.traffic.activeUsers || 0),
+        previous: Number(dashboardData.traffic.previousActiveUsers || 0),
+        icon: <UserOutlined />,
+        format: "number",
+      },
+      {
+        key: "conversion",
+        title: "Conversion Rate",
+        value: Number(dashboardData.traffic.conversionRate || 0),
+        previous: Number(dashboardData.traffic.previousConversionRate || 0),
+        icon: <LineChartOutlined />,
+        format: "percent",
+      },
+      {
+        key: "watchTime",
+        title: "Avg Watch Time",
+        value: Number(dashboardData.traffic.avgWatchMinutes || 0),
+        previous: Number(dashboardData.traffic.previousAvgWatchMinutes || 0),
+        icon: <GlobalOutlined />,
+        format: "minutes",
+      },
+    ];
+  }, [dashboardData]);
 
   const revenueColumns = [
     {
@@ -132,342 +199,364 @@ const AnalyticsDashboard = () => {
       title: "Doanh thu",
       dataIndex: "revenue",
       key: "revenue",
-      render: (value) => `${value.toLocaleString()} đ`,
-      sorter: (a, b) => a.revenue - b.revenue,
+      render: (value) => currencyFormatter.format(Number(value || 0)),
+      sorter: (a, b) => Number(a.revenue || 0) - Number(b.revenue || 0),
     },
     {
       title: "Giao dịch",
       dataIndex: "transactions",
       key: "transactions",
-      sorter: (a, b) => a.transactions - b.transactions,
+      sorter: (a, b) => Number(a.transactions || 0) - Number(b.transactions || 0),
     },
     {
       title: "TB/Đơn",
       dataIndex: "avgOrder",
       key: "avgOrder",
-      render: (value) => `${value.toLocaleString()} đ`,
+      render: (value) => currencyFormatter.format(Number(value || 0)),
     },
     {
       title: "Tăng trưởng",
       dataIndex: "growth",
       key: "growth",
-      render: (value) => (
-        <Tag color={value >= 0 ? "green" : "red"}>
-          {value >= 0 ? <RiseOutlined /> : <FallOutlined />} {Math.abs(value)}%
-        </Tag>
-      ),
-      sorter: (a, b) => a.growth - b.growth,
-    },
-  ];
-
-  // AI Models data
-  const aiModels = [
-    {
-      id: 1,
-      name: "Movie Recommendation Engine",
-      type: "Collaborative Filtering",
-      version: "v2.3.1",
-      status: "active",
-      accuracy: 94.5,
-      lastTrained: "2026-02-10 14:30:00",
-      predictions: 156789,
-    },
-    {
-      id: 2,
-      name: "Content Moderator",
-      type: "NLP Classification",
-      version: "v1.8.2",
-      status: "active",
-      accuracy: 97.2,
-      lastTrained: "2026-02-08 09:15:00",
-      predictions: 45623,
-    },
-    {
-      id: 3,
-      name: "User Sentiment Analyzer",
-      type: "Sentiment Analysis",
-      version: "v1.5.0",
-      status: "training",
-      accuracy: 91.8,
-      lastTrained: "2026-02-12 16:45:00",
-      predictions: 28934,
-    },
-    {
-      id: 4,
-      name: "Video Quality Enhancer",
-      type: "Deep Learning",
-      version: "v3.1.0",
-      status: "inactive",
-      accuracy: 89.3,
-      lastTrained: "2026-01-28 11:20:00",
-      predictions: 12456,
-    },
-  ];
-
-  const aiModelsColumns = [
-    {
-      title: "Tên Model",
-      dataIndex: "name",
-      key: "name",
-      render: (text) => <span className="font-semibold">{text}</span>,
-    },
-    {
-      title: "Loại",
-      dataIndex: "type",
-      key: "type",
-      render: (text) => <Tag color="blue">{text}</Tag>,
-    },
-    {
-      title: "Version",
-      dataIndex: "version",
-      key: "version",
-      render: (text) => <Tag>{text}</Tag>,
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        const statusConfig = {
-          active: { color: "green", icon: <CheckCircleOutlined />, text: "Active" },
-          training: { color: "orange", icon: <SyncOutlined spin />, text: "Training" },
-          inactive: { color: "red", icon: <CloseCircleOutlined />, text: "Inactive" },
-        };
-        const config = statusConfig[status];
+      render: (value) => {
+        const growth = Number(value || 0);
         return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.text}
+          <Tag color={growth >= 0 ? "green" : "red"}>
+            {growth >= 0 ? <RiseOutlined /> : <FallOutlined />} {Math.abs(growth).toFixed(1)}%
           </Tag>
         );
       },
-    },
-    {
-      title: "Độ chính xác",
-      dataIndex: "accuracy",
-      key: "accuracy",
-      render: (value) => (
-        <div className="flex items-center gap-2">
-          <Progress
-            percent={value}
-            size="small"
-            strokeColor={value >= 95 ? "#52c41a" : value >= 90 ? "#faad14" : "#ff4d4f"}
-            style={{ width: 100 }}
-          />
-          <span className="text-xs">{value}%</span>
-        </div>
-      ),
-      sorter: (a, b) => a.accuracy - b.accuracy,
-    },
-    {
-      title: "Predictions",
-      dataIndex: "predictions",
-      key: "predictions",
-      render: (value) => value.toLocaleString(),
-      sorter: (a, b) => a.predictions - b.predictions,
-    },
-    {
-      title: "Trained lần cuối",
-      dataIndex: "lastTrained",
-      key: "lastTrained",
-      render: (text) => <span className="text-xs text-gray-500">{text}</span>,
+      sorter: (a, b) => Number(a.growth || 0) - Number(b.growth || 0),
     },
   ];
 
-  // Top movies by views
-  const topMovies = [
-    { title: "Biệt Đội Đáp Phá", views: 45632, avatar: "🎬" },
-    { title: "Kẻ Trộm Mặt Trăng 4", views: 38921, avatar: "🎥" },
-    { title: "Vùng Đất Câm Lặng", views: 35467, avatar: "🎞️" },
-    { title: "Deadpool & Wolverine", views: 32145, avatar: "🎭" },
-    { title: "Dune: Phần Hai", views: 28934, avatar: "🎪" },
+  const serviceColumns = [
+    {
+      title: "Service",
+      dataIndex: "service",
+      key: "service",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => getStatusTag(status),
+    },
+    {
+      title: "Latency",
+      dataIndex: "latency",
+      key: "latency",
+      render: (latency) => `${Number(latency || 0)}ms`,
+    },
+    {
+      title: "Uptime",
+      dataIndex: "uptime",
+      key: "uptime",
+    },
+    {
+      title: "Sự cố gần nhất",
+      dataIndex: "lastIncident",
+      key: "lastIncident",
+    },
   ];
+
+  const maxVisits = Math.max(
+    ...dashboardData.trafficTrend.map((item) => Number(item.visits || 0)),
+    1,
+  );
 
   return (
     <div className="analytics-dashboard p-6">
-      {/* Header with filters */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="analytics-header">
         <div>
-          <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
-          <p>Thống kê tổng quan và quản lý AI Models</p>
+          <h1 className="analytics-title">Admin Portal Dashboard</h1>
+          <p className="analytics-subtitle">
+            Analytics & System Admin: theo dõi traffic, revenue và sức khỏe hệ thống.
+          </p>
+          <span className="analytics-last-updated">Cập nhật gần nhất: {lastUpdated}</span>
         </div>
-        <Space>
-          <RangePicker />
-          <Select value={timeRange} onChange={setTimeRange} style={{ width: 150 }}>
-            <Option value="today">Hôm nay</Option>
-            <Option value="7days">7 ngày qua</Option>
-            <Option value="30days">30 ngày qua</Option>
-            <Option value="90days">90 ngày qua</Option>
-          </Select>
+        <Space wrap>
+          <Select
+            value={timeRange}
+            options={RANGE_OPTIONS}
+            onChange={setTimeRange}
+            style={{ width: 170 }}
+          />
+          <Button icon={<SyncOutlined />} onClick={() => fetchDashboard({ silent: true })}>
+            Refresh
+          </Button>
         </Space>
       </div>
 
-      {/* Statistics Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        {statsData.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card hoverable className="shadow-sm">
-              <Statistic
-                title={stat.title}
-                value={stat.value}
-                prefix={stat.prefix}
-                suffix={stat.suffix}
-                precision={stat.precision}
-                valueStyle={{ color: stat.trendUp ? "#3f8600" : "#cf1322" }}
-              />
-              <div className="mt-2 text-xs text-gray-500">
-                {stat.trendUp ? (
-                  <RiseOutlined className="text-green-500" />
-                ) : (
-                  <FallOutlined className="text-red-500" />
-                )}{" "}
-                {stat.trend}% so với kỳ trước
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {errorMessage ? (
+        <Alert
+          type="error"
+          showIcon
+          className="mb-4"
+          message="Không tải được dữ liệu thật từ backend"
+          description={errorMessage}
+        />
+      ) : null}
 
-      {/* Tabs for different sections */}
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          {
-            key: "overview",
-            label: (
-              <span>
-                <LineChartOutlined /> Tổng quan
-              </span>
-            ),
-            children: (
-              <Row gutter={[16, 16]}>
-                {/* Traffic Sources */}
-                <Col xs={24} lg={12}>
-                  <Card title="Nguồn truy cập" className="shadow-sm">
-                    <List
-                      dataSource={trafficSources}
-                      renderItem={(item) => (
-                        <List.Item>
-                          <div className="w-full">
-                            <div className="flex justify-between mb-2">
-                              <span className="font-medium">
-                                <GlobalOutlined className="mr-2" />
-                                {item.source}
-                              </span>
-                              <span className="text-gray-500">
-                                {item.visits.toLocaleString()} visits
+      <Spin spinning={loading} tip="Đang tải dữ liệu dashboard...">
+        <Row gutter={[16, 16]} className="mb-6">
+          {kpiData.map((item) => {
+            const growth = calcGrowth(item.value, item.previous);
+            return (
+              <Col xs={24} sm={12} lg={8} xl={4} key={item.key}>
+                <Card className="analytics-kpi-card" hoverable>
+                  <Statistic
+                    title={item.title}
+                    value={formatKpiValue(item.value, item.format)}
+                    prefix={item.icon}
+                  />
+                  <div className="analytics-kpi-trend">
+                    {growth >= 0 ? (
+                      <Tag color="green" icon={<RiseOutlined />}>
+                        +{Math.abs(growth)}%
+                      </Tag>
+                    ) : (
+                      <Tag color="red" icon={<FallOutlined />}>
+                        -{Math.abs(growth)}%
+                      </Tag>
+                    )}
+                    <span>so với kỳ trước</span>
+                  </div>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: "analytics",
+              label: (
+                <span>
+                  <LineChartOutlined /> Analytics
+                </span>
+              ),
+              children: (
+                <>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} xl={14}>
+                      <Card title="Traffic Trend" className="analytics-card">
+                        <div className="traffic-bars">
+                          {dashboardData.trafficTrend.map((point) => (
+                            <div className="traffic-row" key={point.label}>
+                              <span className="traffic-label">{point.label}</span>
+                              <div className="traffic-track">
+                                <div
+                                  className="traffic-fill"
+                                  style={{
+                                    width: `${(Number(point.visits || 0) / maxVisits) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                              <span className="traffic-value">
+                                {numberFormatter.format(Number(point.visits || 0))}
                               </span>
                             </div>
-                            <Progress percent={item.percentage} strokeColor="#1890ff" />
-                          </div>
-                        </List.Item>
-                      )}
-                    />
-                  </Card>
-                </Col>
+                          ))}
+                        </div>
+                      </Card>
+                    </Col>
 
-                {/* Top Movies */}
-                <Col xs={24} lg={12}>
-                  <Card title="Top phim được xem nhiều" className="shadow-sm">
-                    <List
-                      dataSource={topMovies}
-                      renderItem={(item, index) => (
-                        <List.Item>
-                          <List.Item.Meta
-                            avatar={
-                              <Badge count={index + 1} style={{ backgroundColor: "#52c41a" }}>
-                                <Avatar size={40}>{item.avatar}</Avatar>
-                              </Badge>
-                            }
+                    <Col xs={24} xl={10}>
+                      <Card title="Nguồn Traffic" className="analytics-card">
+                        <List
+                          dataSource={dashboardData.trafficSources}
+                          renderItem={(item) => (
+                            <List.Item>
+                              <div className="source-item">
+                                <div className="source-head">
+                                  <span>
+                                    <GlobalOutlined /> {item.source}
+                                  </span>
+                                  <span>{numberFormatter.format(Number(item.visits || 0))} visits</span>
+                                </div>
+                                <Progress percent={Number(item.percentage || 0)} showInfo={false} />
+                              </div>
+                            </List.Item>
+                          )}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={[16, 16]} className="mt-4">
+                    <Col span={24}>
+                      <Card title="Revenue Breakdown" className="analytics-card">
+                        <Table
+                          columns={revenueColumns}
+                          dataSource={dashboardData.revenueData}
+                          pagination={false}
+                          summary={(pageData) => {
+                            let totalRevenue = 0;
+                            let totalTransactions = 0;
+
+                            pageData.forEach(({ revenue, transactions }) => {
+                              totalRevenue += Number(revenue || 0);
+                              totalTransactions += Number(transactions || 0);
+                            });
+
+                            const avgOrder =
+                              totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+
+                            return (
+                              <Table.Summary.Row>
+                                <Table.Summary.Cell index={0}>Tổng cộng</Table.Summary.Cell>
+                                <Table.Summary.Cell index={1}>
+                                  {currencyFormatter.format(totalRevenue)}
+                                </Table.Summary.Cell>
+                                <Table.Summary.Cell index={2}>
+                                  {numberFormatter.format(totalTransactions)}
+                                </Table.Summary.Cell>
+                                <Table.Summary.Cell index={3}>
+                                  {currencyFormatter.format(avgOrder)}
+                                </Table.Summary.Cell>
+                                <Table.Summary.Cell index={4}>-</Table.Summary.Cell>
+                              </Table.Summary.Row>
+                            );
+                          }}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+                </>
+              ),
+            },
+            {
+              key: "system-admin",
+              label: (
+                <span>
+                  <CloudServerOutlined /> System Admin
+                </span>
+              ),
+              children: (
+                <>
+                  {(dashboardData.systemAlerts || []).slice(0, 1).map((alert) => (
+                    <Alert
+                      key={alert.key}
+                      type={
+                        alert.level === "critical"
+                          ? "error"
+                          : alert.level === "warning"
+                            ? "warning"
+                            : "info"
+                      }
+                      showIcon
+                      className="mb-4"
+                      message={alert.title}
+                      description={alert.description}
+                    />
+                  ))}
+
+                  <Row gutter={[16, 16]} className="mb-4">
+                    {dashboardData.systemOverview.map((item) => (
+                      <Col xs={24} sm={12} lg={6} key={item.key}>
+                        <Card className="analytics-card" hoverable>
+                          <Statistic
                             title={item.title}
-                            description={
-                              <span className="text-xs">
-                                <EyeOutlined className="mr-1" />
-                                {item.views.toLocaleString()} lượt xem
-                              </span>
+                            value={Number(item.value || 0)}
+                            suffix={item.suffix}
+                            prefix={
+                              item.key === "db-latency" ? (
+                                <ThunderboltOutlined />
+                              ) : item.key === "pending-transactions" ? (
+                                <ClockCircleOutlined />
+                              ) : item.key === "failed-rate" ? (
+                                <AlertOutlined />
+                              ) : (
+                                <CheckCircleOutlined />
+                              )
                             }
                           />
-                        </List.Item>
-                      )}
-                    />
-                  </Card>
-                </Col>
-              </Row>
-            ),
-          },
-          {
-            key: "revenue",
-            label: (
-              <span>
-                <DollarOutlined /> Doanh thu
-              </span>
-            ),
-            children: (
-              <Card className="shadow-sm">
-                <Table
-                  columns={revenueColumns}
-                  dataSource={revenueData}
-                  pagination={false}
-                  summary={(pageData) => {
-                    let totalRevenue = 0;
-                    let totalTransactions = 0;
+                          <div className="system-status-tag">{getStatusTag(item.status)}</div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
 
-                    pageData.forEach(({ revenue, transactions }) => {
-                      totalRevenue += revenue;
-                      totalTransactions += transactions;
-                    });
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} xl={14}>
+                      <Card title="Service Health" className="analytics-card">
+                        <Table
+                          columns={serviceColumns}
+                          dataSource={dashboardData.serviceStatus}
+                          pagination={false}
+                        />
+                      </Card>
+                    </Col>
 
-                    return (
-                      <Table.Summary.Row className="font-bold bg-gray-50">
-                        <Table.Summary.Cell index={0}>Tổng cộng</Table.Summary.Cell>
-                        <Table.Summary.Cell index={1}>
-                          {totalRevenue.toLocaleString()} đ
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={2}>{totalTransactions}</Table.Summary.Cell>
-                        <Table.Summary.Cell index={3}>
-                          {(totalRevenue / totalTransactions).toLocaleString()} đ
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={4}>-</Table.Summary.Cell>
-                      </Table.Summary.Row>
-                    );
-                  }}
-                />
-              </Card>
-            ),
-          },
-          {
-            key: "ai-models",
-            label: (
-              <span>
-                <CloudServerOutlined /> AI Models
-              </span>
-            ),
-            children: (
-              <div>
-                <div className="mb-4 flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Quản lý AI Models</h3>
-                  <Space>
-                    <Button icon={<SyncOutlined />}>Refresh</Button>
-                    <Button type="primary" icon={<ThunderboltOutlined />}>
-                      Train New Model
-                    </Button>
-                  </Space>
-                </div>
-                <Card className="shadow-sm">
-                  <Table
-                    columns={aiModelsColumns}
-                    dataSource={aiModels}
-                    pagination={{
-                      pageSize: 10,
-                      showTotal: (total) => `Tổng ${total} models`,
-                    }}
-                  />
-                </Card>
-              </div>
-            ),
-          },
-        ]}
-      />
+                    <Col xs={24} xl={10}>
+                      <Card title="Resource Usage" className="analytics-card mb-4">
+                        <List
+                          dataSource={dashboardData.resourceUsage}
+                          renderItem={(resource) => (
+                            <List.Item>
+                              <div className="resource-item">
+                                <div className="resource-head">
+                                  <span>{resource.label}</span>
+                                  <span>{resource.detail}</span>
+                                </div>
+                                <Progress
+                                  percent={Number(resource.usage || 0)}
+                                  strokeColor={
+                                    Number(resource.usage || 0) > 80
+                                      ? "#ff4d4f"
+                                      : Number(resource.usage || 0) > 65
+                                        ? "#faad14"
+                                        : "#52c41a"
+                                  }
+                                  showInfo={false}
+                                />
+                              </div>
+                            </List.Item>
+                          )}
+                        />
+                      </Card>
+
+                      <Card title="Recent Alerts" className="analytics-card">
+                        <List
+                          dataSource={dashboardData.systemAlerts}
+                          renderItem={(item) => (
+                            <List.Item>
+                              <div className="alert-item">
+                                <Tag
+                                  color={
+                                    item.level === "critical"
+                                      ? "red"
+                                      : item.level === "warning"
+                                        ? "gold"
+                                        : "blue"
+                                  }
+                                  icon={
+                                    item.level === "critical" ? <WarningOutlined /> : <AlertOutlined />
+                                  }
+                                >
+                                  {String(item.level || "info").toUpperCase()}
+                                </Tag>
+                                <div>
+                                  <div className="alert-title">{item.title}</div>
+                                  <div className="alert-description">{item.description}</div>
+                                </div>
+                              </div>
+                            </List.Item>
+                          )}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+                </>
+              ),
+            },
+          ]}
+        />
+      </Spin>
     </div>
   );
 };

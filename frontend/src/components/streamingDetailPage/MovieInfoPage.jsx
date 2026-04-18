@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Spin, message } from "antd";
 import { useParams } from "react-router-dom";
 import { getMovieBySlug, getPopularMovies } from "../../services/movieService";
+import { getWatchDataBySlug } from "../../services/watchService";
 
 import InfoHero from "./InfoHero";
 import RelatedMovies from "../streamingPage/RelatedMovies";
@@ -32,6 +33,30 @@ const MovieInfoPage = () => {
       .finally(() => {
         setLoading(false);
       });
+    const controller = new AbortController();
+
+    const load = async () => {
+      setLoading(true);
+
+      try {
+        const data = await getWatchDataBySlug(slug, {
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+        setProductionData(data?.production ?? null);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("Failed to load movie info by slug:", error);
+        setProductionData(null);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => controller.abort();
   }, [slug]);
 
   if (loading)
@@ -41,7 +66,20 @@ const MovieInfoPage = () => {
       </div>
     );
 
-  const related = productionData?.related || [];
+  if (!productionData) {
+    return (
+      <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center px-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Không tìm thấy phim</h2>
+          <p className="text-white/70">Slug: {slug}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const related = Array.isArray(productionData.related)
+    ? productionData.related
+    : [];
 
   return (
     <>

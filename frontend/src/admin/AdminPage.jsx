@@ -90,7 +90,7 @@ const AdminPage = () => {
 
   const menuItems = [
     {
-      label: <Link to="/admin">Analytics</Link>,
+      label: <Link to="/admin">Analytics & System</Link>,
       key: "analytics",
       icon: <AppstoreOutlined />,
     },
