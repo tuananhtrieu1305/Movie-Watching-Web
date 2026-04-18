@@ -1,261 +1,216 @@
-/* Analytics Dashboard Dark Theme */
 .analytics-dashboard {
-  background: transparent !important;
+  color: #f2f6ff;
 }
 
-/* Cards */
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.analytics-title {
+  margin: 0;
+  color: #f7fbff;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.analytics-subtitle {
+  margin: 8px 0 0;
+  color: #aab6ca;
+}
+
+.analytics-last-updated {
+  display: inline-block;
+  margin-top: 10px;
+  color: #6f95ff;
+  font-size: 12px;
+}
+
 .analytics-dashboard .ant-card {
-  background: #141414 !important;
-  border: 1px solid #2a2a2a !important;
+  background: linear-gradient(145deg, #131a2b 0%, #101621 100%);
+  border: 1px solid #202b42;
+  box-shadow: 0 18px 30px rgba(8, 12, 22, 0.35);
 }
 
 .analytics-dashboard .ant-card-head {
-  background: #1a1a1a !important;
-  border-bottom: 1px solid #2a2a2a !important;
-  color: #fff !important;
+  background: transparent;
+  border-bottom: 1px solid #1f2b43;
 }
 
 .analytics-dashboard .ant-card-head-title {
-  color: #fff !important;
+  color: #f7fbff;
+  font-weight: 600;
 }
 
 .analytics-dashboard .ant-card-body {
-  color: #e0e0e0 !important;
-  background: #141414 !important;
+  color: #d4e1f8;
 }
 
-/* Statistic */
-.analytics-dashboard .ant-statistic-title {
-  color: #999 !important;
+.analytics-kpi-card .ant-statistic-title {
+  color: #9fb0cb;
 }
 
-.analytics-dashboard .ant-statistic-content {
-  color: #fff !important;
+.analytics-kpi-card .ant-statistic-content {
+  color: #f7fbff;
+  font-size: 24px;
 }
 
-/* Table */
-.analytics-dashboard .ant-table {
-  background: transparent !important;
-  color: #e0e0e0 !important;
+.analytics-kpi-trend {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #aab6ca;
+  font-size: 12px;
 }
 
-.analytics-dashboard .ant-table-thead > tr > th {
-  background: #1a1a1a !important;
-  color: #fff !important;
-  border-bottom: 1px solid #2a2a2a !important;
-  border-right: none !important;
+.traffic-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.analytics-dashboard .ant-table-tbody > tr > td {
-  background: #141414 !important;
-  border-bottom: 1px solid #2a2a2a !important;
-  border-right: none !important;
-  color: #e0e0e0 !important;
+.traffic-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 120px;
+  gap: 10px;
+  align-items: center;
 }
 
-.analytics-dashboard .ant-table-tbody > tr:hover > td {
-  background: #1f1f1f !important;
+.traffic-label {
+  color: #9bb0d4;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.analytics-dashboard .ant-table-summary {
-  background: #1a1a1a !important;
+.traffic-track {
+  height: 12px;
+  border-radius: 999px;
+  background: #0e1422;
+  border: 1px solid #20304e;
+  overflow: hidden;
 }
 
-.analytics-dashboard .ant-table-summary > tr > td {
-  background: #1a1a1a !important;
-  border-top: 1px solid #2a2a2a !important;
-  border-bottom: none !important;
-  color: #fff !important;
+.traffic-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2b8cff 0%, #31c6ff 100%);
 }
 
-/* List */
-.analytics-dashboard .ant-list {
-  color: #e0e0e0 !important;
+.traffic-value {
+  text-align: right;
+  font-size: 12px;
+  color: #bfd1f0;
+}
+
+.source-item,
+.resource-item {
+  width: 100%;
+}
+
+.source-head,
+.resource-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #d4e1f8;
+  font-size: 13px;
+}
+
+.system-status-tag {
+  margin-top: 10px;
+}
+
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.alert-title {
+  color: #f4f9ff;
+  font-weight: 600;
+}
+
+.alert-description {
+  color: #a8bad8;
+  font-size: 12px;
+  margin-top: 3px;
 }
 
 .analytics-dashboard .ant-list-item {
-  border-bottom: 1px solid #2a2a2a !important;
-  color: #e0e0e0 !important;
+  border-block-end: 1px solid #1f2b43;
 }
 
-.analytics-dashboard .ant-list-item-meta-title {
-  color: #fff !important;
+.analytics-dashboard .ant-table {
+  background: transparent;
+  color: #d4e1f8;
 }
 
-.analytics-dashboard .ant-list-item-meta-description {
-  color: #999 !important;
+.analytics-dashboard .ant-table-thead > tr > th {
+  background: #0f1829;
+  color: #c9d8f1;
+  border-bottom: 1px solid #1f2b43;
 }
 
-/* Select, DatePicker */
-.analytics-dashboard .ant-select-selector {
-  background: #1a1a1a !important;
-  border: 1px solid #2a2a2a !important;
-  color: #e0e0e0 !important;
+.analytics-dashboard .ant-table-tbody > tr > td {
+  background: #111a2c;
+  border-bottom: 1px solid #1f2b43;
+  color: #d4e1f8;
 }
 
-.analytics-dashboard .ant-select-arrow {
-  color: #999 !important;
-}
-
-.analytics-dashboard .ant-picker {
-  background: #1a1a1a !important;
-  border: 1px solid #2a2a2a !important;
-}
-
-.analytics-dashboard .ant-picker-input > input {
-  color: #e0e0e0 !important;
-}
-
-.analytics-dashboard .ant-picker-suffix {
-  color: #999 !important;
-}
-
-/* Tabs */
-.analytics-dashboard .ant-tabs-nav {
-  color: #e0e0e0 !important;
+.analytics-dashboard .ant-table-summary > tr > td {
+  background: #0f1829;
+  color: #f7fbff;
+  border-top: 1px solid #2a395a;
 }
 
 .analytics-dashboard .ant-tabs-tab {
-  color: #999 !important;
+  color: #8ea6ce;
 }
 
 .analytics-dashboard .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: #1890ff !important;
+  color: #7eb9ff;
 }
 
 .analytics-dashboard .ant-tabs-ink-bar {
-  background: #1890ff !important;
+  background: #53a0ff;
 }
 
-.analytics-dashboard .ant-tabs-nav::before {
-  border-bottom: 1px solid #2a2a2a !important;
-}
-
-/* Progress */
-.analytics-dashboard .ant-progress-text {
-  color: #e0e0e0 !important;
-}
-
-/* Badge */
-.analytics-dashboard .ant-badge-count {
-  background: #52c41a !important;
-  color: #fff !important;
-}
-
-/* Button */
 .analytics-dashboard .ant-btn {
-  background: #1a1a1a !important;
-  border: 1px solid #2a2a2a !important;
-  color: #e0e0e0 !important;
+  background: #17233a;
+  border: 1px solid #2a3a59;
+  color: #dce8ff;
 }
 
 .analytics-dashboard .ant-btn:hover {
-  background: #242424 !important;
-  border-color: #3a3a3a !important;
-  color: #fff !important;
+  background: #1b2a45;
+  border-color: #4b6aa3;
+  color: #f7fbff;
 }
 
-.analytics-dashboard .ant-btn-primary {
-  background: #1890ff !important;
-  border-color: #1890ff !important;
-  color: #fff !important;
+.analytics-dashboard .ant-select-selector {
+  background: #17233a !important;
+  border-color: #2a3a59 !important;
+  color: #e5efff !important;
 }
 
-.analytics-dashboard .ant-btn-primary:hover {
-  background: #40a9ff !important;
-  border-color: #40a9ff !important;
-}
+@media (max-width: 768px) {
+  .analytics-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-/* Avatar */
-.analytics-dashboard .ant-avatar {
-  background: #1a1a1a !important;
-  border: 1px solid #2a2a2a !important;
-}
+  .traffic-row {
+    grid-template-columns: 44px 1fr;
+  }
 
-/* Space with text */
-.analytics-dashboard .ant-space-item {
-  color: #e0e0e0 !important;
-}
-
-/* Dropdown menus */
-.ant-select-dropdown {
-  background: #1a1a1a !important;
-  border: 1px solid #2a2a2a !important;
-}
-
-.ant-select-item {
-  color: #e0e0e0 !important;
-}
-
-.ant-select-item-option-selected {
-  background: #242424 !important;
-}
-
-.ant-select-item-option-active {
-  background: #2a2a2a !important;
-}
-
-.ant-picker-dropdown {
-  background: #1a1a1a !important;
-}
-
-.ant-picker-panel-container {
-  background: #1a1a1a !important;
-  border: 1px solid #2a2a2a !important;
-}
-
-.ant-picker-header,
-.ant-picker-body,
-.ant-picker-content {
-  color: #e0e0e0 !important;
-}
-
-.ant-picker-cell {
-  color: #999 !important;
-}
-
-.ant-picker-cell-in-view {
-  color: #e0e0e0 !important;
-}
-
-.ant-picker-cell-selected .ant-picker-cell-inner {
-  background: #1890ff !important;
-  color: #fff !important;
-}
-
-.ant-picker-cell:hover .ant-picker-cell-inner {
-  background: #2a2a2a !important;
-}
-
-/* Header Title */
-.analytics-dashboard h1,
-.analytics-dashboard h2,
-.analytics-dashboard h3 {
-  color: #fff !important;
-}
-
-.analytics-dashboard p {
-  color: #999 !important;
-}
-
-/* Trend indicators */
-.analytics-dashboard .text-xs {
-  color: #999 !important;
-}
-
-.analytics-dashboard .text-green-500 {
-  color: #52c41a !important;
-}
-
-.analytics-dashboard .text-red-500 {
-  color: #ff4d4f !important;
-}
-
-.analytics-dashboard .text-gray-500 {
-  color: #999 !important;
-}
-
-.analytics-dashboard .font-medium,
-.analytics-dashboard .font-semibold {
-  color: #fff !important;
+  .traffic-value {
+    grid-column: 2;
+  }
 }

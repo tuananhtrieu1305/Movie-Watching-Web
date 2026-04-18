@@ -8,6 +8,12 @@ export default defineConfig({
   server: {
     host: true, // <--- DÒNG QUAN TRỌNG NHẤT: Cho phép truy cập từ bên ngoài
     port: 5173, // Đảm bảo chạy đúng port này
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
     watch: {
       usePolling: true, // Bắt buộc khi chạy trên máy ảo/Docker để hot-reload hoạt động
     },
