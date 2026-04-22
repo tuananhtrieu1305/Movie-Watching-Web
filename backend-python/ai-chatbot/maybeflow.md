@@ -79,3 +79,4 @@ RetrieverChunk{'chunk_index': 0,
  'production_id': 1,
  'score': 0.11929681897163391}
 ```
+Đường link: [Truy cập Google](https://www.google.com)

@@ -209,6 +209,7 @@ class DataLoader:
         rating_avg = float(production_data.get('rating_avg') or 0.0)
         rating_cnt = production_data.get('rating_count', 0)
         lang = production_data.get("language", "Vietnamese")
+        slug = production_data.get("slug", "")
         
         genres_list = production_data.get('genres', [])
         actors_list = production_data.get('actors', [])
@@ -227,7 +228,8 @@ class DataLoader:
             f"Mô tả nội dung: {desc}",
             f"Trạng thái: {status}",
             f"Ngôn ngữ: {lang}",
-            f"Premium: {pre}"
+            f"Premium: {pre}",
+            f"slug: {slug}"
         ]
 
         # Chỉ thêm thông tin tập phim nếu là series/season và có dữ liệu

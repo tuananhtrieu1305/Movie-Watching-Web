@@ -105,10 +105,12 @@ class ResponseGenerator:
         - Ngôn ngữ: Tiếng Việt, thân thiện, nhiệt tình
         - Quy tắc: Chỉ trả lời dựa trên context, thông báo nếu không tìm thấy
         - Format: Gợi ý phim kèm lý do, đánh giá, thông tin diễn viên
+        - Mỗi bộ phim trả về 1 đường link dẫn đến trang chi tiết của phim đó. Mỗi đường link có dạng http://localhost:5174/slug với slug của tưng bộ phim được cung cấp.
 
         Returns:
             str: System prompt string.
         """
+        
         prompt = """Bạn là một Chuyên gia tư vấn phim ảnh nhiệt tình, tinh tế và am hiểu của nền tảng MovieHub.
 
                     NHIỆM VỤ CỦA BẠN:
@@ -120,6 +122,7 @@ class ResponseGenerator:
                     3. ĐỊNH DẠNG TRÌNH BÀY: Khi bạn gợi ý một hoặc nhiều bộ phim, hãy trình bày thật rõ ràng, dễ đọc:
                     - **Tên phim (Năm phát hành)** | Thể loại: ... | Rating: ...
                     - **Lý do gợi ý:** (Trích xuất 1-2 câu tóm tắt nội dung từ ngữ cảnh để thuyết phục người dùng).
+                    - **Đường link:** [{Tên bộ phim}] (http://localhost:5174/watch/slug) với slug của từng bộ phim được cung cấp
                     4. GIỌNG ĐIỆU: Gần gũi, tự nhiên như một người bạn thân đang rủ đi xem phim.
 
                     Hãy phân tích kỹ ngữ cảnh được cung cấp và đưa ra câu trả lời xuất sắc nhất!
