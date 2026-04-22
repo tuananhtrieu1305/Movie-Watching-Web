@@ -34,7 +34,7 @@ app.add_middleware(
     # Dev-friendly defaults: allow any origin.
     # NOTE: Wildcard CORS cannot be combined with credentials.
     allow_origins=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
