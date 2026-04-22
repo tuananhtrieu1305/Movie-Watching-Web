@@ -168,6 +168,8 @@ const ContentTable = () => {
         actionRef={actionRef}
         request={async (params) => {
           let data = await getMovies();
+          data = data.filter((item) => ["movie", "series"].includes(item.type));
+
           if (params.title)
             data = data.filter((item) =>
               item.title.toLowerCase().includes(params.title.toLowerCase()),

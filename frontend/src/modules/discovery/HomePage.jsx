@@ -25,8 +25,7 @@ const getSqlSlug = (value) => {
 const asHttpUrlOrNull = (value) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!trimmed) return null;
-  return /^https?:\/\//i.test(trimmed) ? trimmed : null;
+  return trimmed !== "" ? trimmed : null;
 };
 
 const resolvePosterUrl = (value) => asHttpUrlOrNull(value) || AnonymousBanner;
@@ -83,10 +82,7 @@ const mapProductionToHero = (p) => ({
   slug: getSqlSlug(p.slug),
   description: p.description || "",
   poster: resolvePosterUrl(p.poster_url),
-  backdrop:
-    asHttpUrlOrNull(p.banner_url) ||
-    asHttpUrlOrNull(p.poster_url) ||
-    AnonymousBanner,
+  backdrop: asHttpUrlOrNull(p.banner_url) || AnonymousBanner,
   year: p.release_year || null,
   rating: toNumber(p.rating_avg) ?? null,
   genres: getProductionGenres(p),

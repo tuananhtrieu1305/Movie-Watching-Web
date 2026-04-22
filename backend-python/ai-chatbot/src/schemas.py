@@ -6,7 +6,7 @@ và các cấu trúc dữ liệu nội bộ dùng trong pipeline RAG.
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 from enum import Enum
 
@@ -110,7 +110,7 @@ class RetrievedChunk(BaseModel):
         metadata (dict): Metadata đi kèm chunk (production_id, title, chunk_index, ...).
         score (float): Điểm relevance của chunk (từ similarity search hoặc reranker).
     """
-    production_id: str | int  # Rút trích rõ ràng để dễ làm Trích dẫn (Citation)
+    production_id: Union[str, int]  # Rút trích rõ ràng để dễ làm Trích dẫn (Citation)
     chunk_index: int
     content: str
     metadata: dict = {}

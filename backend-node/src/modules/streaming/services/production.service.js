@@ -271,19 +271,19 @@ export const deleteProductionService = async (id) => {
   // 1. Lấy thông tin phim và các tập để biết đường dẫn file
   const production = await prisma.productions.findUnique({
     where: { id: Number(id) },
-    include: { 
+    include: {
       episodes: true,
       series: {
         include: {
           seasons: {
             include: {
               productions: {
-                include: { episodes: true }
-              }
-            }
-          }
-        }
-      }
+                include: { episodes: true },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -292,7 +292,7 @@ export const deleteProductionService = async (id) => {
   // Gom tất cả các tập của phim (nếu là series thì gom tất cả tập từ tất cả season)
   const allEpisodes = [];
   if (production.episodes) allEpisodes.push(...production.episodes);
-  
+
   const seasonShellIds = [];
   if (production.series?.seasons) {
     for (const season of production.series.seasons) {
@@ -370,10 +370,64 @@ export const deleteProductionService = async (id) => {
   });
 };
 
-export const getMoviesService = async () => {
-  return await prisma.productions.findMany({
-    where: { type: { in: ["movie", "series"] } },
+// Logic lấy danh sách phim
+export const getMoviesService = async ({ scope } = {}) => {
+  const isHomeScope = scope === "home";
+
+  const where = isHomeScope
+    ? {
+        type: {
+          in: ["movie", "series"],
+        },
+        poster_url: {
+          startsWith: "http",
+        },
+        banner_url: {
+          startsWith: "http",
+        },
+      }
+    : undefined;
+
+  const productions = await prisma.productions.findMany({
+    where,
     orderBy: { created_at: "desc" },
+    include: {
+      production_genres: {
+        select: {
+          genres: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
+      episodes: {
+        select: {
+          views_count: true,
+        },
+      },
+    },
+  });
+
+  return productions.map((production) => {
+    const totalViews = Array.isArray(production.episodes)
+      ? production.episodes.reduce(
+          (sum, ep) => sum + (Number(ep?.views_count) || 0),
+          0,
+        )
+      : 0;
+
+    const genres = Array.isArray(production.production_genres)
+      ? production.production_genres.map((item) => item?.genres).filter(Boolean)
+      : [];
+
+    return {
+      ...production,
+      total_views: totalViews,
+      genres,
+    };
   });
 };
 

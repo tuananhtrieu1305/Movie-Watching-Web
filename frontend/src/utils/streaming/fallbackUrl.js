@@ -12,8 +12,12 @@ export const getFallbackVideoUrl = (
   seasonNumber = 1,
   episodeNumber = 1,
 ) => {
-  // Nếu có link hợp lệ (bắt đầu bằng http) thì trả về luôn link đó
-  if (originalUrl && originalUrl.startsWith("http")) {
+  // Nếu có link hợp lệ (bắt đầu bằng http) và không phải link mẫu/rác
+  if (
+    originalUrl &&
+    originalUrl.startsWith("http") &&
+    !originalUrl.includes("w3schools.com")
+  ) {
     return originalUrl;
   }
 
@@ -25,4 +29,31 @@ export const getFallbackVideoUrl = (
   const index = sum % 2; // Sinh ra 0 hoặc 1
 
   return DUMMY_SERIES_URLS[index];
+};
+
+export const getFallbackDuration = (
+  originalUrl,
+  type,
+  seasonNumber = 1,
+  episodeNumber = 1,
+  originalDuration = 0,
+) => {
+  if (
+    originalUrl &&
+    originalUrl.startsWith("http") &&
+    !originalUrl.includes("w3schools.com")
+  ) {
+    return originalDuration;
+  }
+
+  if (type === "movie") {
+    return 1213; // 20m 13s dummy movie
+  }
+
+  const sum = Number(seasonNumber) + Number(episodeNumber);
+  const index = sum % 2;
+
+  // index 0 -> link S1E1 -> 1213s
+  // index 1 -> link S2E1 -> 1517s
+  return index === 0 ? 1213 : 1517;
 };

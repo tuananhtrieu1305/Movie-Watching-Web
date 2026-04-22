@@ -12,10 +12,13 @@ const VideoPlayer = (props) => {
     isLightOff,
     setLightOff,
     onNextEpisode,
+    onDurationUpdate,
     settings,
     setSettings,
   } = props;
   const videoRef = useRef(null);
+  console.log(currentEpisode);
+
   const { isAuthenticated, accessToken, user } = useAuth();
   const navigate = useNavigate();
 
@@ -79,6 +82,15 @@ const VideoPlayer = (props) => {
 
   const handleLoadedMetadata = () => {
     if (!videoRef.current) return;
+
+    if (onDurationUpdate && currentEpisode?.id) {
+      if (videoRef.current.duration && !isNaN(videoRef.current.duration)) {
+        onDurationUpdate(
+          currentEpisode.id,
+          Math.floor(videoRef.current.duration),
+        );
+      }
+    }
 
     // Nếu có tham số pos trên URL (từ trang lịch sử truyền sang)
     const searchParams = new URLSearchParams(window.location.search);

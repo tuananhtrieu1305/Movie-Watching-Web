@@ -36,6 +36,8 @@ const CategoryTabs = ({ categories = [] }) => {
   const hasDynamicCategories =
     Array.isArray(categories) && categories.length > 0;
 
+  console.log(categories);
+
   const displayCategories = hasDynamicCategories
     ? categories.slice(0, 8).map((category, index) => ({
         name: category.name,

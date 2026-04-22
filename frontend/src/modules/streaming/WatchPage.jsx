@@ -23,8 +23,12 @@ const WatchPage = () => {
     handlers,
     contextHolder,
   } = useWatchPage();
-  const { handleChangeEpisode, handleChangeSeason, handleNextEpisode } =
-    handlers;
+  const {
+    handleChangeEpisode,
+    handleChangeSeason,
+    handleNextEpisode,
+    handleDurationUpdate,
+  } = handlers;
 
   if (loading) {
     return (
@@ -38,8 +42,12 @@ const WatchPage = () => {
     return (
       <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Không tìm thấy dữ liệu phim</h2>
-          <p className="text-white/70">Slug không tồn tại hoặc chưa được đồng bộ.</p>
+          <h2 className="text-2xl font-bold mb-2">
+            Không tìm thấy dữ liệu phim
+          </h2>
+          <p className="text-white/70">
+            Slug không tồn tại hoặc chưa được đồng bộ.
+          </p>
         </div>
       </div>
     );
@@ -88,6 +96,7 @@ const WatchPage = () => {
                   isLightOff={isLightOff}
                   setLightOff={setLightOff}
                   onNextEpisode={handleNextEpisode}
+                  onDurationUpdate={handleDurationUpdate}
                   settings={playerSettings}
                   setSettings={setPlayerSettings}
                 />
@@ -123,7 +132,7 @@ const WatchPage = () => {
             className={`mt-8 grid grid-cols-1 xl:grid-cols-12 gap-6 transition-opacity duration-300 ${isLightOff ? "opacity-10" : "opacity-100"}`}
           >
             <div className="xl:col-span-9">
-             <CommentSection/>
+              <CommentSection />
             </div>
 
             <div className="xl:col-span-3">

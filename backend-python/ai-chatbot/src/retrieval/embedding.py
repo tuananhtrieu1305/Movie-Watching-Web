@@ -1,3 +1,4 @@
+from typing import Union
 """
 Module embedding — tạo embedding vectors từ text.
 
@@ -90,7 +91,7 @@ class EmbeddingService:
         Trả về embedding model instance.
 
         Returns:
-            langchain_openai.OpenAIEmbeddings | HuggingFaceEmbeddings:
+            langchain_openai.Union[OpenAIEmbeddings, HuggingFaceEmbeddings]:
                 Embedding model sẵn sàng sử dụng.
         """
         return self._model
