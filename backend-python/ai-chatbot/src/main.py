@@ -33,7 +33,12 @@ app.add_middleware(
     CORSMiddleware,
     # Dev-friendly defaults: allow any origin.
     # NOTE: Wildcard CORS cannot be combined with credentials.
-    allow_origins=["*"],
+    allow_origins=[
+        "https://netflick.fun",       # Cho phép web thật gọi
+        "https://www.netflick.fun",   # Cho phép web thật (có www) gọi
+        "http://localhost:3000",      # Cho phép máy bạn lúc test ở nhà
+        "http://localhost:5173"       # (Thêm cổng Frontend lúc dev nếu cần)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
