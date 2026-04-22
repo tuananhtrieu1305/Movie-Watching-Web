@@ -17,6 +17,7 @@
 - [Dependency Injection & OOP](#-dependency-injection--oop)
 - [API Endpoints](#-api-endpoints)
 - [Hướng dẫn cài đặt & chạy](#-hướng-dẫn-cài-đặt--chạy)
+- [Option: Chạy LLM ở Local](#-option-chạy-llm-ở-local-thay-vì-gemini-api)
 - [Cấu hình Environment](#-cấu-hình-environment)
 
 ---
@@ -370,6 +371,110 @@ curl -X POST http://localhost:8002/api/v1/ingest -d '{"force_reload": true}'
 # 6. Mở Swagger UI test API
 # → http://localhost:8002/docs
 ```
+
+---
+
+## 🖥 Option: Chạy LLM ở Local (thay vì Gemini API)
+
+> Nếu không muốn dùng Gemini API (tốn tiền / cần offline), bạn có thể **tự host LLM trên máy riêng** bằng **vLLM** + model **Gemma 4 31B**.
+> Folder `llm-local/` chứa sẵn hướng dẫn và script test.
+
+### Yêu cầu phần cứng
+
+- **GPU**: NVIDIA với ≥ 40GB VRAM (khuyến nghị H100, A100, hoặc dùng dịch vụ cloud như Kaggle/Lightning.ai)
+- Model `google/gemma-4-31B-it` cần ~31B parameters → **bắt buộc GPU mạnh**
+
+### Cách hoạt động
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  Máy có GPU (Kaggle / Lightning.ai / Server riêng)        │
+│                                                            │
+│  vLLM Server (:8000)                                       │
+│  ├── Model: google/gemma-4-31B-it                          │
+│  └── API: OpenAI-compatible (/v1/chat/completions)         │
+│                         │                                  │
+│                    (nếu remote)                            │
+│                    Pinggy Tunnel                            │
+└────────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼
+┌────────────────────────────────────────────────────────────┐
+│  Máy local (hoặc AI Chatbot server)                        │
+│                                                            │
+│  Gọi API qua OpenAI SDK:                                   │
+│  client = OpenAI(base_url="http://<host>:8000/v1")         │
+└────────────────────────────────────────────────────────────┘
+```
+
+vLLM expose API **tương thích OpenAI** → code client giống hệt khi gọi OpenAI/Gemini, chỉ đổi `base_url`.
+
+### Các bước cài đặt
+
+```bash
+# 1. Cài vLLM (trên máy có GPU)
+pip install vllm huggingface_hub
+pip install "numpy<2.0.0"
+
+# 2. Đăng nhập HuggingFace (cần accept license model Gemma)
+export HUGGING_FACE_HUB_TOKEN="hf_your_token_here"
+
+# 3. Khởi động vLLM server
+python -m vllm.entrypoints.openai.api_server \
+    --model google/gemma-4-31B-it \
+    --dtype bfloat16 \
+    --max-model-len 8192 \
+    --port 8000
+```
+
+### Test nhanh bằng curl
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "google/gemma-4-31B-it",
+    "messages": [
+      {"role": "user", "content": "Gợi ý phim hay cho cuối tuần"}
+    ],
+    "temperature": 0.7
+  }'
+```
+
+### Test bằng Python (`llm-local/test_llm.py`)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8000/v1",  # Hoặc URL Pinggy nếu remote
+    api_key="any-string"                  # vLLM local không cần key thật
+)
+
+response = client.chat.completions.create(
+    model="google/gemma-4-31b-it",
+    messages=[{"role": "user", "content": "Xin chào!"}],
+    temperature=0.7,
+    stream=True  # Hỗ trợ streaming (nhả từng token)
+)
+
+for chunk in response:
+    print(chunk.choices[0].delta.content, end="")
+```
+
+### Truy cập từ xa (nếu GPU ở cloud)
+
+Nếu vLLM chạy trên Kaggle/Lightning.ai, dùng **Pinggy** để tạo tunnel công khai:
+
+```bash
+# Trên máy cloud (cạnh vLLM)
+ssh -p 443 -R0:localhost:8000 a.pinggy.io
+# → Nhận được link: https://xxxxx.pinggy-free.link
+```
+
+Sau đó đổi `base_url` trong code thành link Pinggy đó.
+
+> **Lưu ý**: Để tích hợp vào chatbot chính, cần sửa `generator.py` để dùng `ChatOpenAI` (LangChain) thay vì `ChatGoogleGenerativeAI`, trỏ `base_url` về vLLM server.
 
 ---
 
