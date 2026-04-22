@@ -1,14 +1,36 @@
-import { createContext, useContext, useState, useMemo } from "react";
+import { createContext, useContext, useState, useMemo, useEffect } from "react";
 import { createMeeetingApi } from "./MeetingApi";
 
 const MeetingAppContext = createContext();
 export const useMeetingContext = () => useContext(MeetingAppContext);
+
+const SESSION_KEY = "watch_party_session";
+
 export default function MeetingContext({ children }) {
-  // Chỉ lưu trữ dữ liệu, không gọi hook của Cloudflare ở đây
-  const [token, setToken] = useState(null);
-  const [meetingId, setMeetingId] = useState(null);
-  const [participantId, setParticipantId] = useState(null);
-  const [isHost, setIsHost] = useState(false);
+  // 1. Khởi tạo state từ sessionStorage nếu có (để hỗ trợ F5)
+  const [session, setSession] = useState(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    return saved ? JSON.parse(saved) : {
+      token: null,
+      meetingId: null,
+      participantId: null,
+      isHost: false,
+    };
+  });
+
+  // Tách các state ra để tiện sử dụng như cũ (hoặc dùng trực tiếp session)
+  const [token, setToken] = useState(session.token);
+  const [meetingId, setMeetingId] = useState(session.meetingId);
+  const [participantId, setParticipantId] = useState(session.participantId);
+  const [isHost, setIsHost] = useState(session.isHost);
+
+  // 2. Lưu vào sessionStorage mỗi khi có thay đổi quan trọng
+  useEffect(() => {
+    if (meetingId) {
+      const dataToSave = { token, meetingId, participantId, isHost };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(dataToSave));
+    }
+  }, [token, meetingId, participantId, isHost]);
 
   const createRoom = async (title) => {
     try {
