@@ -32,22 +32,24 @@ Sau đó dict này được định dạng lại dưới dạng chuẩn `DataLoa
 
 ```json
 MovieDocument(
-    production_id=1, 
-    title='The Dark Knight', 
-    content='Tên phim/series: The Dark Knight\nLoại: movie\nNăm phát hành: 2008\nQuốc gia: USA\nĐánh giá trung bình: 5.0/5\nSố lượng đánh giá: 1\nThể loại: Hành động, Siêu anh hùng, Bí ẩn\nDàn diễn viên: Tom Hanks (vai Bruce Wayne / Batman), Leonardo DiCaprio (vai Harvey Dent / Two-Face), Meryl Streep (vai Rachel Dawes), Brad Pitt (vai Alfred Pennyworth)\nMô tả nội dung: Phim siêu anh hùng về Batman\nTrạng thái: completed\nNgôn ngữ: English\nPremium: True\nDanh sách tập phim: Tập 1: Full Movie', 
+    production_id=1,
+    title='The Dark Knight',
+    content='Tên phim/series: The Dark Knight\nLoại: movie\nNăm phát hành: 2008\nQuốc gia: USA\nĐánh giá trung bình: 5.0/5\nSố lượng đánh giá: 1\nThể loại: Hành động, Siêu anh hùng, Bí ẩn\nDàn diễn viên: Tom Hanks (vai Bruce Wayne / Batman), Leonardo DiCaprio (vai Harvey Dent / Two-Face), Meryl Streep (vai Rachel Dawes), Brad Pitt (vai Alfred Pennyworth)\nMô tả nội dung: Phim siêu anh hùng về Batman\nTrạng thái: completed\nNgôn ngữ: English\nPremium: True\nDanh sách tập phim: Tập 1: Full Movie',
     metadata={'production_id': 1, 'type': 'movie', 'title': 'The Dark Knight', 'year': 2008, 'country': 'USA', 'rating': 5.0, 'language': 'English', 'genres': ['Hành động', 'Siêu anh hùng', 'Bí ẩn'], 'actors': ['Tom Hanks (vai Bruce Wayne / Batman)', 'Leonardo DiCaprio (vai Harvey Dent / Two-Face)', 'Meryl Streep (vai Rachel Dawes)', 'Brad Pitt (vai Alfred Pennyworth)']}
 )
 ```
+
 Hàm `DataLoader.load_all()` sẽ thực hiện 2 bước kia trên toàn bộ tập data để tạo thành list[MovieDocument]
 
 Hàm `Chunking.chunk_all()` sẽ cắt các MovieDocument thành từng đoạn con là Document có dạng:
 
 ```json
 Document(
-    metadata={'production_id': 1, 'type': 'movie', 'title': 'The Dark Knight', 'year': 2008, 'country': 'USA', 'rating': 5.0, 'language': 'English', 'actors': ['Tom Hanks (vai Bruce Wayne / Batman)', 'Leonardo DiCaprio (vai Harvey Dent / Two-Face)', 'Meryl Streep (vai Rachel Dawes)', 'Brad Pitt (vai Alfred Pennyworth)'], 'genres': ['Hành động', 'Siêu anh hùng', 'Bí ẩn'], 'chunk_index': 0}, 
+    metadata={'production_id': 1, 'type': 'movie', 'title': 'The Dark Knight', 'year': 2008, 'country': 'USA', 'rating': 5.0, 'language': 'English', 'actors': ['Tom Hanks (vai Bruce Wayne / Batman)', 'Leonardo DiCaprio (vai Harvey Dent / Two-Face)', 'Meryl Streep (vai Rachel Dawes)', 'Brad Pitt (vai Alfred Pennyworth)'], 'genres': ['Hành động', 'Siêu anh hùng', 'Bí ẩn'], 'chunk_index': 0},
     page_content='Tên phim/series: The Dark Knight\nLoại: movie\nNăm phát hành: 2008\nQuốc gia: USA\nĐánh giá trung bình: 5.0/5\nSố lượng đánh giá: 1\nThể loại: Hành động, Siêu anh hùng, Bí ẩn\nDàn diễn viên: Tom Hanks (vai Bruce Wayne / Batman), Leonardo DiCaprio (vai Harvey Dent / Two-Face), Meryl Streep (vai Rachel Dawes), Brad Pitt (vai Alfred Pennyworth)\nMô tả nội dung: Phim siêu anh hùng về Batman\nTrạng thái: completed\nNgôn ngữ: English\nPremium: True\nDanh sách tập phim: Tập 1: Full Movie'
 )
 ```
+
 Kết quả sau khi Retrieval (chi tiết code test nằm trong file retriever.py) sẽ có dạng list[RetrieverChunk] với 1 trong số đó có dạng:
 
 ```json
@@ -78,4 +80,8 @@ RetrieverChunk{'chunk_index': 0,
               'year': 2008},
  'production_id': 1,
  'score': 0.11929681897163391}
+```
+
+```
+Đường link: [Truy cập Google](https://www.google.com)
 ```
