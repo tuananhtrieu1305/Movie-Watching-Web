@@ -1,7 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import "../assets/chatbot.css";
 
 import { sendChatMessage } from "../services/chatbotService";
+import { listProductions } from "../services/productionService";
+import AnonymousBanner from "../assets/anonymousBanner.png";
 
 import ReactMarkdown from "react-markdown";
 
@@ -17,7 +20,116 @@ const getOrCreateUserId = () => {
   return userId;
 };
 
+const resolveImageUrlOrNull = (value) => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  try {
+    const mediaBase = import.meta.env.VITE_MEDIA_BASE_URL || window.location.origin;
+    return new URL(trimmed, mediaBase).toString();
+  } catch {
+    return null;
+  }
+};
+
+const stripLegacyLinkLines = (text) => {
+  if (typeof text !== "string") return "";
+
+  const cleaned = text
+    .split("\n")
+    .filter((line) => !/^\s*[-*]?\s*\*{0,2}\s*Đường link\s*:/i.test(line.trim()))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return cleaned;
+};
+
+const formatMovieType = (value) => {
+  if (typeof value !== "string") return "movie";
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return "movie";
+  if (normalized === "series") return "series";
+  if (normalized === "season") return "season";
+  return "movie";
+};
+
+const normalizeLookupText = (value) => {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+};
+
+const toProductionIdOrNull = (value) => {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue) || numericValue <= 0) return null;
+  return Math.trunc(numericValue);
+};
+
+const buildWatchHref = (slug) => {
+  if (typeof slug !== "string") return "";
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return "";
+  return `/watch/${encodeURIComponent(normalizedSlug)}`;
+};
+
+const normalizeChatSources = (sources) => {
+  if (!Array.isArray(sources)) return [];
+
+  const seen = new Set();
+  const cards = [];
+
+  sources.forEach((item, index) => {
+    const productionId = toProductionIdOrNull(
+      item?.production_id ?? item?.productionId ?? item?.id,
+    );
+    const uniqueKey = productionId != null ? String(productionId) : `source-${index}`;
+    if (seen.has(uniqueKey)) return;
+    seen.add(uniqueKey);
+
+    const title = typeof item?.title === "string" && item.title.trim() !== ""
+      ? item.title.trim()
+      : "Phim đề xuất";
+
+    const slug = typeof item?.slug === "string" ? item.slug.trim() : "";
+    const year = item?.year == null ? "" : String(item.year);
+    const type = formatMovieType(item?.type);
+
+    const ratingValue = Number(item?.rating);
+    const ratingText = Number.isFinite(ratingValue) && ratingValue > 0
+      ? ratingValue.toFixed(1)
+      : "";
+
+    const durationValue = Number(item?.duration_minutes);
+    const durationText = Number.isFinite(durationValue) && durationValue > 0
+      ? `${Math.round(durationValue)} phút`
+      : "";
+
+    const posterUrl =
+      resolveImageUrlOrNull(item?.poster_url) ||
+      resolveImageUrlOrNull(item?.thumbnail_url) ||
+      AnonymousBanner;
+
+    cards.push({
+      id: uniqueKey,
+      productionId,
+      titleKey: normalizeLookupText(title),
+      title,
+      type,
+      year,
+      ratingText,
+      durationText,
+      posterUrl,
+      watchHref: buildWatchHref(slug),
+    });
+  });
+
+  return cards;
+};
+
 const ChatbotWidget = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -33,6 +145,11 @@ const ChatbotWidget = () => {
     () => localStorage.getItem(CONVERSATION_ID_STORAGE_KEY) || null,
   );
   const abortRef = useRef(null);
+  const slugLookupRef = useRef({
+    byId: new Map(),
+    byTitle: new Map(),
+  });
+  const slugLookupPromiseRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -94,13 +211,21 @@ const ChatbotWidget = () => {
         setConversationId(response.conversation_id);
       }
 
-      const answerText =
+      const answerTextRaw =
         typeof response?.answer === "string" && response.answer.trim() !== ""
           ? response.answer
           : "Mình chưa có câu trả lời phù hợp lúc này.";
+      const movieCards = normalizeChatSources(response?.sources);
+      const answerText = movieCards.length > 0
+        ? stripLegacyLinkLines(answerTextRaw) || "Mình chưa có câu trả lời phù hợp lúc này."
+        : answerTextRaw;
 
       setMessages((prev) =>
-        prev.map((m) => (m.id === placeholderBotId ? { ...m, text: answerText } : m)),
+        prev.map((m) =>
+          m.id === placeholderBotId
+            ? { ...m, text: answerText, movieCards }
+            : m,
+        ),
       );
     } catch (err) {
       const errorText =
@@ -124,6 +249,66 @@ const ChatbotWidget = () => {
       handleSendMessage();
     }
   };
+
+  const hydrateSlugLookup = useCallback(async () => {
+    const existingLookup = slugLookupRef.current;
+    if (existingLookup.byId.size > 0 || existingLookup.byTitle.size > 0) {
+      return existingLookup;
+    }
+
+    if (!slugLookupPromiseRef.current) {
+      slugLookupPromiseRef.current = (async () => {
+        const productions = await listProductions();
+        if (!Array.isArray(productions)) return slugLookupRef.current;
+
+        const byId = new Map();
+        const byTitle = new Map();
+
+        productions.forEach((production) => {
+          const slug = typeof production?.slug === "string" ? production.slug.trim() : "";
+          if (!slug) return;
+
+          const productionId = toProductionIdOrNull(production?.id ?? production?.production_id);
+          if (productionId != null && !byId.has(productionId)) {
+            byId.set(productionId, slug);
+          }
+
+          const titleKey = normalizeLookupText(production?.title);
+          if (titleKey && !byTitle.has(titleKey)) {
+            byTitle.set(titleKey, slug);
+          }
+        });
+
+        slugLookupRef.current = { byId, byTitle };
+        return slugLookupRef.current;
+      })().finally(() => {
+        slugLookupPromiseRef.current = null;
+      });
+    }
+
+    return slugLookupPromiseRef.current;
+  }, []);
+
+  const handleMovieCardClick = useCallback(async (movie) => {
+    if (movie.watchHref) {
+      navigate(movie.watchHref);
+      return;
+    }
+
+    try {
+      const lookup = await hydrateSlugLookup();
+      const slugFromId =
+        movie.productionId != null ? lookup.byId.get(movie.productionId) || "" : "";
+      const slugFromTitle = slugFromId ? "" : lookup.byTitle.get(movie.titleKey) || "";
+      const resolvedWatchHref = buildWatchHref(slugFromId || slugFromTitle);
+
+      if (resolvedWatchHref) {
+        navigate(resolvedWatchHref);
+      }
+    } catch {
+      // Ignore lookup errors so chatbot interaction is not blocked.
+    }
+  }, [hydrateSlugLookup, navigate]);
 
   return (
     <>
@@ -207,6 +392,43 @@ const ChatbotWidget = () => {
                   <div className="message-text">
                     <ReactMarkdown>{message.text}</ReactMarkdown>
                   </div>
+                  {message.type === "bot" && Array.isArray(message.movieCards) && message.movieCards.length > 0 && (
+                    <div className="chatbot-movie-list">
+                      {message.movieCards.map((movie, index) => {
+                        const card = (
+                          <>
+                            <div className="chatbot-movie-rank">#{index + 1}</div>
+                            <div className="chatbot-movie-poster">
+                              <img src={movie.posterUrl} alt={movie.title} loading="lazy" />
+                            </div>
+                            <div className="chatbot-movie-info">
+                              <div className="chatbot-movie-title">{movie.title}</div>
+                              <div className="chatbot-movie-meta">
+                                <span className="chatbot-movie-type">{movie.type}</span>
+                                {movie.ratingText && <span className="chatbot-movie-rating">★ {movie.ratingText}</span>}
+                                {movie.durationText && <span className="chatbot-movie-duration">{movie.durationText}</span>}
+                                {movie.year && <span className="chatbot-movie-year">{movie.year}</span>}
+                              </div>
+                            </div>
+                          </>
+                        );
+
+                        return (
+                          <button
+                            key={movie.id}
+                            type="button"
+                            className="chatbot-movie-card"
+                            aria-label={`Mở chi tiết phim ${movie.title}`}
+                            onClick={() => {
+                              void handleMovieCardClick(movie);
+                            }}
+                          >
+                            {card}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                   {message.suggestion && (
                     <div className="message-suggestion">
                       {message.suggestion}

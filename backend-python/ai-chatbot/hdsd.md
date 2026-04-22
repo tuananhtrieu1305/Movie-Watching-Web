@@ -11,6 +11,7 @@ PYTHONPATH=. uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Phần còn lại là mở web lên và test nhớ chạy npm install react-markdown
+sudo chown -R $(whoami) ~/Movie-Watching-Web/frontend (Nếu dùng lightning)
 
 run docker:
 ```

@@ -6,6 +6,7 @@ Cung cấp class ChatService kết nối: history → retrieval → generation �
 
 import time
 import asyncio
+import re
 from src.schemas import ChatRequest, ChatResponse, ChatMessage, MessageRole
 from src.retrieval.retriever import Retriever
 from src.generation.generator import ResponseGenerator
@@ -150,11 +151,31 @@ class ChatService:
             # if retrieved_chunks:
             #     sources = list(set([chunk.metadata.get("source", "Unknown") for chunk in retrieved_chunks]))
             source_list = []
+            seen_production_ids = set()
             for chunk in retrieved_chunks:
+                production_id = str(chunk.production_id)
+                if production_id in seen_production_ids:
+                    continue
+
+                seen_production_ids.add(production_id)
+                metadata = chunk.metadata or {}
+                slug = metadata.get("slug", "")
+                if not slug and isinstance(chunk.content, str):
+                    slug_match = re.search(r"slug:\s*([^\s,]+)", chunk.content, flags=re.IGNORECASE)
+                    if slug_match:
+                        slug = slug_match.group(1).strip()
+
                 source_list.append({
                     "production_id": chunk.production_id,
-                    "title": chunk.metadata.get("title", "Không rõ"),
-                    "score": chunk.score
+                    "title": metadata.get("title", "Không rõ"),
+                    "score": chunk.score,
+                    "slug": slug,
+                    "poster_url": metadata.get("poster_url", ""),
+                    "thumbnail_url": metadata.get("thumbnail_url", ""),
+                    "type": metadata.get("type", "movie"),
+                    "year": metadata.get("year", ""),
+                    "rating": metadata.get("rating", 0),
+                    "duration_minutes": metadata.get("duration_minutes", 0),
                 })
 
             total_time = time.time() - start_time

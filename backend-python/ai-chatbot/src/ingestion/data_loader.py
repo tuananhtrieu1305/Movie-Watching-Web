@@ -122,6 +122,8 @@ class DataLoader:
                 productions_dict[p_id]['genres'] = []
                 productions_dict[p_id]['actors'] = []
                 productions_dict[p_id]['episodes'] = []
+                productions_dict[p_id]['primary_duration_seconds'] = None
+                productions_dict[p_id]['primary_thumbnail_url'] = None
                 
             '''
             {
@@ -163,14 +165,35 @@ class DataLoader:
 
             # 4. Fetch và map Tập phim (Episodes)
             cursor.execute("""
-                SELECT production_id, episode_number, title 
+                SELECT production_id, episode_number, title, duration, thumbnail_url
                 FROM episodes 
                 ORDER BY production_id, episode_number ASC
             """)
             for row in cursor.fetchall():
                 if row['production_id'] in productions_dict:
+                    duration_seconds = row.get('duration')
+                    duration_minutes = None
+                    if isinstance(duration_seconds, (int, float)) and duration_seconds > 0:
+                        duration_minutes = round(duration_seconds / 60)
+
                     ep_info = f"Tập {row['episode_number']}: {row['title']}"
+                    if duration_minutes:
+                        ep_info += f" ({duration_minutes} phút)"
                     productions_dict[row['production_id']]['episodes'].append(ep_info)
+
+                    if (
+                        productions_dict[row['production_id']].get('primary_duration_seconds') is None
+                        and isinstance(duration_seconds, (int, float))
+                        and duration_seconds > 0
+                    ):
+                        productions_dict[row['production_id']]['primary_duration_seconds'] = int(duration_seconds)
+
+                    if (
+                        not productions_dict[row['production_id']].get('primary_thumbnail_url')
+                        and isinstance(row.get('thumbnail_url'), str)
+                        and row.get('thumbnail_url').strip() != ''
+                    ):
+                        productions_dict[row['production_id']]['primary_thumbnail_url'] = row['thumbnail_url']
 
             cursor.close()
             
@@ -210,6 +233,12 @@ class DataLoader:
         rating_cnt = production_data.get('rating_count', 0)
         lang = production_data.get("language", "Vietnamese")
         slug = production_data.get("slug", "")
+        poster_url = production_data.get("poster_url", "")
+        thumbnail_url = production_data.get("primary_thumbnail_url", "")
+        duration_seconds = production_data.get("primary_duration_seconds")
+        duration_minutes = None
+        if isinstance(duration_seconds, (int, float)) and duration_seconds > 0:
+            duration_minutes = round(duration_seconds / 60)
         
         genres_list = production_data.get('genres', [])
         actors_list = production_data.get('actors', [])
@@ -229,7 +258,8 @@ class DataLoader:
             f"Trạng thái: {status}",
             f"Ngôn ngữ: {lang}",
             f"Premium: {pre}",
-            f"slug: {slug}"
+            f"slug: {slug}",
+            f"Thời lượng: {duration_minutes} phút" if duration_minutes else "Thời lượng: Chưa rõ"
         ]
 
         # Chỉ thêm thông tin tập phim nếu là series/season và có dữ liệu
@@ -247,7 +277,11 @@ class DataLoader:
             "country": country,
             # "genres": genres_list,  # List các string để ChromaDB filter
             "rating": rating_avg,
-            "language": lang
+            "language": lang,
+            "slug": slug or "",
+            "poster_url": poster_url or "",
+            "thumbnail_url": thumbnail_url or "",
+            "duration_minutes": int(duration_minutes) if duration_minutes else 0
         }
         if actors_list:
             metadata["actors"] = actors_list
