@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Module generator — sinh câu trả lời từ LLM dựa trên RAG context.
 
@@ -134,7 +135,7 @@ class ResponseGenerator:
         self,
         query: str,
         context: str,
-        chat_history: list[ChatMessage] | None = None
+        chat_history: Optional[list[ChatMessage]] = None
     ) -> list[dict]:
         """
         Xây dựng danh sách messages cho LLM.
@@ -149,7 +150,7 @@ class ResponseGenerator:
         Args:
             query (str): Câu hỏi hiện tại.
             context (str): Context string từ Retriever.format_context().
-            chat_history (list[ChatMessage] | None): Lịch sử hội thoại.
+            chat_history (Optional[list[ChatMessage]]): Lịch sử hội thoại.
 
         Returns:
             list[dict]: Messages format [{"role": "...", "content": "..."}, ...]
@@ -197,7 +198,7 @@ class ResponseGenerator:
         self,
         query: str,
         retrieved_chunks: list[RetrievedChunk],
-        chat_history: list[ChatMessage] | None = None
+        chat_history: Optional[list[ChatMessage]] = None
     ) -> str:
         """
         Sinh câu trả lời từ LLM.
@@ -213,7 +214,7 @@ class ResponseGenerator:
         Args:
             query (str): Câu hỏi người dùng.
             retrieved_chunks (list[RetrievedChunk]): Chunks đã rerank.
-            chat_history (list[ChatMessage] | None): Lịch sử chat.
+            chat_history (Optional[list[ChatMessage]]): Lịch sử chat.
 
         Returns:
             str: Câu trả lời text từ LLM.

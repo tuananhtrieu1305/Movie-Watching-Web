@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Module kết nối và quản lý MongoDB cho lịch sử chat.
 
@@ -22,7 +23,7 @@ class MongoDBClient:
     cho chat history.
 
     Attributes:
-        _instance (MongoDBClient | None): Singleton instance.
+        _instance (Optional[MongoDBClient]): Singleton instance.
         _client: pymongo.MongoClient instance.
         _database: pymongo.database.Database instance.
         _history_collection: pymongo.collection.Collection cho chat history.

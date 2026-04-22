@@ -101,7 +101,7 @@ class HybridSearchEngine:
     async def semantic_search(self, 
                         query: str, 
                         top_k: int = 10, 
-                        filter: dict | None = None
+                        filter: Optional[dict] = None
                         ) -> list[Document]:
         """
         Semantic search trong ChromaDB.
@@ -172,7 +172,7 @@ class HybridSearchEngine:
         self,
         query: str,
         top_k: int = 10,
-        filter: dict | None = None,
+        filter: Optional[dict] = None,
         alpha: float = 0.5
     ) -> list[RetrievedChunk]:
         """

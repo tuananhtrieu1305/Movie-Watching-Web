@@ -9,6 +9,8 @@ const HistoryPage = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  console.log(items);
+
   const loadHistory = async () => {
     if (!accessToken) return;
 
@@ -54,14 +56,12 @@ const HistoryPage = () => {
               >
                 <img
                   src={
-                    item.episodes?.production?.poster_url ||
-                    "/default-avatar.png"
+                    item.episodes?.production?.seasons?.series?.productions
+                      ?.poster_url || item.episodes?.production?.poster_url
                   }
                   alt={item.episodes?.production?.title}
                   className="w-full h-56 object-cover"
                 />
-
-                {/* Thanh progress màu vàng bên dưới ảnh */}
                 <div className="absolute top-56 left-0 right-0 h-1 bg-gray-800 -mt-1 z-10 w-full">
                   <div
                     className="h-full bg-[#ffdd95]"
@@ -73,7 +73,7 @@ const HistoryPage = () => {
 
                 <div className="p-4 pt-5">
                   <h3 className="text-white font-semibold mb-1 line-clamp-1">
-                    {item.episodes?.production?.seasons 
+                    {item.episodes?.production?.seasons
                       ? `${item.episodes.production.seasons.series?.productions?.title} - ${item.episodes.production.title}`
                       : item.episodes?.production?.title}
                   </h3>
@@ -89,11 +89,11 @@ const HistoryPage = () => {
                       const slug = isSeason
                         ? production.seasons.series?.productions?.slug
                         : production?.slug;
-                      const seasonQuery = isSeason 
-                        ? `ss=${production.seasons.season_number}&` 
+                      const seasonQuery = isSeason
+                        ? `ss=${production.seasons.season_number}&`
                         : "";
                       const epQuery = `ep=${item.episodes?.episode_number}&pos=${item.last_position || 0}`;
-                      
+
                       return (
                         <Link
                           to={`/watch/${slug}?${seasonQuery}${epQuery}`}

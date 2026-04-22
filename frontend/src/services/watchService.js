@@ -1,6 +1,9 @@
-import { listProductions } from "./productionService";
+import { listProductions, getProductionBySlug } from "./productionService";
 
-const FALLBACK_VIDEO_URL = "https://www.w3schools.com/html/mov_bbb.mp4";
+import {
+  getFallbackVideoUrl,
+  getFallbackDuration,
+} from "../utils/streaming/fallbackUrl";
 
 const toNumber = (value) => {
   if (value == null) return null;
@@ -29,7 +32,9 @@ const normalizeGenres = (production) => {
           name: genre?.name ?? "Unknown",
         };
       })
-      .filter((genre) => typeof genre.name === "string" && genre.name.trim() !== "");
+      .filter(
+        (genre) => typeof genre.name === "string" && genre.name.trim() !== "",
+      );
   }
 
   if (!Array.isArray(production?.production_genres)) return [];
@@ -39,7 +44,9 @@ const normalizeGenres = (production) => {
       id: item?.genres?.id ?? index + 1,
       name: item?.genres?.name ?? "Unknown",
     }))
-    .filter((genre) => typeof genre.name === "string" && genre.name.trim() !== "");
+    .filter(
+      (genre) => typeof genre.name === "string" && genre.name.trim() !== "",
+    );
 };
 
 const buildEpisodes = (production) => {
@@ -50,14 +57,28 @@ const buildEpisodes = (production) => {
       title:
         typeof episode?.title === "string" && episode.title.trim() !== ""
           ? episode.title
-          : production.type === "movie"
+          : production?.type === "movie"
             ? "Full Movie"
             : `Episode ${index + 1}`,
-      video_url:
-        typeof episode?.video_url === "string" && episode.video_url.trim() !== ""
+      video_url: getFallbackVideoUrl(
+        typeof episode?.video_url === "string" &&
+          episode.video_url.trim() !== ""
           ? episode.video_url
-          : FALLBACK_VIDEO_URL,
-      duration: toNumber(episode?.duration) ?? 0,
+          : null,
+        production?.type,
+        1,
+        toNumber(episode?.episode_number) ?? index + 1,
+      ),
+      duration: getFallbackDuration(
+        typeof episode?.video_url === "string" &&
+          episode.video_url.trim() !== ""
+          ? episode.video_url
+          : null,
+        production?.type,
+        1,
+        toNumber(episode?.episode_number) ?? index + 1,
+        toNumber(episode?.duration) ?? 0,
+      ),
       views_count: toNumber(episode?.views_count) ?? 0,
       is_active: index === 0,
     }));
@@ -67,9 +88,9 @@ const buildEpisodes = (production) => {
     {
       id: production.id * 1000 + 1,
       episode_number: 1,
-      title: production.type === "movie" ? "Full Movie" : "Episode 1",
-      video_url: FALLBACK_VIDEO_URL,
-      duration: 0,
+      title: production?.type === "movie" ? "Full Movie" : "Episode 1",
+      video_url: getFallbackVideoUrl(null, production?.type, 1, 1),
+      duration: getFallbackDuration(null, production?.type, 1, 1, 0),
       views_count: toNumber(production?.total_views) ?? 0,
       is_active: true,
     },
@@ -88,17 +109,35 @@ const buildSeasons = (production) => {
         : `Mùa ${toNumber(season?.season_number) ?? index + 1}`,
     episodes: Array.isArray(season?.episodes)
       ? season.episodes.map((episode, episodeIndex) => ({
-          id: episode?.id ?? (season?.id ?? production.id * 100 + index + 1) * 1000 + episodeIndex + 1,
+          id:
+            episode?.id ??
+            (season?.id ?? production.id * 100 + index + 1) * 1000 +
+              episodeIndex +
+              1,
           episode_number: toNumber(episode?.episode_number) ?? episodeIndex + 1,
           title:
             typeof episode?.title === "string" && episode.title.trim() !== ""
               ? episode.title
               : `Episode ${episodeIndex + 1}`,
-          video_url:
-            typeof episode?.video_url === "string" && episode.video_url.trim() !== ""
+          video_url: getFallbackVideoUrl(
+            typeof episode?.video_url === "string" &&
+              episode.video_url.trim() !== ""
               ? episode.video_url
-              : FALLBACK_VIDEO_URL,
-          duration: toNumber(episode?.duration) ?? 0,
+              : null,
+            production?.type,
+            toNumber(season?.season_number) ?? index + 1,
+            toNumber(episode?.episode_number) ?? episodeIndex + 1,
+          ),
+          duration: getFallbackDuration(
+            typeof episode?.video_url === "string" &&
+              episode.video_url.trim() !== ""
+              ? episode.video_url
+              : null,
+            production?.type,
+            toNumber(season?.season_number) ?? index + 1,
+            toNumber(episode?.episode_number) ?? episodeIndex + 1,
+            toNumber(episode?.duration) ?? 0,
+          ),
           views_count: toNumber(episode?.views_count) ?? 0,
           is_active: episodeIndex === 0,
         }))
@@ -141,12 +180,18 @@ export const getWatchDataBySlug = async (slug, { signal } = {}) => {
   const targetSlug = normalizeSlug(slug);
   if (!targetSlug) return null;
 
-  const productions = await listProductions({ signal });
-  if (!Array.isArray(productions) || productions.length === 0) return null;
-
-  const matchedProduction = productions.find(
-    (production) => normalizeSlug(production?.slug) === targetSlug,
-  );
+  let matchedProduction = null;
+  let productions = [];
+  try {
+    const [detailRes, listRes] = await Promise.all([
+      getProductionBySlug(targetSlug, { signal }),
+      listProductions({ signal }),
+    ]);
+    matchedProduction = detailRes;
+    productions = listRes;
+  } catch (error) {
+    if (signal?.aborted) throw error;
+  }
 
   if (!matchedProduction) return null;
 
@@ -165,11 +210,20 @@ export const getWatchDataBySlug = async (slug, { signal } = {}) => {
       ? matchedProduction.actors
       : [],
     movie: {
-      duration: toNumber(matchedProduction?.movies?.duration) ?? toNumber(episodes[0]?.duration) ?? 0,
-      preview_duration: toNumber(matchedProduction?.movies?.preview_duration) ?? 300,
+      duration:
+        toNumber(matchedProduction?.movies?.duration) ??
+        toNumber(episodes[0]?.duration) ??
+        0,
+      preview_duration:
+        toNumber(matchedProduction?.movies?.preview_duration) ?? 300,
     },
     series: {
-      total_seasons: seasons.length > 0 ? seasons.length : matchedProduction.type === "series" ? 1 : 0,
+      total_seasons:
+        seasons.length > 0
+          ? seasons.length
+          : matchedProduction.type === "series"
+            ? 1
+            : 0,
     },
     seasons,
     episodes,

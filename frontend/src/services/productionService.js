@@ -1,5 +1,6 @@
 const DEFAULT_STREAMING_API_BASE = "/api/streaming";
-const DEFAULT_STREAMING_API_HTTP_FALLBACK = "http://localhost:3000/api/streaming";
+const DEFAULT_STREAMING_API_HTTP_FALLBACK =
+  "http://localhost:3000/api/streaming";
 
 const normalizeBase = (value) => {
   if (typeof value !== "string") return null;
@@ -37,7 +38,7 @@ export const listProductions = async ({ signal } = {}) => {
   const errors = [];
 
   for (const base of getStreamingApiBases()) {
-    const endpoint = `${base}/list?scope=home`;
+    const endpoint = `${base}/productions/list?scope=home`;
 
     let response;
     try {
@@ -64,3 +65,35 @@ export const listProductions = async ({ signal } = {}) => {
 
   throw new Error(errors[0] || "Unable to load productions");
 };
+
+export const getProductionBySlug = async (slug, { signal } = {}) => {
+  const errors = [];
+
+  for (const base of getStreamingApiBases()) {
+    const endpoint = `${base}/productions/detail/${slug}`;
+
+    let response;
+    try {
+      response = await fetch(endpoint, { method: "GET", signal });
+    } catch (err) {
+      if (err?.name === "AbortError") throw err;
+      errors.push(`Fetch failed (${endpoint})`);
+      continue;
+    }
+
+    const data = await safeJson(response);
+
+    if (response.ok) {
+      return data;
+    }
+
+    const errorMessage =
+      typeof data?.error === "string" && data.error.trim() !== ""
+        ? data.error
+        : `Request failed (${response.status})`;
+    errors.push(`${endpoint}: ${errorMessage}`);
+  }
+
+  throw new Error(errors[0] || "Unable to load production detail");
+};
+

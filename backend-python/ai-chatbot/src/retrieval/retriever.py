@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Module retriever — orchestrate toàn bộ quy trình truy xuất context.
 
@@ -148,10 +149,10 @@ class Retriever:
         self,
         query: str,
         top_k: int = 10,
-        genre_filter: str | None = None,
-        year_filter: int | None = None,
-        type_filter: str | None = None,
-        country_filter: str | None = None
+        genre_filter: Optional[str] = None,
+        year_filter: Optional[int] = None,
+        type_filter: Optional[str] = None,
+        country_filter: Optional[str] = None
     ) -> list[RetrievedChunk]:
         """
         Truy xuất với bộ lọc metadata bổ sung.
@@ -162,10 +163,10 @@ class Retriever:
         Args:
             query (str): Câu truy vấn.
             top_k (int): Số chunks tối đa. Mặc định 10.
-            genre_filter (str | None): Lọc theo thể loại.
-            year_filter (int | None): Lọc theo năm.
-            type_filter (str | None): Lọc theo loại ('movie', 'series', 'season').
-            country_filter (str | None): Lọc theo quốc gia.
+            genre_filter (Optional[str]): Lọc theo thể loại.
+            year_filter (Optional[int]): Lọc theo năm.
+            type_filter (Optional[str]): Lọc theo loại ('movie', 'series', 'season').
+            country_filter (Optional[str]): Lọc theo quốc gia.
 
         Returns:
             list[RetrievedChunk]: Chunks đã lọc và rerank.

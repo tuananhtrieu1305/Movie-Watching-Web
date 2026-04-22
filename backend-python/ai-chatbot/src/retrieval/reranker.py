@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Module reranker — sắp xếp lại kết quả search bằng cross-encoder.
 
@@ -69,7 +70,7 @@ class Reranker:
         self,
         query: str,
         chunks: list[RetrievedChunk],
-        top_k: int | None = None
+        top_k: Optional[int] = None
     ) -> list[RetrievedChunk]:
         """
         Rerank danh sách chunks dựa trên cross-encoder score.
@@ -85,7 +86,7 @@ class Reranker:
         Args:
             query (str): Câu truy vấn gốc.
             chunks (list[RetrievedChunk]): Chunks từ hybrid search.
-            top_k (int | None): Số chunks giữ lại. None = dùng self._top_k.
+            top_k (Optional[int]): Số chunks giữ lại. None = dùng self._top_k.
 
         Returns:
             list[RetrievedChunk]: Chunks đã rerank, sắp xếp theo score.

@@ -66,7 +66,7 @@ const HeroSlider = ({ movies = [] }) => {
             key={`${movie.id}-${index}`}
             className="hero-slide"
             style={{
-              backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 100%), url(${movie.backdrop || movie.poster})`,
+              backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 100%), url(${movie.backdrop})`,
             }}
           >
             <div className="hero-content">

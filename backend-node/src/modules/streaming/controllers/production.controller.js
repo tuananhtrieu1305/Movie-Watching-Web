@@ -12,12 +12,17 @@ export const uploadMovieController = async (req, res) => {
   try {
     const { type } = req.body;
     if (!req.file && (!type || type === "movie")) {
-      console.log("⚠️ [400 Bad Request]: Không nhận được file video từ FE cho phim lẻ!");
+      console.log(
+        "⚠️ [400 Bad Request]: Không nhận được file video từ FE cho phim lẻ!",
+      );
       return res.status(400).send("Chưa chọn file video cho phim lẻ!");
     }
     const result = await uploadMovieService(req.file, req.body);
     res.json({
-      message: type === "series" ? "Tạo phim bộ thành công!" : "Upload thành công! Đang xử lý video ngầm.",
+      message:
+        type === "series"
+          ? "Tạo phim bộ thành công!"
+          : "Upload thành công! Đang xử lý video ngầm.",
       data: result,
     });
   } catch (error) {
@@ -27,9 +32,12 @@ export const uploadMovieController = async (req, res) => {
 
 export const getListMoviesController = async (req, res) => {
   try {
-    const movies = await getMoviesService();
+    const scope =
+      typeof req.query?.scope === "string" ? req.query.scope.trim() : "";
+    const movies = await getMoviesService({ scope });
     res.json(movies);
   } catch (error) {
+    console.error("Get List Error:", error);
     res.status(500).json({ error: error.message });
   }
 };
