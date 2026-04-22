@@ -120,28 +120,16 @@ export const initSocket = (httpServer, options) => {
         console.log(`[Watch Party] Host disconnected from ${meetingId}. Starting Grace Period...`);
         
         const timer = setTimeout(() => {
-          // Grace Period đã hết (15s). Chuyển Host!
-          const roomSockets = io.sockets.adapter.rooms.get(`party_${meetingId}`);
+          // Grace Period đã hết (15s). Kết thúc buổi xem cho tất cả mọi người!
+          console.log(`[Watch Party] Grace Period expired for ${meetingId}. Ending party for everyone.`);
           
-          if (roomSockets && roomSockets.size > 0) {
-            // Lấy đại người đầu tiên trong phòng làm Host mới
-            const newHostSocketId = Array.from(roomSockets)[0];
-            const newHostSocket = io.sockets.sockets.get(newHostSocketId);
-            
-            if (newHostSocket) {
-              newHostSocket.isHost = true;
-              state.hostSocketId = newHostSocketId;
-              state.hostParticipantId = newHostSocket.participantId;
-              
-              // Thông báo cho Host mới
-              newHostSocket.emit("assigned_as_host", { message: "Bạn đã trở thành Host vì Host cũ mất kết nối." });
-              console.log(`[Watch Party] Host migrated to ${newHostSocket.participantId} in ${meetingId}`);
-            }
-          } else {
-            // Không còn ai, xóa phòng
-            watchParties.delete(meetingId);
-            console.log(`[Watch Party] Room ${meetingId} destroyed.`);
-          }
+          // Thông báo cho tất cả Guest còn lại
+          io.to(`party_${meetingId}`).emit("party_ended", { 
+            message: "Chủ phòng đã thoát. Buổi xem phim kết thúc." 
+          });
+
+          // Xóa dữ liệu phòng
+          watchParties.delete(meetingId);
           hostTimers.delete(meetingId);
         }, 15000); // 15s Grace Period
 
