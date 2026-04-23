@@ -6,16 +6,16 @@ export function MovieGrid({ results, clearAll }) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="text-6xl mb-4">🎬</div>
-        <h3 className="text-xl font-bold text-white mb-2">No results found</h3>
+        <h3 className="text-xl font-bold text-white mb-2">Không tìm thấy kết quả</h3>
         <p className="text-gray-500 text-sm mb-6">
-          Try adjusting or clearing your filters
+          Thử thay đổi hoặc đặt lại bộ lọc của bạn
         </p>
         <button
           type="button"
           onClick={clearAll}
           className="px-6 py-2.5 bg-[#ffdd95] text-gray-900 font-bold rounded-xl hover:bg-[#ffd175] transition-colors"
         >
-          Clear all filters
+          Xóa tất cả bộ lọc
         </button>
       </div>
     );

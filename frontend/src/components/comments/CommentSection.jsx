@@ -6,7 +6,7 @@ import CommentInput from "./CommentInput";
 import CommentItem from "./CommentItem";
 
 const CommentSection = ({ productionId }) => {
-  const { accessToken, user, isAuthenticated } = useContext(AuthContext);
+  const { accessToken, user, isAuthenticated, refreshAccessToken } = useContext(AuthContext);
 
   const [comments, setComments] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
@@ -97,6 +97,28 @@ const CommentSection = ({ productionId }) => {
         return [newComment, ...prev];
       });
     } catch (err) {
+      if (err?.response?.status === 401) {
+        try {
+          const newToken = await refreshAccessToken();
+          const newCommentRetry = await createComment(
+            {
+              productionId,
+              content: inputData.content,
+              isSpoiler: inputData.isSpoiler || false,
+            },
+            newToken
+          );
+          setComments((prev) => {
+            if (prev.some(c => c.id === newCommentRetry.id)) return prev;
+            return [newCommentRetry, ...prev];
+          });
+          return;
+        } catch (refreshErr) {
+          setSubmitError("Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang.");
+          return;
+        }
+      }
+
       const msg = err?.response?.data?.message || "Gửi bình luận thất bại.";
       setSubmitError(msg);
       console.error("createComment error:", err);
