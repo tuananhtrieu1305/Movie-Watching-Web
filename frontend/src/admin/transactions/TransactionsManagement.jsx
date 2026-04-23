@@ -48,10 +48,15 @@ const TransactionsManagement = () => {
         ...item,
         username: item.users?.username || "-",
         plan_name: item.subscription_plans?.name || "-",
+        amount: Number(item.amount ?? 0),
+        discount_amount: Number(item.discount_amount ?? 0),
+        final_amount: Number(item.final_amount ?? 0),
       }));
       setTransactions(normalized);
     } catch (error) {
-      message.error(error.response?.data?.message || "Không tải được danh sách giao dịch");
+      message.error(
+        error.response?.data?.message || "Không tải được danh sách giao dịch",
+      );
     } finally {
       setLoading(false);
     }
@@ -66,10 +71,10 @@ const TransactionsManagement = () => {
       const matchSearch =
         t.transaction_code.toLowerCase().includes(searchText.toLowerCase()) ||
         t.username.toLowerCase().includes(searchText.toLowerCase());
-    const matchStatus = statusFilter === "all" || t.status === statusFilter;
-    const matchMethod =
-      methodFilter === "all" || t.payment_method === methodFilter;
-    return matchSearch && matchStatus && matchMethod;
+      const matchStatus = statusFilter === "all" || t.status === statusFilter;
+      const matchMethod =
+        methodFilter === "all" || t.payment_method === methodFilter;
+      return matchSearch && matchStatus && matchMethod;
     });
   }, [transactions, searchText, statusFilter, methodFilter]);
 
@@ -79,7 +84,7 @@ const TransactionsManagement = () => {
     success: transactions.filter((t) => t.status === "success").length,
     totalRevenue: transactions
       .filter((t) => t.status === "success")
-      .reduce((sum, t) => sum + t.final_amount, 0),
+      .reduce((sum, t) => sum + Number(t.final_amount ?? 0), 0),
     pending: transactions.filter((t) => t.status === "pending").length,
   };
 
@@ -137,7 +142,9 @@ const TransactionsManagement = () => {
       zalopay: "ZaloPay",
       credit_card: "Thẻ tín dụng",
     };
-    return <Tag color={colors[method] || "default"}>{labels[method] || method}</Tag>;
+    return (
+      <Tag color={colors[method] || "default"}>{labels[method] || method}</Tag>
+    );
   };
 
   // View transaction details
