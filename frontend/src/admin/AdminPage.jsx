@@ -13,10 +13,17 @@ import { Layout, Menu, Dropdown, Space, Avatar } from "antd";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import React, { useState, memo } from "react";
 import AnonymousAvatar from "../assets/anonymous.png";
+import { useAuth } from "../modules/auth/hooks/useAuth";
 
 const { Content, Sider, Header: AntHeader } = Layout;
 
 const MemoizedHeader = memo(({ collapsed, onToggle }) => {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   const dropdownItems = [
     {
       label: <Link to="/">Homepage</Link>,
@@ -25,7 +32,11 @@ const MemoizedHeader = memo(({ collapsed, onToggle }) => {
     },
     { type: "divider" },
     {
-      label: <span style={{ cursor: "pointer" }}>Log out</span>,
+      label: (
+        <span style={{ cursor: "pointer" }} onClick={handleLogout}>
+          Log out
+        </span>
+      ),
       key: "logout",
       icon: <LogoutOutlined />,
       danger: true,
