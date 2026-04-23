@@ -177,23 +177,6 @@ const Header = () => {
               )}
             </div>
 
-            <nav className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className={`text-[14px] font-semibold transition-all hover:text-[#ffdd95] ${
-                    location.pathname === link.path
-                      ? "text-[#ffdd95]"
-                      : "text-gray-200"
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsWatchPartyModalOpen(true)}
