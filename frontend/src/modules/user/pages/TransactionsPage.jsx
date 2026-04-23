@@ -5,7 +5,7 @@ import { useAuth } from "../../auth/hooks/useAuth";
 import { paymentApi } from "../../payment/services/paymentApi";
 
 const TransactionsPage = () => {
-  const { accessToken } = useAuth();
+  const { accessToken, refreshAccessToken } = useAuth();
   const [searchParams] = useSearchParams();
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +14,14 @@ const TransactionsPage = () => {
   const paymentStatus = searchParams.get("paymentStatus");
   const txnRef = searchParams.get("txnRef");
   const message = searchParams.get("message");
+
+  useEffect(() => {
+    if (paymentStatus === "success") {
+      refreshAccessToken().catch((err) =>
+        console.error("Lỗi cập nhật lại token VIP:", err),
+      );
+    }
+  }, [paymentStatus, refreshAccessToken]);
 
   const statusBanner = useMemo(() => {
     if (paymentStatus === "success") {
@@ -75,10 +83,11 @@ const TransactionsPage = () => {
 
       {statusBanner ? (
         <div
-          className={`mb-5 rounded-lg px-4 py-3 text-sm font-medium ${statusBanner.type === "success"
+          className={`mb-5 rounded-lg px-4 py-3 text-sm font-medium ${
+            statusBanner.type === "success"
               ? "bg-green-500/20 text-green-300 border border-green-500/40"
               : "bg-red-500/20 text-red-300 border border-red-500/40"
-            }`}
+          }`}
         >
           {statusBanner.text}
         </div>
@@ -109,9 +118,15 @@ const TransactionsPage = () => {
               <tbody>
                 {transactions.map((item) => (
                   <tr key={item.id} className="border-b border-gray-800">
-                    <td className="py-3 pr-4 text-gray-200">{item.transaction_code}</td>
-                    <td className="py-3 pr-4">{item.subscription_plans?.name || "-"}</td>
-                    <td className="py-3 pr-4">{formatPrice(item.final_amount)}</td>
+                    <td className="py-3 pr-4 text-gray-200">
+                      {item.transaction_code}
+                    </td>
+                    <td className="py-3 pr-4">
+                      {item.subscription_plans?.name || "-"}
+                    </td>
+                    <td className="py-3 pr-4">
+                      {formatPrice(item.final_amount)}
+                    </td>
                     <td className="py-3 pr-4 capitalize">{item.status}</td>
                     <td className="py-3 pr-4">{formatDate(item.created_at)}</td>
                     <td className="py-3">
