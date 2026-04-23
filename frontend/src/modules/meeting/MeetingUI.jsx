@@ -79,20 +79,43 @@ export default function MeetingUI({ meeting }) {
     };
   }, [roomState, meetingId, isHost, participantId]);
 
-  // Tự động quay về trang trước khi rời phòng (Leave) hoặc bị Kick/End Meeting
+  // Quản lý việc điều hướng khi thoát phòng hoặc kết thúc phòng
   useEffect(() => {
-    if (roomState === "left") {
-      navigate(-1); // Quay lại trang chi tiết phim hoặc trang chủ
+    // Nếu trạng thái phòng chuyển sang 'joined', đánh dấu đã vào phòng thành công
+    if (roomState === "joined") {
+      window.hasJoinedRoom = true;
+    }
+    
+    // Nếu đã từng vào phòng (hasJoinedRoom) mà giờ trạng thái không còn là joined/joining
+    // Nghĩa là cuộc họp đã kết thúc hoặc bạn đã rời đi
+    const isSessionEnded = roomState !== "joined" && roomState !== "joining" && roomState !== "setup";
+    
+    if (window.hasJoinedRoom && isSessionEnded) {
+      console.log("[MeetingUI] Buổi họp kết thúc, trạng thái hiện tại:", roomState);
+      navigate("/", { replace: true });
+      window.hasJoinedRoom = false; // Reset cờ
     }
   }, [roomState, navigate]);
 
-  // 1. Tách Setup Screen ra riêng - Render Full Width trước khi vào giao diện chính
-  if (roomState !== "joined") {
+  // 1. Tách Setup Screen ra riêng
+  // Chỉ hiển thị màn hình Setup nếu chưa bao giờ vào phòng thành công
+  if (roomState !== "joined" && !window.hasJoinedRoom) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#121212] px-4">
-        {/* Force white color for titles and identifiers in the setup screen */}
         <div className="w-full max-w-5xl rtk-setup-screen-container">
           <RtkSetupScreen meeting={meeting} />
+        </div>
+      </div>
+    );
+  }
+
+  // 1.5 Màn hình chờ thoát (Nếu đã từng vào phòng nhưng giờ đang thoát)
+  if (window.hasJoinedRoom && roomState !== "joined") {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-black">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#ffdd95] border-t-transparent rounded-full animate-spin mb-4 mx-auto shadow-[0_0_15px_rgba(255,221,149,0.3)]"></div>
+          <p className="text-[#ffdd95] font-bold">ĐANG KẾT THÚC PHIÊN...</p>
         </div>
       </div>
     );

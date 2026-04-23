@@ -14,7 +14,7 @@ class MeetingController {
       // 2. Lấy token cho host
       const joinMeetingData = await meetingService.generateParticipantToken(
         meetingId,
-        "group_call_host",
+        "host",
       );
 
       // 3. Lưu phòng + host vào DB trong 1 transaction
@@ -62,7 +62,7 @@ class MeetingController {
       }
 
       // 2. Cấp token Cloudflare
-      const participantData = await meetingService.generateParticipantToken(meetingId);
+      const participantData = await meetingService.generateParticipantToken(meetingId, "participant");
 
       // 3. Ghi participant vào DB (upsert — an toàn khi F5)
       await meetingService.addOrUpdateParticipant(meetingId, userId, "participant");
