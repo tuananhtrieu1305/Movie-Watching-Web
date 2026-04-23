@@ -36,7 +36,7 @@ model productions {
   ratings           ratings[]
   seasons           seasons?
   series            series?
-  watch_parties     watch_parties[]
+  watch_parties      watch_parties[]
 
   @@index([is_premium], map: "idx_premium")
   @@index([release_year], map: "idx_release_year")
@@ -111,39 +111,45 @@ model bookmarks {
   @@index([user_id, created_at], map: "idx_user_bookmarks")
 }
 
-model comment_likes {
+model comment_reactions {
   user_id    Int
   comment_id Int
+  type       reaction_type
   created_at DateTime? @default(now()) @db.Timestamp(0)
   users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comment_likes_ibfk_1")
   comments   comments  @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comment_likes_ibfk_2")
 
   @@id([user_id, comment_id])
   @@index([comment_id, created_at], map: "idx_comment_likes")
+
+  @@map("comment_reactions")
 }
 
 model comments {
-  id             Int              @id @default(autoincrement())
-  user_id        Int
-  production_id  Int
-  episode_id     Int?
-  content        String           @db.Text
-  parent_id      Int?
-  likes_count    Int?             @default(0)
-  status         comments_status? @default(active)
-  created_at     DateTime?        @default(now()) @db.Timestamp(0)
-  updated_at     DateTime?        @default(now()) @db.Timestamp(0)
-  comment_likes  comment_likes[]
-  users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_ibfk_1")
-  productions    productions      @relation(fields: [production_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_ibfk_2")
-  episodes       episodes?        @relation(fields: [episode_id], references: [id], onUpdate: NoAction, map: "comments_ibfk_3")
-  comments       comments?        @relation("commentsTocomments", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_ibfk_4")
-  other_comments comments[]       @relation("commentsTocomments")
+  id                Int                 @id @default(autoincrement())
+  user_id           Int
+  production_id     Int
+  episode_id        Int?
+  content           String              @db.Text
+  parent_id         Int?
+  likes_count       Int?                @default(0)
+  dislikes_count    Int?                @default(0)
+  is_spoiler        Boolean?            @default(false)
+  status            comments_status?    @default(active)
+  created_at        DateTime?           @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?           @default(now()) @db.Timestamp(0)
+  comment_reactions comment_reactions[]
+  users             users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_ibfk_1")
+  productions       productions         @relation(fields: [production_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_ibfk_2")
+  episodes          episodes?           @relation(fields: [episode_id], references: [id], onUpdate: NoAction, map: "comments_ibfk_3")
+  comments          comments?           @relation("commentsTocomments", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_ibfk_4")
+  other_comments    comments[]          @relation("commentsTocomments")
 
   @@index([episode_id, created_at], map: "idx_episode_comments")
   @@index([parent_id, created_at], map: "idx_parent_comments")
   @@index([production_id, created_at], map: "idx_production_comments")
   @@index([user_id, created_at], map: "idx_user_comments")
+  @@index([production_id, id(sort: Desc)], map: "idx_production_cursor")
 }
 
 model daily_stats {
@@ -351,7 +357,7 @@ model users {
   created_at               DateTime?                  @default(now()) @db.Timestamp(0)
   updated_at               DateTime?                  @default(now()) @db.Timestamp(0)
   bookmarks                bookmarks[]
-  comment_likes            comment_likes[]
+  comment_reactions         comment_reactions[]
   comments                 comments[]
   notifications            notifications[]
   ratings                  ratings[]
@@ -359,7 +365,6 @@ model users {
   user_subscriptions       user_subscriptions[]
   watch_history            watch_history[]
   watch_parties            watch_parties[]
-  watch_party_chats        watch_party_chats[]
   watch_party_participants watch_party_participants[]
 
   @@index([email], map: "idx_email")
@@ -388,26 +393,17 @@ model watch_history {
 }
 
 model watch_parties {
-  id                       String                     @id @db.VarChar(20)
+  id                       String                     @id @db.VarChar(100)
   host_id                  Int
   title                    String                     @db.VarChar(255)
-  password                 String?                    @db.VarChar(100)
-  max_participants         Int?                       @default(10)
-  production_id            Int
-  episode_id               Int
-  current_position         Int?                       @default(0)
-  is_playing               Boolean?                   @default(false)
-  allow_chat               Boolean?                   @default(true)
-  allow_skip_votes         Boolean?                   @default(false)
-  skip_votes_required      Int?                       @default(3)
+  production_id            Int?
+  episode_id               Int?
   status                   watch_parties_status?      @default(waiting)
   created_at               DateTime?                  @default(now()) @db.Timestamp(0)
-  started_at               DateTime?                  @db.Timestamp(0)
   expires_at               DateTime?                  @db.Timestamp(0)
   users                    users                      @relation(fields: [host_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_parties_ibfk_1")
-  productions              productions                @relation(fields: [production_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_parties_ibfk_2")
-  episodes                 episodes                   @relation(fields: [episode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_parties_ibfk_3")
-  watch_party_chats        watch_party_chats[]
+  productions              productions?                @relation(fields: [production_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_parties_ibfk_2")
+  episodes                 episodes?                   @relation(fields: [episode_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_parties_ibfk_3")
   watch_party_participants watch_party_participants[]
 
   @@index([episode_id], map: "episode_id")
@@ -416,28 +412,10 @@ model watch_parties {
   @@index([production_id], map: "production_id")
 }
 
-model watch_party_chats {
-  id                 Int           @id @default(autoincrement())
-  party_id           String        @db.VarChar(20)
-  user_id            Int
-  message            String        @db.Text
-  timestamp_in_video Int?          @default(0)
-  is_system_message  Boolean?      @default(false)
-  created_at         DateTime?     @default(now()) @db.Timestamp(0)
-  watch_parties      watch_parties @relation(fields: [party_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_party_chats_ibfk_1")
-  users              users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_party_chats_ibfk_2")
-
-  @@index([party_id, created_at], map: "idx_party_chats")
-  @@index([user_id], map: "user_id")
-}
-
 model watch_party_participants {
-  party_id             String                         @db.VarChar(20)
+  party_id             String                         @db.VarChar(100)
   user_id              Int
   role                 watch_party_participants_role? @default(participant)
-  can_control_playback Boolean?                       @default(false)
-  can_send_chat        Boolean?                       @default(true)
-  is_muted             Boolean?                       @default(false)
   joined_at            DateTime?                      @default(now()) @db.Timestamp(0)
   last_active_at       DateTime?                      @default(now()) @db.Timestamp(0)
   watch_parties        watch_parties                  @relation(fields: [party_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "watch_party_participants_ibfk_1")
@@ -505,6 +483,11 @@ enum actors_gender {
   female
   other
   unknown
+}
+
+enum reaction_type {
+  LIKE
+  DISLIKE
 }
 
 enum comments_status {

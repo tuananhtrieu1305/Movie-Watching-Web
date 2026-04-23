@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Button } from "antd";
 import {
   CheckOutlined,
@@ -5,8 +6,10 @@ import {
   PlusOutlined,
   ShareAltOutlined,
   StarFilled,
+  TeamOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import AnonymousBanner from "../../assets/anonymousBanner.png";
 import {
   GenreTags,
@@ -18,6 +21,7 @@ import ActorList from "../../components/adminContent/ActorList";
 import DescriptionBox from "../../components/adminContent/DescriptionBox";
 import useShareUrl from "../../hooks/streaming/useShareUrl";
 import useWatchlist from "../../hooks/streaming/useWatchlist";
+import WatchPartyModal from "../../modules/meeting/components/WatchPartyModal";
 import {
   calcDurationDisplay,
   createWatchNowUrl,
@@ -25,19 +29,23 @@ import {
 import { useAuth } from "../../modules/auth/hooks/useAuth";
 
 const InfoHero = ({ production }) => {
+  const navigate = useNavigate();
   const { handleCopyUrl, contextHolder } = useShareUrl();
   const { toggleWatchlist, isInWatchlist, loading } = useWatchlist(
     production?.id,
   );
   const { user } = useAuth();
-  
-  if (!production) return null;
 
-  console.log(production);
+  // States cho Watch Party Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  if (!production) return null;
 
   let firstEpLink = createWatchNowUrl(production);
   if (production.is_premium && !user?.is_premium) {
-    firstEpLink += firstEpLink.includes("?") ? "&preview=true" : "?preview=true";
+    firstEpLink += firstEpLink.includes("?")
+      ? "&preview=true"
+      : "?preview=true";
   }
 
   const durationDisplay = calcDurationDisplay(production);
@@ -121,6 +129,15 @@ const InfoHero = ({ production }) => {
                 >
                   Share
                 </Button>
+                <Button
+                  shape="round"
+                  size="large"
+                  icon={<TeamOutlined />}
+                  className="bg-white/10 text-white border-white/20 hover:!bg-white/20 hover:!text-[#ffdd95] font-bold px-6 h-12 text-lg backdrop-blur-md hover:!border-[#ffdd95]"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Xem cùng bạn bè
+                </Button>
               </div>
 
               {/* Description */}
@@ -180,6 +197,12 @@ const InfoHero = ({ production }) => {
           </div>
         </div>
       </div>
+
+      <WatchPartyModal
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        production={production}
+      />
     </>
   );
 };

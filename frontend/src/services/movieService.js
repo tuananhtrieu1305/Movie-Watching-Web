@@ -42,6 +42,13 @@ export const getMovieBySlug = async (slug) => {
   return response.data;
 };
 
+export const searchMovies = async (query) => {
+  const response = await axios.get(`${PRODUCTIONS_API}/search`, {
+    params: { q: query },
+  });
+  return response.data;
+};
+
 // 2. THỂ LOẠI (GENRES)
 
 export const getGenres = async () => {

@@ -14,8 +14,10 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    allowedHosts: true, // Mọi domain/ngrok đều được phép
+    cors: true, // Bật CORS
     watch: {
-      usePolling: true, // Bắt buộc khi chạy trên máy ảo/Docker để hot-reload hoạt động
+      usePolling: true,
     },
   },
 });

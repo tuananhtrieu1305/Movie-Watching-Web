@@ -61,3 +61,47 @@
 .ant-table-cell>span:first-of-type {
   margin: 0;
 }
+
+/* ============================================================
+   Cloudflare RealtimeKit UI Overrides 
+   Fix for black text on dark background in Setup Screen
+   ============================================================ */
+
+/* Force all text in RTK components to white */
+[class*="rk-"],
+[class*="rtk-"],
+.rtk-setup-screen-container {
+  color: #ffffff !important;
+}
+
+/* Target specifically titles, paragraphs and spans */
+[class*="rtk-"] h1,
+[class*="rtk-"] h2,
+[class*="rtk-"] h3,
+[class*="rtk-"] h4,
+[class*="rtk-"] p,
+[class*="rtk-"] span,
+[class*="rtk-"] label,
+[class*="rtk-"] div:not([class*="button"]),
+.rtk-setup-screen-container * {
+  color: #ffffff !important;
+}
+
+/* Fix for inputs in Setup Screen to be readable */
+[class*="rtk-"] input {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 1px solid #444 !important;
+}
+
+[class*="rtk-"] input::placeholder {
+  color: #888 !important;
+}
+
+/* Fix for the meeting title which specifically seems to be black */
+[class*="rtk-"] [class*="title"],
+[class*="rtk-"] [class*="Title"],
+[class*="rtk-"] [class*="Header"],
+[class*="rtk-"] [class*="header"] {
+  color: #ffffff !important;
+}
