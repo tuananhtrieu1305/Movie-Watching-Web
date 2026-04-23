@@ -81,8 +81,8 @@ API_PORT: int = int(os.getenv("API_PORT", "8002"))
 # ============================================================
 # Prevent requests from hanging indefinitely when external services are slow.
 CHAT_RETRIEVAL_TIMEOUT_SECONDS: float = float(
-	os.getenv("CHAT_RETRIEVAL_TIMEOUT_SECONDS", "20")
+	os.getenv("CHAT_RETRIEVAL_TIMEOUT_SECONDS", "200")
 )
 CHAT_LLM_TIMEOUT_SECONDS: float = float(
-	os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "60")
+	os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "600")
 )

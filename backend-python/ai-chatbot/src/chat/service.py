@@ -13,8 +13,20 @@ from src.history.repository import ChatHistoryRepository
 from src.logger import get_logger
 from src.config import CHAT_RETRIEVAL_TIMEOUT_SECONDS, CHAT_LLM_TIMEOUT_SECONDS
 
+from typing import Optional
+
 logger = get_logger(__name__)
 
+def _to_numeric_production_id(value: object) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int) and value > 0:
+        return value
+    try:
+        numeric = int(str(value))
+    except (TypeError, ValueError):
+        return None
+    return numeric if numeric > 0 else None
 
 class ChatService:
     """
@@ -150,12 +162,21 @@ class ChatService:
             # if retrieved_chunks:
             #     sources = list(set([chunk.metadata.get("source", "Unknown") for chunk in retrieved_chunks]))
             source_list = []
+            seen_production_ids = set()
             for chunk in retrieved_chunks:
-                source_list.append({
-                    "production_id": chunk.production_id,
-                    "title": chunk.metadata.get("title", "Không rõ"),
-                    "score": chunk.score
-                })
+                production_id = _to_numeric_production_id(
+                    chunk.production_id
+                )
+
+                if production_id is None:
+                    metadata = chunk.metadata or {}
+                    production_id = _to_numeric_production_id(metadata.get("production_id"))
+
+                if production_id is None or production_id in seen_production_ids:
+                    continue
+
+                seen_production_ids.add(production_id)
+                source_list.append({"production_id": production_id})
 
             total_time = time.time() - start_time
             logger.info(f"[ChatService] Hoàn tất xử lý request cho user {user_id}. Tổng thời gian: {total_time:.2f}s.")
