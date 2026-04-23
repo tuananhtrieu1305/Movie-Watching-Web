@@ -47,15 +47,6 @@ const Header = () => {
             NETFLICK
           </Link>
 
-          <div className="hidden sm:flex items-center bg-gray-800/80 rounded-full px-4 py-2 gap-2 min-w-[200px] lg:min-w-[280px]">
-            <FaSearch className="text-gray-400 text-sm" />
-            <input
-              type="text"
-              placeholder="Search movies, actors..."
-              className="bg-transparent border-none text-white text-sm w-full focus:outline-none placeholder-gray-500"
-            />
-          </div>
-
           <nav className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link

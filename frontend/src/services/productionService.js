@@ -96,4 +96,3 @@ export const getProductionBySlug = async (slug, { signal } = {}) => {
 
   throw new Error(errors[0] || "Unable to load production detail");
 };
-
