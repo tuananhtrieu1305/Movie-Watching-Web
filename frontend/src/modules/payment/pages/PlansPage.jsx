@@ -33,7 +33,7 @@ const PlansPage = () => {
         "Xem trên 2 thiết bị",
         "Tải phim xem offline",
       ],
-      isCurrent: true,
+      isCurrent: false,
       buttonText: "Nâng cấp ngay",
       buttonStyle: "bg-yellow-500 hover:bg-yellow-400 text-black",
       highlight: true,
@@ -161,7 +161,7 @@ const PlansPage = () => {
 
         {/* Footer Note */}
         <p className="text-center text-gray-500 text-sm mt-10">
-          Thanh toán an toàn qua VNPay. Hủy bất cứ lúc nào.
+          Thanh toán an toàn qua PayOS. Hủy bất cứ lúc nào.
         </p>
       </div>
     </div>

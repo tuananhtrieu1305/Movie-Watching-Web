@@ -7,7 +7,7 @@ import { useAuth } from '../../auth/hooks/useAuth';
 const CheckoutPage = () => {
     const [searchParams] = useSearchParams();
     const selectedPlan = searchParams.get('plan') || 'vip';
-    const [paymentMethod] = useState('vnpay');
+    const [paymentMethod] = useState('payos');
     const [isPaying, setIsPaying] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const { accessToken } = useAuth();
@@ -22,7 +22,7 @@ const CheckoutPage = () => {
     const plan = plans[selectedPlan] || plans.vip_1_month;
 
     const paymentMethods = [
-        { id: 'vnpay', name: 'VNPay QR', icon: <FaQrcode className="text-blue-600" />, desc: 'Quét mã QR ngân hàng' },
+        { id: 'payos', name: 'PayOS QR', icon: <FaQrcode className="text-blue-600" />, desc: 'Quét mã QR ngân hàng' },
     ];
 
     const handlePayment = async () => {
@@ -36,10 +36,10 @@ const CheckoutPage = () => {
         setIsPaying(true);
 
         try {
-            const { paymentUrl } = await paymentApi.createVnpayUrl(accessToken, selectedPlan);
+            const { paymentUrl } = await paymentApi.createPayosUrl(accessToken, selectedPlan);
             window.location.href = paymentUrl;
         } catch (error) {
-            setErrorMessage(error.response?.data?.message || 'Không tạo được link VNPay.');
+            setErrorMessage(error.response?.data?.message || 'Không tạo được link PayOS.');
             setIsPaying(false);
         }
     };
@@ -115,7 +115,7 @@ const CheckoutPage = () => {
                                 disabled={isPaying}
                                 className="w-full bg-[#ffdd95] hover:bg-[#ffe6aa] disabled:opacity-70 text-black font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                             >
-                                <FaLock /> {isPaying ? 'Đang chuyển đến VNPay...' : 'Thanh toán ngay'}
+                                <FaLock /> {isPaying ? 'Đang chuyển đến PayOS...' : 'Thanh toán ngay'}
                             </button>
 
                             {errorMessage ? (

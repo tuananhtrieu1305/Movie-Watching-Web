@@ -1,7 +1,7 @@
 import { paymentService } from "./payment.service.js";
 
 export const paymentController = {
-  async createVnpayUrl(req, res) {
+  async createPayosUrl(req, res) {
     try {
       const { planCode } = req.body;
       const userId = req.user?.id;
@@ -14,22 +14,21 @@ export const paymentController = {
         return res.status(400).json({ message: "Thiếu planCode" });
       }
 
-      const paymentUrl = await paymentService.createVnpayPaymentUrl({
+      const paymentUrl = await paymentService.createPayosPaymentUrl({
         planCode,
         userId,
-        request: req,
       });
 
       return res.status(200).json({ paymentUrl });
     } catch (error) {
-      console.error("Create VNPay URL Error:", error);
+      console.error("Create PayOS URL Error:", error);
       return res.status(400).json({ message: error.message });
     }
   },
 
-  async handleVnpayReturn(req, res) {
+  async handlePayosReturn(req, res) {
     try {
-      const result = await paymentService.processVnpayReturn(req.query);
+      const result = await paymentService.processPayosReturn(req.query);
 
       const frontendResultUrl =
         process.env.FRONTEND_PAYMENT_RESULT_URL ||
@@ -44,7 +43,7 @@ export const paymentController = {
 
       return res.redirect(redirectUrl.toString());
     } catch (error) {
-      console.error("VNPay Return Error:", error);
+      console.error("PayOS Return Error:", error);
 
       const frontendResultUrl =
         process.env.FRONTEND_PAYMENT_RESULT_URL ||
@@ -54,6 +53,16 @@ export const paymentController = {
       redirectUrl.searchParams.set("message", error.message || "Payment error");
 
       return res.redirect(redirectUrl.toString());
+    }
+  },
+
+  async handlePayosWebhook(req, res) {
+    try {
+      await paymentService.processPayosWebhook(req.body);
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("PayOS Webhook Error:", error);
+      return res.status(400).json({ success: false, message: error.message });
     }
   },
 

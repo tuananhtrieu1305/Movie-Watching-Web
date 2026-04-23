@@ -4,9 +4,9 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:3000";
 
 export const paymentApi = {
-  async createVnpayUrl(accessToken, planCode) {
+  async createPayosUrl(accessToken, planCode) {
     const { data } = await axios.post(
-      `${API_BASE_URL}/api/v1/payments/vnpay/create-url`,
+      `${API_BASE_URL}/api/v1/payments/payos/create-url`,
       { planCode },
       {
         headers: {

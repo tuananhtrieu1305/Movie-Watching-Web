@@ -133,7 +133,7 @@ const TransactionsManagement = () => {
     };
     const labels = {
       momo: "MoMo",
-      vnpay: "VNPay",
+      vnpay: "PayOS",
       zalopay: "ZaloPay",
       credit_card: "Thẻ tín dụng",
     };
@@ -288,7 +288,7 @@ const TransactionsManagement = () => {
             onChange={setMethodFilter}
           >
             <Option value="all">Tất cả PT</Option>
-            <Option value="vnpay">VNPay</Option>
+            <Option value="vnpay">PayOS</Option>
           </Select>
         </Space>
       </Card>

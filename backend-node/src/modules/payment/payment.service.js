@@ -1,55 +1,88 @@
-import crypto from "crypto";
+import PayOS from "@payos/node";
 import prisma from "../../core/database/prisma.js";
 
-const formatDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
+const createPayosClient = () => {
+  const clientId = process.env.PAYOS_CLIENT_ID;
+  const apiKey = process.env.PAYOS_API_KEY;
+  const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
 
-  return `${year}${month}${day}${hours}${minutes}${seconds}`;
+  if (!clientId || !apiKey || !checksumKey) {
+    throw new Error("Thiếu cấu hình PayOS trên server");
+  }
+
+  return new PayOS(clientId, apiKey, checksumKey);
 };
 
-const buildSignData = (params) => {
-  const sortedKeys = Object.keys(params).sort();
+const normalizeGatewayStatus = (status) => {
+  if (!status) return "failed";
+  const normalized = String(status).toUpperCase();
 
-  return sortedKeys
-    .map(
-      (key) =>
-        `${key}=${encodeURIComponent(String(params[key])).replace(/%20/g, "+")}`,
-    )
-    .join("&");
+  if (["PAID", "SUCCESS", "SUCCEEDED"].includes(normalized)) {
+    return "success";
+  }
+
+  if (["PENDING", "PROCESSING"].includes(normalized)) {
+    return "pending";
+  }
+
+  if (["CANCELLED", "CANCELED"].includes(normalized)) {
+    return "cancelled";
+  }
+
+  return "failed";
 };
 
-const getClientIp = (request) => {
-  const forwardedFor = request.headers["x-forwarded-for"];
+const applySuccessfulPayment = async ({ tx, transaction, gatewayPayload }) => {
+  const now = new Date();
+  const latestSubscription = await tx.user_subscriptions.findFirst({
+    where: {
+      user_id: transaction.user_id,
+      status: "active",
+      end_date: { gte: now },
+    },
+    orderBy: { end_date: "desc" },
+  });
 
-  if (forwardedFor) {
-    const ip = String(forwardedFor).split(",")[0].trim();
-    if (ip.startsWith("::ffff:")) {
-      return ip.replace("::ffff:", "");
-    }
-    if (ip === "::1" || ip === "::") {
-      return "127.0.0.1";
-    }
-    return ip;
-  }
+  const startDate =
+    latestSubscription?.end_date && latestSubscription.end_date > now
+      ? latestSubscription.end_date
+      : now;
 
-  const socketIp = request.socket?.remoteAddress || "127.0.0.1";
-  if (socketIp.startsWith("::ffff:")) {
-    return socketIp.replace("::ffff:", "");
-  }
-  if (socketIp === "::1" || socketIp === "::") {
-    return "127.0.0.1";
-  }
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + Number(transaction.subscription_plans.duration_days));
 
-  return socketIp;
+  await tx.transactions.update({
+    where: { id: transaction.id },
+    data: {
+      status: "success",
+      vip_start_date: startDate,
+      vip_end_date: endDate,
+      payment_gateway_response: JSON.stringify(gatewayPayload),
+    },
+  });
+
+  await tx.user_subscriptions.create({
+    data: {
+      user_id: transaction.user_id,
+      plan_id: transaction.plan_id,
+      transaction_id: transaction.id,
+      start_date: startDate,
+      end_date: endDate,
+      status: "active",
+      auto_renew: false,
+    },
+  });
+
+  await tx.users.update({
+    where: { id: transaction.user_id },
+    data: {
+      vip_expires_at: endDate,
+    },
+  });
 };
 
 export const paymentService = {
-  async createVnpayPaymentUrl({ planCode, userId, request }) {
+  async createPayosPaymentUrl({ planCode, userId }) {
     const normalizedPlanCode = planCode?.toLowerCase();
     const plan = await prisma.subscription_plans.findFirst({
       where: {
@@ -67,22 +100,16 @@ export const paymentService = {
       throw new Error("Giá gói không hợp lệ");
     }
 
-    const tmnCode = process.env.VNPAY_TMN_CODE;
-    const hashSecret = process.env.VNPAY_HASH_SECRET;
-    const vnpUrl = process.env.VNPAY_URL;
     const backendBaseUrl =
       process.env.BACKEND_BASE_URL?.replace(/\/$/, "") || "http://localhost:3000";
-    const returnUrl =
-      process.env.VNPAY_RETURN_URL ||
-      `${backendBaseUrl}/api/v1/payments/vnpay/return`;
+    const returnUrl = process.env.PAYOS_RETURN_URL || `${backendBaseUrl}/api/v1/payments/payos/return`;
+    const cancelUrl = process.env.PAYOS_CANCEL_URL || returnUrl;
 
-    if (!tmnCode || !hashSecret || !vnpUrl) {
-      throw new Error("Thiếu cấu hình VNPay trên server");
-    }
+    const payos = createPayosClient();
 
-    const txnRef = `${normalizedPlanCode}-${userId}-${Date.now()}`;
-    const createDate = formatDate(new Date());
-    const ipAddr = getClientIp(request);
+    const orderCode = Date.now() * 100 + Math.floor(Math.random() * 100);
+    const txnRef = `payos-${orderCode}`;
+    const description = `Thanh toan ${normalizedPlanCode}`.slice(0, 25);
 
     await prisma.transactions.create({
       data: {
@@ -93,61 +120,37 @@ export const paymentService = {
         discount_amount: 0,
         final_amount: amount,
         status: "pending",
+        // Keep enum value unchanged to avoid DB migration.
         payment_method: "vnpay",
       },
     });
 
-    const params = {
-      vnp_Version: "2.1.0",
-      vnp_Command: "pay",
-      vnp_TmnCode: tmnCode,
-      vnp_Locale: "vn",
-      vnp_CurrCode: "VND",
-      vnp_TxnRef: txnRef,
-      vnp_OrderInfo: `Thanh toan goi ${normalizedPlanCode.toUpperCase()} cho user ${userId}`,
-      vnp_OrderType: "other",
-      vnp_Amount: amount * 100,
-      vnp_ReturnUrl: returnUrl,
-      vnp_IpAddr: ipAddr,
-      vnp_CreateDate: createDate,
-    };
+    const paymentLink = await payos.createPaymentLink({
+      orderCode,
+      amount: Math.round(amount),
+      description,
+      returnUrl,
+      cancelUrl,
+      items: [
+        {
+          name: plan.name,
+          quantity: 1,
+          price: Math.round(amount),
+        },
+      ],
+      buyerName: `user_${userId}`,
+    });
 
-    const signData = buildSignData(params);
-    const secureHash = crypto
-      .createHmac("sha512", hashSecret)
-      .update(Buffer.from(signData, "utf-8"))
-      .digest("hex");
-
-    return `${vnpUrl}?${signData}&vnp_SecureHash=${secureHash}`;
+    return paymentLink.checkoutUrl;
   },
 
-  async processVnpayReturn(vnpParams) {
-    const params = { ...vnpParams };
-    const receivedHash = params.vnp_SecureHash;
-
-    delete params.vnp_SecureHash;
-    delete params.vnp_SecureHashType;
-
-    if (!receivedHash) {
-      throw new Error("Thiếu chữ ký VNPay");
+  async processPayosPayment({ orderCode, gatewayPayload }) {
+    const numericOrderCode = Number(orderCode);
+    if (!Number.isFinite(numericOrderCode)) {
+      throw new Error("Mã đơn thanh toán không hợp lệ");
     }
 
-    const hashSecret = process.env.VNPAY_HASH_SECRET;
-    if (!hashSecret) {
-      throw new Error("Thiếu VNPAY_HASH_SECRET");
-    }
-
-    const signData = buildSignData(params);
-    const expectedHash = crypto
-      .createHmac("sha512", hashSecret)
-      .update(Buffer.from(signData, "utf-8"))
-      .digest("hex");
-
-    if (expectedHash !== receivedHash) {
-      throw new Error("Sai chữ ký VNPay");
-    }
-
-    const transactionCode = params.vnp_TxnRef;
+    const transactionCode = `payos-${numericOrderCode}`;
     const transaction = await prisma.transactions.findUnique({
       where: { transaction_code: transactionCode },
       include: {
@@ -167,15 +170,15 @@ export const paymentService = {
       };
     }
 
-    const isSuccess =
-      params.vnp_ResponseCode === "00" && params.vnp_TransactionStatus === "00";
+    const status = normalizeGatewayStatus(gatewayPayload?.status);
 
-    if (!isSuccess) {
+    if (status !== "success") {
+      const failedStatus = status === "cancelled" ? "cancelled" : "failed";
       await prisma.transactions.update({
         where: { id: transaction.id },
         data: {
-          status: "failed",
-          payment_gateway_response: JSON.stringify(vnpParams),
+          status: failedStatus,
+          payment_gateway_response: JSON.stringify(gatewayPayload),
         },
       });
 
@@ -186,53 +189,10 @@ export const paymentService = {
     }
 
     await prisma.$transaction(async (tx) => {
-      const now = new Date();
-      const latestSubscription = await tx.user_subscriptions.findFirst({
-        where: {
-          user_id: transaction.user_id,
-          status: "active",
-          end_date: { gte: now },
-        },
-        orderBy: { end_date: "desc" },
-      });
-
-      const startDate =
-        latestSubscription?.end_date && latestSubscription.end_date > now
-          ? latestSubscription.end_date
-          : now;
-
-      const endDate = new Date(startDate);
-      endDate.setDate(
-        endDate.getDate() + Number(transaction.subscription_plans.duration_days),
-      );
-
-      await tx.transactions.update({
-        where: { id: transaction.id },
-        data: {
-          status: "success",
-          vip_start_date: startDate,
-          vip_end_date: endDate,
-          payment_gateway_response: JSON.stringify(vnpParams),
-        },
-      });
-
-      await tx.user_subscriptions.create({
-        data: {
-          user_id: transaction.user_id,
-          plan_id: transaction.plan_id,
-          transaction_id: transaction.id,
-          start_date: startDate,
-          end_date: endDate,
-          status: "active",
-          auto_renew: false,
-        },
-      });
-
-      await tx.users.update({
-        where: { id: transaction.user_id },
-        data: {
-          vip_expires_at: endDate,
-        },
+      await applySuccessfulPayment({
+        tx,
+        transaction,
+        gatewayPayload,
       });
     });
 
@@ -241,6 +201,40 @@ export const paymentService = {
       transactionCode,
       alreadyProcessed: false,
     };
+  },
+
+  async processPayosReturn(queryParams) {
+    const payos = createPayosClient();
+    const orderCode = Number(queryParams.orderCode);
+
+    if (!Number.isFinite(orderCode)) {
+      throw new Error("Thiếu orderCode từ PayOS");
+    }
+
+    const paymentInfo = await payos.getPaymentLinkInformation(orderCode);
+    return this.processPayosPayment({
+      orderCode,
+      gatewayPayload: {
+        source: "payos-return",
+        query: queryParams,
+        info: paymentInfo,
+        status: paymentInfo?.status,
+      },
+    });
+  },
+
+  async processPayosWebhook(payload) {
+    const payos = createPayosClient();
+    const webhookData = payos.verifyPaymentWebhookData(payload);
+
+    return this.processPayosPayment({
+      orderCode: webhookData.orderCode,
+      gatewayPayload: {
+        source: "payos-webhook",
+        data: webhookData,
+        status: webhookData?.status,
+      },
+    });
   },
 
   async getUserTransactionHistory(userId) {
