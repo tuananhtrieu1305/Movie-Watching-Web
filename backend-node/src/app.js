@@ -25,16 +25,22 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+const finalCorsOrigins = [
+  ...allowedOrigins,
+  "https://netflick.fun",
+  "https://www.netflick.fun",
+];
+
 initSocket(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: finalCorsOrigins,
     credentials: true,
   },
 });
 
 app.use(
   cors({
-    origin: [allowedOrigins, "https://netflick.fun"],
+    origin: finalCorsOrigins,
     credentials: true,
   }),
 );

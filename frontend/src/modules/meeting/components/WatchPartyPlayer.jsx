@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getMovies, getMovieBySlug, searchMovies } from "../../../services/movieService";
+import {
+  getMovies,
+  getMovieBySlug,
+  searchMovies,
+} from "../../../services/movieService";
 import { useMeetingContext } from "../MeetingContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getFallbackVideoUrl } from "../../../utils/streaming/fallbackUrl";
@@ -37,7 +41,7 @@ export default function WatchPartyPlayer({
   const [currentMovieEpisodes, setCurrentMovieEpisodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [guestWaitingAutoplay, setGuestWaitingAutoplay] = useState(false);
-  const [driftMs, setDriftMs] = useState(0); 
+  const [driftMs, setDriftMs] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
 
   const videoContainerRef = useRef(null);
@@ -51,7 +55,13 @@ export default function WatchPartyPlayer({
   }, []);
 
   useEffect(() => {
-    if (isHost && initialSlug && socket && !partyState.slug && !hasAutoSelectedRef.current) {
+    if (
+      isHost &&
+      initialSlug &&
+      socket &&
+      !partyState.slug &&
+      !hasAutoSelectedRef.current
+    ) {
       hasAutoSelectedRef.current = true;
       handleHostSelectMovie(initialSlug);
     }
@@ -62,7 +72,11 @@ export default function WatchPartyPlayer({
       setLoading(true);
       const res = await getMovies();
       setMovieList(res.data || res);
-    } catch (err) { console.error(err); } finally { if (!initialSlug) setLoading(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (!initialSlug) setLoading(false);
+    }
   };
 
   // 2. Fetch chi tiết phim
@@ -83,10 +97,11 @@ export default function WatchPartyPlayer({
       const productionData = res.data || res;
       setCurrentMovie(productionData);
 
-      const epList = (productionData.episodes && productionData.episodes.length > 0)
-        ? productionData.episodes
-        : (productionData.seasons?.[0]?.episodes || []);
-      
+      const epList =
+        productionData.episodes && productionData.episodes.length > 0
+          ? productionData.episodes
+          : productionData.seasons?.[0]?.episodes || [];
+
       setCurrentMovieEpisodes(epList);
       const ep = episodeId ? epList.find((e) => e.id === episodeId) : epList[0];
 
@@ -102,7 +117,11 @@ export default function WatchPartyPlayer({
         };
         setCurrentEpisode(fixedEp);
       }
-    } catch (error) { console.error(error); } finally { setLoading(false); }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 3. Socket Listeners
@@ -118,13 +137,22 @@ export default function WatchPartyPlayer({
       });
       if (state.currentMovie && !isHost) {
         const pingMs = Math.max(0, Date.now() - state.serverTime);
-        setPartyState(prev => ({ ...prev, currentTime: state.currentTime + pingMs / 1000 }));
+        setPartyState((prev) => ({
+          ...prev,
+          currentTime: state.currentTime + pingMs / 1000,
+        }));
         setGuestWaitingAutoplay(true);
       }
     });
 
     socket.on("movie_changed", (data) => {
-      setPartyState(prev => ({ ...prev, slug: data.movieSlug, episodeId: data.episodeId, isPlaying: false, currentTime: 0 }));
+      setPartyState((prev) => ({
+        ...prev,
+        slug: data.movieSlug,
+        episodeId: data.episodeId,
+        isPlaying: false,
+        currentTime: 0,
+      }));
       if (!isHost) setGuestWaitingAutoplay(true);
     });
 
@@ -148,7 +176,7 @@ export default function WatchPartyPlayer({
         vt.currentTime = targetTime;
         vt.playbackRate = 1.0;
         setDriftMs(0); // Ẩn ngay nút Bù trễ (Giống bản cũ của bạn)
-      } 
+      }
       // 2. NHỊP ĐẬP HEARTBEAT (Lệch nhẹ 0.3s - 3s) -> Soft Sync mượt mà
       else if (type === "heartbeat") {
         if (absDrift > 0.3) {
@@ -167,7 +195,9 @@ export default function WatchPartyPlayer({
         vt.playbackRate = 1.0;
       }
 
-      setTimeout(() => { isUpdatingFromSocketRef.current = false; }, 300);
+      setTimeout(() => {
+        isUpdatingFromSocketRef.current = false;
+      }, 300);
     });
 
     socket.on("party_ended", (data) => {
@@ -196,7 +226,11 @@ export default function WatchPartyPlayer({
     const interval = setInterval(() => {
       const vt = videoRef.current;
       if (vt && !vt.paused) {
-        socket.emit("host_sync_video", { meetingId, type: "heartbeat", currentTime: vt.currentTime });
+        socket.emit("host_sync_video", {
+          meetingId,
+          type: "heartbeat",
+          currentTime: vt.currentTime,
+        });
       }
     }, 2000);
     return () => clearInterval(interval);
@@ -209,15 +243,27 @@ export default function WatchPartyPlayer({
   };
   const handleHostPlay = () => {
     if (!isHost || isUpdatingFromSocketRef.current) return;
-    socket.emit("host_sync_video", { meetingId, type: "play", currentTime: videoRef.current?.currentTime || 0 });
+    socket.emit("host_sync_video", {
+      meetingId,
+      type: "play",
+      currentTime: videoRef.current?.currentTime || 0,
+    });
   };
   const handleHostPause = () => {
     if (!isHost || isUpdatingFromSocketRef.current) return;
-    socket.emit("host_sync_video", { meetingId, type: "pause", currentTime: videoRef.current?.currentTime || 0 });
+    socket.emit("host_sync_video", {
+      meetingId,
+      type: "pause",
+      currentTime: videoRef.current?.currentTime || 0,
+    });
   };
   const handleHostSeeked = () => {
     if (!isHost || isUpdatingFromSocketRef.current) return;
-    socket.emit("host_sync_video", { meetingId, type: "seek", currentTime: videoRef.current?.currentTime || 0 });
+    socket.emit("host_sync_video", {
+      meetingId,
+      type: "seek",
+      currentTime: videoRef.current?.currentTime || 0,
+    });
   };
   const handleGuestJoinTheater = () => {
     setGuestWaitingAutoplay(false);
@@ -226,14 +272,19 @@ export default function WatchPartyPlayer({
     if (partyState.isPlaying) videoRef.current.play();
   };
   const handleCopyMeetingId = () => {
-    if (meetingId) { navigator.clipboard.writeText(meetingId); message.success("Đã copy mã phòng!"); }
+    if (meetingId) {
+      navigator.clipboard.writeText(meetingId);
+      message.success("Đã copy mã phòng!");
+    }
   };
 
-  const loadingOverlay = (loading && partyState.slug) && (
+  const loadingOverlay = loading && partyState.slug && (
     <div className="absolute inset-0 z-[100] bg-[#121212] flex items-center justify-center">
       <div className="text-center">
-         <Spin size="large" />
-         <div className="mt-4 text-orange-200 font-medium">Đang chuẩn bị rạp chiếu...</div>
+        <Spin size="large" />
+        <div className="mt-4 text-orange-200 font-medium">
+          Đang chuẩn bị rạp chiếu...
+        </div>
       </div>
     </div>
   );
@@ -241,45 +292,111 @@ export default function WatchPartyPlayer({
   return (
     <div className="h-full w-full flex flex-col relative bg-[#121212]">
       {loadingOverlay}
-      
+
       <div className="absolute top-4 right-4 z-50 flex items-center gap-3">
         <div className="flex items-center bg-gray-900/80 border border-gray-700 rounded-full px-4 py-1.5 backdrop-blur-md shadow-2xl">
-          <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mr-2">Room ID:</span>
-          <span className="text-[#ffdd95] font-mono font-bold mr-3">{meetingId}</span>
-          <Button type="text" size="small" icon={<CopyOutlined className="text-gray-400" />} onClick={handleCopyMeetingId} />
+          <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mr-2">
+            Room ID:
+          </span>
+          <span className="text-[#ffdd95] font-mono font-bold mr-3">
+            {meetingId}
+          </span>
+          <Button
+            type="text"
+            size="small"
+            icon={<CopyOutlined className="text-gray-400" />}
+            onClick={handleCopyMeetingId}
+          />
         </div>
-        <Button type="primary" shape="circle" icon={isTheaterMode ? <FullscreenExitOutlined /> : <FullscreenOutlined />} onClick={() => setIsTheaterMode(!isTheaterMode)} />
+        <Button
+          type="primary"
+          shape="circle"
+          icon={
+            isTheaterMode ? <FullscreenExitOutlined /> : <FullscreenOutlined />
+          }
+          onClick={() => setIsTheaterMode(!isTheaterMode)}
+        />
         {isHost && partyState.slug && (
-          <Button type="default" onClick={() => handleHostSelectMovie(null)} className="bg-white/10 text-white">Đổi Phim Khác</Button>
+          <Button
+            type="default"
+            onClick={() => handleHostSelectMovie(null)}
+            className="bg-white/10 text-white"
+          >
+            Đổi Phim Khác
+          </Button>
         )}
       </div>
 
       {partyState.slug && currentMovie ? (
         <div className="flex-1 flex flex-col p-4 pt-20 overflow-y-auto custom-scrollbar">
           <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-t-xl flex justify-between items-center shadow-lg">
-            <h2 className="text-xl font-bold text-white mb-0">{currentMovie.title} {currentEpisode ? ` - Tập ${currentEpisode.episode_number}` : ""}</h2>
+            <h2 className="text-xl font-bold text-white mb-0">
+              {currentMovie.title}{" "}
+              {currentEpisode ? ` - Tập ${currentEpisode.episode_number}` : ""}
+            </h2>
           </div>
 
-          <div ref={videoContainerRef} className="flex-1 relative flex items-center justify-center bg-black border border-gray-800 border-t-0 rounded-b-xl overflow-hidden shadow-2xl">
+          <div
+            ref={videoContainerRef}
+            className="flex-1 relative flex items-center justify-center bg-black border border-gray-800 border-t-0 rounded-b-xl overflow-hidden shadow-2xl"
+          >
             {guestWaitingAutoplay && !isHost && (
               <div className="absolute inset-0 z-40 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm">
-                <h3 className="text-white text-2xl font-bold mb-4">Rạp đang chiếu phim rồi!</h3>
-                <Button type="primary" size="large" onClick={handleGuestJoinTheater}>Nhấn để xem cùng Host</Button>
+                <h3 className="text-white text-2xl font-bold mb-4">
+                  Rạp đang chiếu phim rồi!
+                </h3>
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleGuestJoinTheater}
+                >
+                  Nhấn để xem cùng Host
+                </Button>
               </div>
             )}
-            {isBuffering && ( <div className="absolute inset-0 z-30 bg-black/40 flex items-center justify-center"><Spin size="large" tip="Đang đồng bộ..." /></div> )}
+            {isBuffering && (
+              <div className="absolute inset-0 z-30 bg-black/40 flex items-center justify-center">
+                <Spin size="large" tip="Đang đồng bộ..." />
+              </div>
+            )}
             {currentEpisode && (
-              <video ref={videoRef} src={currentEpisode.video_url} className="w-full h-full object-contain" controls={isHost} playsInline poster={currentEpisode.thumbnail_url || currentMovie.poster_url}
-                onPlay={handleHostPlay} onPause={handleHostPause} onSeeked={handleHostSeeked}
-                onWaiting={() => setIsBuffering(true)} onPlaying={() => setIsBuffering(false)} onCanPlay={() => setIsBuffering(false)}
+              <video
+                ref={videoRef}
+                src={currentEpisode.video_url}
+                className="w-full h-full object-contain"
+                controls={isHost}
+                playsInline
+                poster={currentEpisode.thumbnail_url || currentMovie.poster_url}
+                onPlay={handleHostPlay}
+                onPause={handleHostPause}
+                onSeeked={handleHostSeeked}
+                onWaiting={() => setIsBuffering(true)}
+                onPlaying={() => setIsBuffering(false)}
+                onCanPlay={() => setIsBuffering(false)}
               />
             )}
-            {!isHost && currentEpisode && ( <GuestControls videoRef={videoRef} containerRef={videoContainerRef} /> )}
+            {!isHost && currentEpisode && (
+              <GuestControls
+                videoRef={videoRef}
+                containerRef={videoContainerRef}
+              />
+            )}
 
             {/* CHỈ HIỆN KHI LỆCH QUÁ NẶNG MÀ KO TỰ SỬA ĐƯỢC (Ví dụ Guest treo mạng) */}
             {!isHost && Math.abs(driftMs) > 10000 && (
               <div className="absolute bottom-10 right-10 z-50">
-                <Button type="primary" danger shape="round" onClick={() => socket.emit("join_party", { meetingId, isHost: false, participantId: socket.participantId })}>
+                <Button
+                  type="primary"
+                  danger
+                  shape="round"
+                  onClick={() =>
+                    socket.emit("join_party", {
+                      meetingId,
+                      isHost: false,
+                      participantId: socket.participantId,
+                    })
+                  }
+                >
                   Lệch nặng: Bù {(driftMs / 1000).toFixed(1)}s
                 </Button>
               </div>
@@ -288,10 +405,17 @@ export default function WatchPartyPlayer({
 
           {currentMovieEpisodes.length > 1 && (
             <div className="mt-4 p-5 bg-gray-900/50 border border-gray-800 rounded-xl">
-              <h4 className="text-sm font-bold text-white uppercase mb-4">Danh sách tập phim</h4>
+              <h4 className="text-sm font-bold text-white uppercase mb-4">
+                Danh sách tập phim
+              </h4>
               <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                 {currentMovieEpisodes.map((ep) => (
-                  <button key={ep.id} onClick={() => handleHostSelectMovie(currentMovie.slug, ep.id)} disabled={!isHost}
+                  <button
+                    key={ep.id}
+                    onClick={() =>
+                      handleHostSelectMovie(currentMovie.slug, ep.id)
+                    }
+                    disabled={!isHost}
                     className={`min-w-[50px] h-10 px-3 rounded-lg text-sm font-bold transition-all ${currentEpisode?.id === ep.id ? "bg-[#ffdd95] text-black shadow-[0_0_15px_rgba(255,221,149,0.4)]" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}
                   >
                     {ep.episode_number || "EP"}
@@ -305,12 +429,46 @@ export default function WatchPartyPlayer({
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-16">
           {isHost ? (
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-extrabold text-[#ffdd95] mb-8">Phòng chiếu đã sẵn sàng!</h2>
-              <SearchInput placeholder="Tìm tên phim để bắt đầu..." loading={loading && !partyState.slug} onSearch={async (val) => { try { if (val.trim()) { setLoading(true); const res = await searchMovies(val); setMovieList(res.data || res); } else { fetchMovies(); } } catch (err) { console.error(err); } finally { setLoading(false); } }} />
+              <h2 className="text-3xl font-extrabold text-[#ffdd95] mb-8">
+                Phòng chiếu đã sẵn sàng!
+              </h2>
+              <SearchInput
+                placeholder="Tìm tên phim để bắt đầu..."
+                loading={loading && !partyState.slug}
+                onSearch={async (val) => {
+                  try {
+                    if (val.trim()) {
+                      setLoading(true);
+                      const res = await searchMovies(val);
+                      setMovieList(res.data || res);
+                    } else {
+                      fetchMovies();
+                    }
+                  } catch (err) {
+                    console.error(err);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              />
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-10">
                 {movieList.map((movie) => (
-                  <Card key={movie.id} hoverable cover={<img alt={movie.title} src={movie.poster_url} className="h-64 object-cover" />} onClick={() => handleHostSelectMovie(movie.slug)} className="bg-[#1a1a1a] border-gray-800">
-                    <div className="truncate text-white font-semibold">{movie.title}</div>
+                  <Card
+                    key={movie.id}
+                    hoverable
+                    cover={
+                      <img
+                        alt={movie.title}
+                        src={movie.poster_url}
+                        className="h-64 object-cover"
+                      />
+                    }
+                    onClick={() => handleHostSelectMovie(movie.slug)}
+                    className="bg-[#1a1a1a] border-gray-800"
+                  >
+                    <div className="truncate text-white font-semibold">
+                      {movie.title}
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -318,7 +476,9 @@ export default function WatchPartyPlayer({
           ) : (
             <div className="h-full flex flex-col items-center justify-center">
               <div className="w-16 h-16 border-4 border-[#ffdd95] border-t-transparent rounded-full animate-spin mb-6"></div>
-              <h2 className="text-3xl font-bold text-white">Đang chờ Chủ phòng</h2>
+              <h2 className="text-3xl font-bold text-white">
+                Đang chờ Chủ phòng
+              </h2>
             </div>
           )}
         </div>
