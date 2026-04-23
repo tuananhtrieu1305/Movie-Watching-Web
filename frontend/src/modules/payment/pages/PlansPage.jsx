@@ -33,7 +33,7 @@ const PlansPage = () => {
         "Xem trên 2 thiết bị",
         "Tải phim xem offline",
       ],
-      isCurrent: true,
+      isCurrent: false,
       buttonText: "Nâng cấp ngay",
       buttonStyle: "bg-yellow-500 hover:bg-yellow-400 text-black",
       highlight: true,
@@ -54,7 +54,8 @@ const PlansPage = () => {
       ],
       isCurrent: false,
       buttonText: "Nâng cấp ngay",
-      buttonStyle: "bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400",
+      buttonStyle:
+        "bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400",
     },
     {
       code: "vip_1_year",
@@ -117,14 +118,18 @@ const PlansPage = () => {
                   {plan.name}
                 </h3>
                 {plan.subtitle && (
-                  <p className="text-sm text-gray-400 mt-0.5">{plan.subtitle}</p>
+                  <p className="text-sm text-gray-400 mt-0.5">
+                    {plan.subtitle}
+                  </p>
                 )}
               </div>
 
               {/* Price */}
               <div className="mb-5 pb-5 border-b border-gray-700">
                 {plan.originalPrice && (
-                  <p className="text-xs text-gray-500 line-through mb-0.5">{plan.originalPrice}</p>
+                  <p className="text-xs text-gray-500 line-through mb-0.5">
+                    {plan.originalPrice}
+                  </p>
                 )}
                 <p className="text-3xl font-black text-white leading-none">
                   {plan.price}
@@ -137,7 +142,10 @@ const PlansPage = () => {
               {/* Features */}
               <ul className="space-y-2.5 mb-6 flex-1">
                 {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm text-gray-300">
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2.5 text-sm text-gray-300"
+                  >
                     <FaCheck className="text-green-500 mt-0.5 shrink-0" />
                     <span>{feature}</span>
                   </li>
@@ -161,7 +169,7 @@ const PlansPage = () => {
 
         {/* Footer Note */}
         <p className="text-center text-gray-500 text-sm mt-10">
-          Thanh toán an toàn qua VNPay. Hủy bất cứ lúc nào.
+          Thanh toán an toàn qua PayOS. Hủy bất cứ lúc nào.
         </p>
       </div>
     </div>
