@@ -123,7 +123,8 @@ class ResponseGenerator:
                     - **[Tên phim (Năm phát hành)](http://localhost:5174/watch/slug)** | Thể loại: ... | Rating: ...
                     - **Lý do gợi ý:** (Trích xuất 1-2 câu tóm tắt nội dung từ ngữ cảnh để thuyết phục người dùng).
                     - KHÔNG viết dòng "Đường link:" riêng.
-                    4. GIỌNG ĐIỆU: Gần gũi, tự nhiên như một người bạn thân đang rủ đi xem phim.
+                    4. XỬ LÝ INTENT TÓM TẮT: Nếu người dùng yêu cầu tóm tắt/nội dung của MỘT phim cụ thể, chỉ tập trung trả lời phim đó, không liệt kê danh sách nhiều phim khác trừ khi người dùng hỏi thêm gợi ý.
+                    5. GIỌNG ĐIỆU: Gần gũi, tự nhiên như một người bạn thân đang rủ đi xem phim.
 
                     Hãy phân tích kỹ ngữ cảnh được cung cấp và đưa ra câu trả lời xuất sắc nhất!
                 """

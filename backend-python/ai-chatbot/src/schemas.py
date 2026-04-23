@@ -41,9 +41,9 @@ class ChatResponse(BaseModel):
         conversation_id (str): ID cuộc hội thoại (tạo mới hoặc từ request).
         answer (str): Nội dung câu trả lời của chatbot, đã được sinh bởi LLM
             dựa trên ngữ cảnh từ RAG pipeline.
-        sources (list[dict]): Danh sách các nguồn tham khảo (tên phim, metadata)
-            mà chatbot sử dụng để sinh câu trả lời. Mỗi phần tử là một dict
-            chứa thông tin về document chunk đã được sử dụng.
+        sources (list[dict]): Danh sách production được truy xuất theo thứ tự
+            relevance để frontend tự hydrate dữ liệu chi tiết từ API streaming.
+            Mỗi phần tử tối thiểu chứa: {"production_id": <int>}.
     """
     conversation_id: str
     answer: str

@@ -33,11 +33,13 @@ const safeJson = async (response) => {
   }
 };
 
-export const listProductions = async ({ signal } = {}) => {
+export const listProductions = async ({ signal, scope = "home" } = {}) => {
   const errors = [];
+  const normalizedScope =
+    typeof scope === "string" && scope.trim() !== "" ? scope.trim() : "home";
 
   for (const base of getStreamingApiBases()) {
-    const endpoint = `${base}/list?scope=home`;
+    const endpoint = `${base}/list?scope=${encodeURIComponent(normalizedScope)}`;
 
     let response;
     try {
