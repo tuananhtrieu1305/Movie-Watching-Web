@@ -32,8 +32,10 @@ export const deleteProduction = async (id) => {
   return res.data;
 };
 
-export const getMovies = async () => {
-  const response = await axios.get(`${PRODUCTIONS_API}/list`);
+export const getMovies = async (filters = {}) => {
+  const response = await axios.get(`${PRODUCTIONS_API}/list`, {
+    params: filters,
+  });
   return response.data;
 };
 

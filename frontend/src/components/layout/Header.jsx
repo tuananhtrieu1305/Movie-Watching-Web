@@ -101,22 +101,6 @@ const Header = () => {
               NETFLICK
             </Link>
 
-          <nav className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`text-sm font-medium transition-colors hover:text-[#ffdd95] ${
-                  location.pathname === link.path
-                    ? "text-white font-bold"
-                    : "text-gray-300"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-        </div>
             {/* SEARCH BAR CONTAINER */}
             <div className="relative" ref={searchRef}>
               <div className="hidden md:flex items-center bg-white/10 hover:bg-white/15 transition-colors rounded-full px-4 py-1.5 gap-2 min-w-[200px] lg:min-w-[350px] border border-white/5 focus-within:border-[#ffdd95]/50 focus-within:bg-white/20">
@@ -176,6 +160,23 @@ const Header = () => {
                 </div>
               )}
             </div>
+
+          <nav className="hidden lg:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`text-sm font-medium transition-colors hover:text-[#ffdd95] ${
+                  location.pathname === link.path
+                    ? "text-white font-bold"
+                    : "text-gray-300"
+                }`}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
           <div className="flex items-center gap-3">
             <button 

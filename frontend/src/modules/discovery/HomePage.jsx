@@ -231,10 +231,19 @@ const HomePage = () => {
     return [...counts.values()]
       .sort((a, b) => b.total - a.total)
       .slice(0, 8)
-      .map((item) => ({
-        name: item.name,
-        link: `/category/${encodeURIComponent(normalizeText(item.name).replace(/\s+/g, "-"))}`,
-      }));
+      .map((item) => {
+        const slug = item.name
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/đ/g, 'd')
+          .replace(/Đ/g, 'D')
+          .toLowerCase()
+          .replace(/\s+/g, '-');
+        return {
+          name: item.name,
+          link: `/movies?genre=${slug}`,
+        };
+      });
   }, [visibleProductions]);
 
   const recommended = useMemo(
@@ -291,31 +300,31 @@ const HomePage = () => {
         {/* Movie Sections */}
         <CategorySection
           title="Phim Đề Xuất Cho Bạn"
-          viewAllLink="/recommended"
+          viewAllLink="/movies?sort=rating"
           movies={recommended}
         />
 
         <CategorySection
           title="Phim Mới Cập Nhật"
-          viewAllLink="/new-releases"
+          viewAllLink="/movies?sort=newest"
           movies={newReleases}
         />
 
         <CategorySection
           title="Phim Bộ Hot"
-          viewAllLink="/trending-series"
+          viewAllLink="/series?sort=trending"
           movies={seriesHot}
         />
 
         <CategorySection
           title="Phim Hành Động"
-          viewAllLink="/category/action"
+          viewAllLink="/movies?genre=hanh-dong"
           movies={actionMovies}
         />
 
         <CategorySection
           title="Phim Hoạt Hình"
-          viewAllLink="/category/animation"
+          viewAllLink="/movies?genre=hoat-hinh"
           movies={animationMovies}
         />
 

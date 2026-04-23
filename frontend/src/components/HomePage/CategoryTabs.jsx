@@ -1,24 +1,24 @@
 import { Link } from "react-router-dom";
 
 const FALLBACK_CATEGORIES = [
-  { name: "Marvel", icon: "🦸", color: "#e23636", link: "/category/marvel" },
-  { name: "Sitcom", icon: "😂", color: "#22c55e", link: "/category/sitcom" },
-  { name: "Netflix", icon: "N", color: "#e50914", link: "/category/netflix" },
-  { name: "Anime", icon: "🎌", color: "#3b82f6", link: "/category/anime" },
+  { name: "Phim Hành Động", icon: "💥", color: "#e23636", link: "/movies?genre=hanh-dong" },
+  { name: "Hài hước", icon: "😂", color: "#22c55e", link: "/movies?genre=hai-huoc" },
+  { name: "Netflix", icon: "N", color: "#e50914", link: "/series" },
+  { name: "Hoạt Hình", icon: "🎌", color: "#3b82f6", link: "/movies?genre=hoat-hinh" },
   {
-    name: "Hàn Quốc",
-    icon: "🇰🇷",
+    name: "Tình Cảm",
+    icon: "❤️",
     color: "#8b5cf6",
-    link: "/category/han-quoc",
+    link: "/movies?genre=tinh-cam",
   },
   {
-    name: "Hành Động",
-    icon: "💥",
+    name: "Hình Sự",
+    icon: "🕵️",
     color: "#f59e0b",
-    link: "/category/hanh-dong",
+    link: "/movies?genre=hinh-su",
   },
-  { name: "Kinh Dị", icon: "👻", color: "#6366f1", link: "/category/kinh-di" },
-  { name: "+3 chủ đề", icon: "➕", color: "#64748b", link: "/categories" },
+  { name: "Kinh Dị", icon: "👻", color: "#6366f1", link: "/movies?genre=kinh-di" },
+  { name: "Khoa Học", icon: "🌌", color: "#64748b", link: "/movies?genre=khoa-hoc-vien-tuong" },
 ];
 
 const TAB_COLORS = [

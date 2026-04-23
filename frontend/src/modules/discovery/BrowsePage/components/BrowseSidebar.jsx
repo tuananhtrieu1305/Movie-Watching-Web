@@ -1,5 +1,5 @@
 import React from "react";
-import { GENRES, TYPES, COUNTRIES, LANGUAGES } from "../constants";
+import { GENRES, TYPES, COUNTRIES } from "../constants";
 import { SidebarSection, SidebarChip } from "./FilterComponents";
 
 export function BrowseSidebar({
@@ -9,10 +9,6 @@ export function BrowseSidebar({
   setSelectedType,
   selectedCountry,
   setSelectedCountry,
-  selectedLanguage,
-  setSelectedLanguage,
-  onlyTrending,
-  setOnlyTrending,
   activeFiltersCount,
   clearAll,
 }) {
@@ -20,21 +16,21 @@ export function BrowseSidebar({
     <aside className="hidden lg:flex flex-col w-52 shrink-0">
       <div className="sticky top-24 space-y-1">
         {/* Genre */}
-        <SidebarSection title="Genre">
+        <SidebarSection title="Thể loại">
           <div className="space-y-0.5">
             {GENRES.map((g) => (
               <SidebarChip
-                key={g}
-                label={g}
-                active={selectedGenres.includes(g)}
-                onClick={() => toggleGenre(g)}
+                key={g.value}
+                label={g.label}
+                active={selectedGenres.includes(g.value)}
+                onClick={() => toggleGenre(g.value)}
               />
             ))}
           </div>
         </SidebarSection>
 
         {/* Type */}
-        <SidebarSection title="Type">
+        <SidebarSection title="Định dạng">
           <div className="space-y-0.5">
             {TYPES.map((t) => (
               <SidebarChip
@@ -50,7 +46,7 @@ export function BrowseSidebar({
         </SidebarSection>
 
         {/* Country */}
-        <SidebarSection title="Country">
+        <SidebarSection title="Quốc gia">
           <div className="space-y-0.5">
             {COUNTRIES.map((c) => (
               <SidebarChip
@@ -67,32 +63,6 @@ export function BrowseSidebar({
           </div>
         </SidebarSection>
 
-        {/* Language */}
-        <SidebarSection title="Language">
-          <div className="space-y-0.5">
-            {LANGUAGES.map((l) => (
-              <SidebarChip
-                key={l.value}
-                label={l.label}
-                active={selectedLanguage === l.value}
-                onClick={() =>
-                  setSelectedLanguage(
-                    selectedLanguage === l.value ? null : l.value,
-                  )
-                }
-              />
-            ))}
-          </div>
-        </SidebarSection>
-
-        {/* Trending toggle */}
-        <SidebarSection title="More">
-          <SidebarChip
-            label="🔥 Trending Only"
-            active={onlyTrending}
-            onClick={() => setOnlyTrending(!onlyTrending)}
-          />
-        </SidebarSection>
 
         {/* Clear all */}
         {activeFiltersCount > 0 && (
@@ -101,7 +71,7 @@ export function BrowseSidebar({
             onClick={clearAll}
             className="w-full text-xs text-gray-500 hover:text-red-400 transition-colors font-medium py-2 focus-visible:ring-1 focus-visible:ring-red-400 rounded"
           >
-            Clear all filters
+            Xóa tất cả bộ lọc
           </button>
         )}
       </div>

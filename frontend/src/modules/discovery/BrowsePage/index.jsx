@@ -1,7 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { TYPES, COUNTRIES, SORT_OPTIONS } from "./constants";
-import { MOCK_MOVIES } from "./mockData";
+import { GENRES, TYPES, COUNTRIES, SORT_OPTIONS } from "./constants";
+import { getMovies } from "../../../services/movieService";
+import { Spin } from "antd";
 import { ActiveFilterBadge } from "./components/FilterComponents";
 import { BrowseSidebar } from "./components/BrowseSidebar";
 import { MovieGrid } from "./components/MovieGrid";
@@ -24,9 +25,62 @@ export default function BrowsePage() {
   }, [searchParams, location.pathname]);
 
   const selectedCountry = searchParams.get("country");
-  const selectedLanguage = searchParams.get("lang");
-  const sortBy = searchParams.get("sort") || "trending";
-  const onlyTrending = searchParams.get("trending") === "true";
+  const sortBy = searchParams.get("sort") || "newest";
+
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data từ API khi filters thay đổi
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFilteredMovies = async () => {
+      try {
+        setLoading(true);
+        // Build query params
+        const filters = {};
+        if (selectedGenres.length > 0) filters.genre = selectedGenres.join(",");
+        if (selectedType) filters.type = selectedType;
+        if (selectedCountry) filters.country = selectedCountry;
+        
+        // Map UI sort to API sort
+        if (sortBy === "rating") {
+          filters.sort = "rating";
+        } else if (sortBy === "trending") {
+          filters.sort = "popular";
+        } else if (sortBy === "title") {
+          filters.sort = "title";
+        } else {
+          filters.sort = "latest"; // Cho newest hoặc mặc định
+        }
+
+        const data = await getMovies(filters);
+        
+        if (isMounted) {
+          // Map data chuẩn hoá cho MovieGrid
+          const mappedData = data.map((item) => ({
+            id: item.id,
+            title: item.title,
+            slug: item.slug,
+            poster: item.poster_url,
+            quality: "HD", 
+            trending: item.total_views > 1000,
+            year: item.release_year,
+            rating: item.rating_avg || "0.0",
+            genre: (item.genres || []).map((g) => g.name),
+            type: item.type,
+            country: item.country
+          }));
+          setMovies(mappedData);
+        }
+      } catch (err) {
+        console.error("Lỗi khi filter phim:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchFilteredMovies();
+    return () => { isMounted = false; };
+  }, [selectedGenres, selectedType, selectedCountry, sortBy]);
 
   // Helper method to update URLSearchParams
   const updateFilters = (updates) => {
@@ -49,7 +103,7 @@ export default function BrowsePage() {
       }
     });
 
-    if (newParams.get("sort") === "trending") {
+    if (newParams.get("sort") === "newest") {
       newParams.delete("sort"); // keep URL clean since it's the default
     }
 
@@ -65,45 +119,17 @@ export default function BrowsePage() {
 
   const setSelectedType = (type) => updateFilters({ type });
   const setSelectedCountry = (country) => updateFilters({ country });
-  const setSelectedLanguage = (lang) => updateFilters({ lang });
   const setSortBy = (sort) => updateFilters({ sort });
-  const setOnlyTrending = (trending) => updateFilters({ trending });
 
   const clearAll = () => {
     setSearchParams({}, { replace: true });
   };
 
-  const results = useMemo(() => {
-    let list = MOCK_MOVIES;
-    if (selectedGenres.length)
-      list = list.filter((m) =>
-        selectedGenres.some((g) => m.genre.includes(g)),
-      );
-    if (selectedType) list = list.filter((m) => m.type === selectedType);
-    if (selectedCountry)
-      list = list.filter((m) => m.country === selectedCountry);
-    if (selectedLanguage)
-      list = list.filter((m) => m.language === selectedLanguage);
-    if (onlyTrending) list = list.filter((m) => m.trending);
-
-    return [...list].sort((a, b) => {
-      if (sortBy === "rating") return b.rating - a.rating;
-      if (sortBy === "newest") return b.year - a.year;
-      if (sortBy === "title") return a.title.localeCompare(b.title);
-      return b.trending - a.trending || b.rating - a.rating;
-    });
-  }, [
-    selectedGenres,
-    selectedType,
-    selectedCountry,
-    selectedLanguage,
-    sortBy,
-    onlyTrending,
-  ]);
+  const results = movies;
 
   const activeFilters = [
     ...selectedGenres.map((g) => ({
-      label: g,
+      label: GENRES.find((genre) => genre.value === g)?.label || g,
       onRemove: () => toggleGenre(g),
     })),
     ...(selectedType
@@ -122,12 +148,6 @@ export default function BrowsePage() {
           },
         ]
       : []),
-    ...(selectedLanguage
-      ? [{ label: selectedLanguage, onRemove: () => setSelectedLanguage(null) }]
-      : []),
-    ...(onlyTrending
-      ? [{ label: "🔥 Trending", onRemove: () => setOnlyTrending(false) }]
-      : []),
   ];
 
   return (
@@ -142,10 +162,6 @@ export default function BrowsePage() {
             setSelectedType={setSelectedType}
             selectedCountry={selectedCountry}
             setSelectedCountry={setSelectedCountry}
-            selectedLanguage={selectedLanguage}
-            setSelectedLanguage={setSelectedLanguage}
-            onlyTrending={onlyTrending}
-            setOnlyTrending={setOnlyTrending}
             activeFiltersCount={activeFilters.length}
             clearAll={clearAll}
           />
@@ -158,7 +174,7 @@ export default function BrowsePage() {
                 <span className="text-white font-semibold">
                   {results.length}
                 </span>{" "}
-                title{results.length !== 1 ? "s" : ""}
+                phim
               </p>
               <div className="flex gap-2 flex-wrap justify-end">
                 {SORT_OPTIONS.map((opt) => (
@@ -183,7 +199,7 @@ export default function BrowsePage() {
             {activeFilters.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap mb-4 p-3 bg-gray-900/50 rounded-xl border border-gray-800">
                 <span className="text-xs text-gray-500 font-medium">
-                  Active:
+                  Đang chọn:
                 </span>
                 {activeFilters.map((f, i) => (
                   <ActiveFilterBadge
@@ -196,7 +212,13 @@ export default function BrowsePage() {
             )}
 
             {/* Grid */}
-            <MovieGrid results={results} clearAll={clearAll} />
+            {loading ? (
+              <div className="flex justify-center items-center py-32">
+                <Spin size="large" />
+              </div>
+            ) : (
+              <MovieGrid results={results} clearAll={clearAll} />
+            )}
           </div>
         </div>
       </div>

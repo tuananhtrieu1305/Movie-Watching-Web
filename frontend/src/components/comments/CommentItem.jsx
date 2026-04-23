@@ -35,7 +35,7 @@ function avatarSrc(url, name = "?") {
 
 // ─────────────────────────────────────────────────────────────────────
 const CommentItem = ({ data, productionId, accessToken, currentUserId, depth = 0 }) => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, refreshAccessToken } = useContext(AuthContext);
 
   // ── Author info (từ API: data.user) ─────────────────────────────
   const author = data.user || { id: null, username: "Anonymous", avatar_url: null };
@@ -154,7 +154,28 @@ const CommentItem = ({ data, productionId, accessToken, currentUserId, depth = 0
       setIsReplying(false);
       setShowReplies(true);
     } catch (e) {
+      if (e?.response?.status === 401 && refreshAccessToken) {
+        try {
+          const newToken = await refreshAccessToken();
+          const newReplyRetry = await createComment(
+            { productionId, content: inputData.content, parentId: data.id, isSpoiler: false },
+            newToken
+          );
+          setReplies(prev => {
+            if (prev.some(r => r.id === newReplyRetry.id)) return prev;
+            setReplyCount(c => c + 1);
+            return [newReplyRetry, ...prev];
+          });
+          setIsReplying(false);
+          setShowReplies(true);
+          return;
+        } catch (retryErr) {
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang.");
+          return;
+        }
+      }
       console.error("reply error:", e);
+      alert(e?.response?.data?.message || "Gửi trả lời thất bại.");
     }
   };
 

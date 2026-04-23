@@ -118,6 +118,16 @@ export const AuthProvider = ({ children }) => {
     bootstrap();
   }, [clearSession, refreshAccessToken]);
 
+  // Silent refresh interval (14 minutes)
+  useEffect(() => {
+    if (!accessToken) return;
+    const interval = setInterval(() => {
+      refreshAccessToken().catch(() => clearSession());
+    }, 14 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [accessToken, refreshAccessToken, clearSession]);
+
   const value = useMemo(
     () => ({
       accessToken,

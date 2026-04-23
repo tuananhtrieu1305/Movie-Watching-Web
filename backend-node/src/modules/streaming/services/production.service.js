@@ -370,53 +370,76 @@ export const deleteProductionService = async (id) => {
   });
 };
 
-// Logic lấy danh sách phim
-export const getMoviesService = async ({ scope } = {}) => {
+export const getMoviesService = async ({ scope, genre, year, country, type, sort } = {}) => {
   const isHomeScope = scope === "home";
 
-  const where = isHomeScope
-    ? {
-        type: {
-          in: ["movie", "series"],
-        },
-        poster_url: {
-          startsWith: "http",
-        },
-        banner_url: {
-          startsWith: "http",
-        },
+  const where = {
+    type: { in: (type && type !== "all") ? [type] : ["movie", "series"] }
+  };
+
+  if (isHomeScope) {
+    where.poster_url = { startsWith: "http" };
+    where.banner_url = { startsWith: "http" };
+  }
+
+  if (year && year !== "all") {
+    where.release_year = parseInt(year);
+  }
+
+  if (country && country !== "all") {
+    where.country = country;
+  }
+
+  if (genre && genre !== "all") {
+    const genreArray = typeof genre === 'string' ? genre.split(',') : [genre];
+    
+    where.production_genres = {
+      some: {
+        genres: {
+          OR: genreArray.map((g) => {
+            return {
+              OR: [
+                { id: !isNaN(g) ? parseInt(g) : undefined },
+                { slug: g }
+              ].filter(Boolean)
+            };
+          })
+        }
       }
-    : undefined;
+    };
+  }
+
+  let orderBy = { created_at: "desc" };
+  if (sort === "popular") {
+    orderBy = { rating_count: "desc" };
+  } else if (sort === "rating") {
+    orderBy = { rating_avg: "desc" };
+  } else if (sort === "latest") {
+    orderBy = { created_at: "desc" };
+  } else if (sort === "title") {
+    orderBy = { title: "asc" };
+  }
 
   const productions = await prisma.productions.findMany({
     where,
-    orderBy: { created_at: "desc" },
+    orderBy,
     include: {
       production_genres: {
         select: {
           genres: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
+            select: { id: true, name: true, slug: true },
           },
         },
       },
       episodes: {
-        select: {
-          views_count: true,
-        },
+        select: { views_count: true },
       },
     },
   });
 
-  return productions.map((production) => {
+  const results = productions.map((production) => {
     const totalViews = Array.isArray(production.episodes)
-      ? production.episodes.reduce(
-          (sum, ep) => sum + (Number(ep?.views_count) || 0),
-          0,
-        )
+      ? production.episodes.reduce((sum, ep) => sum + (Number(ep?.views_count) || 0), 0)
       : 0;
 
     const genres = Array.isArray(production.production_genres)
@@ -429,6 +452,12 @@ export const getMoviesService = async ({ scope } = {}) => {
       genres,
     };
   });
+
+  if (sort === "popular") {
+    results.sort((a, b) => b.total_views - a.total_views);
+  }
+
+  return results;
 };
 
 export const getMovieBySlugService = async (slug) => {

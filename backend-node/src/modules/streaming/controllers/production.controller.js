@@ -43,9 +43,13 @@ export const uploadMovieController = async (req, res) => {
 
 export const getListMoviesController = async (req, res) => {
   try {
-    const scope =
-      typeof req.query?.scope === "string" ? req.query.scope.trim() : "";
-    const movies = await getMoviesService({ scope });
+    const { scope, genre, year, country, type, sort } = req.query;
+    
+    const movies = await getMoviesService({ 
+      scope: typeof scope === "string" ? scope.trim() : "",
+      genre, year, country, type, sort
+    });
+
     res.json(movies);
   } catch (error) {
     console.error("Get List Error:", error);
