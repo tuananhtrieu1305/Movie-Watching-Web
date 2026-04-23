@@ -1,17 +1,10 @@
 import { Server } from "socket.io";
 import { verifyAccessToken } from "../utils/jwt.js";
 import { meetingService } from "../../modules/meeting/meeting.instance.js";
+import prisma from "../database/prisma.js";
 
 let io;
-
-// Data Structures for Watch Party
-// watchParties.get(meetingId) => {
-//   hostUserId,        // user.id từ DB — SOURCE OF TRUTH cho identity
-//   hostSocketId,      // socket.id hiện tại — chỉ dùng cho emit định hướng
-//   currentMovie, currentEpisodeId, isPlaying, currentTime, lastSyncTime
-// }
 const watchParties = new Map();
-// hostTimers.get(meetingId) => timeoutID (for Grace Period)
 const hostTimers = new Map();
 
 export const initSocket = (httpServer, options) => {
@@ -23,8 +16,6 @@ export const initSocket = (httpServer, options) => {
     ...options
   });
 
-  // ===================== LỚP 1: SOCKET AUTHENTICATION =====================
-  // Verify JWT tại handshake — chặn kết nối không hợp lệ ngay từ đầu
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) {
@@ -46,7 +37,6 @@ export const initSocket = (httpServer, options) => {
   });
 
   io.on("connection", (socket) => {
-    // --- LEGACY: COMMENT SYSTEM ---
     socket.on("join_production", (productionId) => {
       if (productionId) {
         socket.join(`production_${productionId}`);
@@ -59,21 +49,39 @@ export const initSocket = (httpServer, options) => {
       }
     });
 
-    // --- WATCH PARTY MODULE ---
-
-    // 1. Join Party
-    socket.on("join_party", ({ meetingId, isHost }) => {
+    socket.on("join_party", async ({ meetingId, isHost }) => {
       if (!meetingId) return;
 
       socket.join(`party_${meetingId}`);
       socket.meetingId = meetingId;
+      socket.isHost = isHost;
 
-      const userId = socket.user.id; // Lấy từ JWT đã verify
-      const existingState = watchParties.get(meetingId) || {};
+      const userId = socket.user.id;
+      const existingState = watchParties.get(meetingId) || { isPlaying: false, currentTime: 0 };
 
       console.log(`[WatchParty] User ${userId} joined party_${meetingId} (isHost: ${isHost})`);
 
-      // ===================== LỚP 2: HOST AUTHORIZATION =====================
+      // 2. Lấy thông tin phim hiện tại từ DB để gửi cho người mới vào
+      try {
+        const party = await prisma.watch_parties.findUnique({
+          where: { id: meetingId },
+          include: { productions: true }
+        });
+
+        if (party && party.production_id) {
+          socket.emit("party_state", {
+            currentMovie: party.productions?.slug,
+            currentEpisodeId: party.episode_id,
+            isPlaying: existingState.isPlaying,
+            currentTime: existingState.currentTime,
+            serverTime: Date.now()
+          });
+        }
+      } catch (err) {
+        console.error("[Socket] Lỗi lấy party state:", err);
+      }
+
+
       if (isHost) {
         // Kiểm tra: chỉ đúng host (theo userId) mới được claim host role
         const isLegitimateHost =
@@ -109,28 +117,67 @@ export const initSocket = (httpServer, options) => {
     });
 
     // 2. Thay đổi phim/tập (Chỉ Host)
-    socket.on("host_change_movie", ({ meetingId, movieSlug, episodeId }) => {
-      const state = watchParties.get(meetingId);
+    socket.on("host_change_movie", async (data) => {
+      const { meetingId, movieSlug, episodeId } = data;
 
-      // Guard: verify bằng userId — đúng cả sau reconnect
-      if (!state || socket.user.id !== state.hostUserId) {
-        console.warn(`[WatchParty] Unauthorized host_change_movie from user ${socket.user.id} in ${meetingId}`);
+      // Guard: Chỉ Host mới được đổi phim
+      if (!socket.isHost) {
+        console.warn(`[WatchParty] Unauthorized movie change attempt by user ${socket.user?.id}`);
         return;
       }
 
-      state.currentMovie = movieSlug;
-      state.currentEpisodeId = episodeId;
-      state.isPlaying = false;
-      state.currentTime = 0;
-      state.lastSyncTime = Date.now();
+      try {
+        let updateData = {
+          production_id: null,
+          episode_id: null
+        };
 
-      watchParties.set(meetingId, state);
+        let finalMovieSlug = null;
+        let finalEpisodeId = null;
 
-      io.to(`party_${meetingId}`).emit("movie_changed", {
-        movieSlug,
-        episodeId
-      });
-      console.log(`[WatchParty] Room ${meetingId} changed movie to ${movieSlug}`);
+        // Nếu có chọn phim mới
+        if (movieSlug) {
+          const production = await prisma.productions.findUnique({
+            where: { slug: movieSlug },
+            include: { episodes: { orderBy: { episode_number: "asc" }, take: 1 } }
+          });
+
+          if (production) {
+            finalMovieSlug = movieSlug;
+            finalEpisodeId = episodeId || (production.episodes.length > 0 ? production.episodes[0].id : null);
+            updateData = {
+              production_id: production.id,
+              episode_id: finalEpisodeId
+            };
+          } else {
+            console.error(`[WatchParty] Movie not found: ${movieSlug}`);
+            return;
+          }
+        }
+
+        // 1. Cập nhật Database
+        await prisma.watch_parties.update({
+          where: { id: meetingId },
+          data: updateData
+        });
+
+        // 2. Cập nhật trạng thái trong RAM
+        const state = watchParties.get(meetingId) || { currentTime: 0, isPlaying: false };
+        state.currentMovie = finalMovieSlug;
+        state.currentEpisodeId = finalEpisodeId;
+        state.hostUserId = socket.user?.id;
+        watchParties.set(meetingId, state);
+
+        // 3. Thông báo cho mọi người trong phòng
+        io.to(`party_${meetingId}`).emit("movie_changed", {
+          movieSlug: finalMovieSlug,
+          episodeId: finalEpisodeId
+        });
+        
+        console.log(`[WatchParty] Room ${meetingId} ${movieSlug ? 'changed movie to ' + movieSlug : 'reset to lobby'}`);
+      } catch (err) {
+        console.error("[WatchParty] Lỗi đổi phim:", err);
+      }
     });
 
     // 3. Play / Pause / Seek
