@@ -8,11 +8,14 @@ import { router } from "./routes/route.jsx";
 import { ConfigProvider, theme } from "antd";
 import enUS from "antd/locale/en_US";
 import { AuthProvider } from "./modules/auth/context/AuthContext";
+import MeetingProvider from "./modules/meeting/MeetingContext";
 
 createRoot(document.getElementById("root")).render(
   <AuthProvider>
-    <ConfigProvider locale={enUS} theme={{ algorithm: theme.darkAlgorithm }}>
-      <RouterProvider router={router} />
-    </ConfigProvider>
+    <MeetingProvider>
+      <ConfigProvider locale={enUS} theme={{ algorithm: theme.darkAlgorithm }}>
+        <RouterProvider router={router} />
+      </ConfigProvider>
+    </MeetingProvider>
   </AuthProvider>
 );

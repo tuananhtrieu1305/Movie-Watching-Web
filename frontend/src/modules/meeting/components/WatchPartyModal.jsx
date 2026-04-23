@@ -23,10 +23,24 @@ const WatchPartyModal = ({ open, onCancel, production }) => {
   const handleCreateWatchParty = async () => {
     try {
       setIsCreating(true);
-      const data = await createRoom(`Phòng xem ${production.title}`);
-      navigate(`/meeting/${data.id}`, { state: { initialSlug: production.slug } });
+      
+      const title = production 
+        ? `Phòng xem ${production.title}` 
+        : "Phòng xem phim nhóm";
+      
+      const prodId = production?.id || null;
+      const slug = production?.slug || null;
+
+      // Gửi thêm production.id (nếu có)
+      const data = await createRoom(title, prodId, null);
+      
+      // Navigate tới trang meeting với meetingId từ backend
+      navigate(`/meeting/${data.meetingId}`, { 
+        state: { initialSlug: slug } 
+      });
     } catch (error) {
-      message.error("Lỗi khi tạo phòng Watch Party. Vui lòng thử lại!");
+      console.error(error);
+      message.error(error.message || "Lỗi khi tạo phòng Watch Party. Vui lòng thử lại!");
     } finally {
       setIsCreating(false);
       onCancel();
@@ -38,14 +52,18 @@ const WatchPartyModal = ({ open, onCancel, production }) => {
     try {
       setIsJoining(true);
       const cleanId = joinId.trim();
+      
       const data = await joinMeetingApi(cleanId);
       
       if (data && data.token) {
         setToken(data.token);
-        setIsHost(false);
+        setIsHost(data.role === "host");
         setGlobalMeetingId(cleanId);
-        setParticipantId(data.participant?.id || "guest-temp");
-        navigate(`/meeting/${cleanId}`, { state: { initialSlug: production.slug } });
+        setParticipantId(data.userId);
+        
+        navigate(`/meeting/${cleanId}`, { 
+          state: { initialSlug: production?.slug || null } 
+        });
       }
     } catch (error) {
       message.error(error.message || "Không thể vào phòng. Mã sai hoặc phòng đã đóng.");
@@ -74,9 +92,15 @@ const WatchPartyModal = ({ open, onCancel, production }) => {
             <TeamOutlined className="text-3xl" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Watch Party</h2>
-          <p className="text-gray-400 text-center">
-            Tạo phòng riêng hoặc nhập mã để cùng xem siêu phẩm{" "}
-            <span className="text-[#ffdd95] font-semibold">{production?.title}</span>
+          <p className="text-gray-400 text-center px-4">
+            {production ? (
+              <>
+                Tạo phòng riêng hoặc nhập mã để cùng xem siêu phẩm{" "}
+                <span className="text-[#ffdd95] font-semibold">{production.title}</span>
+              </>
+            ) : (
+              "Tạo phòng xem chung và mời bạn bè tham gia bằng mã phòng"
+            )}
           </p>
         </div>
 
@@ -85,7 +109,7 @@ const WatchPartyModal = ({ open, onCancel, production }) => {
           <div className="bg-[#242424] p-5 rounded-xl border border-gray-700 hover:border-gray-600 transition-colors">
             <h3 className="text-lg font-bold text-white mb-2">Tạo phòng mới</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Bạn sẽ là Chủ phòng (Host), có quyền chọn tập và làm chủ thanh trình chiếu.
+              Bạn sẽ là Chủ phòng (Host), có quyền chọn phim và làm chủ thanh trình chiếu.
             </p>
             <Button
               type="primary"
