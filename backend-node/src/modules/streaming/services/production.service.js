@@ -168,7 +168,7 @@ export const updateProductionService = async (id, metadata) => {
     banner_url,
     country,
     language,
-    duration, // BỔ SUNG DURATION VÀO ĐÂY
+    duration,
   } = metadata;
 
   return await prisma.$transaction(async (tx) => {
@@ -209,7 +209,7 @@ export const updateProductionService = async (id, metadata) => {
       });
     }
 
-    // 3. Genres (Giữ nguyên logic của bạn)
+    // 3. Genres
     if (genres) {
       const genreIds = typeof genres === "string" ? JSON.parse(genres) : genres;
       await tx.production_genres.deleteMany({
@@ -225,7 +225,7 @@ export const updateProductionService = async (id, metadata) => {
       }
     }
 
-    // 4. Actors (Cập nhật dùng Clean Slug)
+    // 4. Actors
     if (actors) {
       const actorList =
         typeof actors === "string" ? JSON.parse(actors) : actors;
