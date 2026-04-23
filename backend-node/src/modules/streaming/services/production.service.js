@@ -357,7 +357,7 @@ export const deleteProductionService = async (id) => {
     console.error("Lỗi Promise dọn rác R2:", err),
   );
 
-  // 3. Xóa dữ liệu trong MySQL (Nhờ Cascade, episodes/actors/genres sẽ tự bay màu)
+  // 3. Xóa dữ liệu trong MySQL
   return await prisma.$transaction(async (tx) => {
     // 3.1 Xóa các mảng vỏ của Season trước
     if (seasonShellIds.length > 0) {
@@ -530,7 +530,7 @@ export const getPopularMoviesService = async () => {
   const popularDb = await prisma.productions.findMany({
     where: {
       type: { in: ["movie", "series"] },
-      status: "completed", // Tuỳ chọn: Chỉ lấy các phim đã hoàn thành, hoặc bạn có thể bỏ dòng này
+      status: "completed", // Chỉ lấy các phim đã hoàn thành
     },
     take: 10, // Lấy top 10
     orderBy: [
