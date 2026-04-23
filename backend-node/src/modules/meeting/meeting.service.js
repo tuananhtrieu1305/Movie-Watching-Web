@@ -46,15 +46,17 @@ export default class MeetingService {
   }
 
   async generateParticipantToken(meetingId, role) {
-    // API cấp token bằng cách thêm participant vào meeting
+    // Phân quyền dựa trên role: Host dùng preset host, Guest dùng preset participant
+    const presetName = role === "host" ? "group_call_host" : "group_call_participant";
+    
     const response = await fetch(
       `${this.baseUrl}/meetings/${meetingId}/participants`,
       {
         method: "POST",
         headers: this.headers,
         body: JSON.stringify({
-          preset_name: "group_call_host",
-          custom_participant_id: "tmp",
+          preset_name: presetName,
+          custom_participant_id: "user_" + Math.random().toString(36).substr(2, 9), // ID định danh tham gia
         }),
       },
     );

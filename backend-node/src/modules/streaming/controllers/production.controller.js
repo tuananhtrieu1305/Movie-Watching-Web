@@ -6,7 +6,18 @@ import {
   updateProductionService,
   deleteProductionService,
   getPopularMoviesService,
+  searchProductionsService,
 } from "../services/production.service.js";
+
+export const searchProductionsController = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const results = await searchProductionsService(q);
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 export const uploadMovieController = async (req, res) => {
   try {

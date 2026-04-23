@@ -8,10 +8,13 @@ import {
   updateProductionController,
   deleteProductionController,
   getPopularMoviesController,
+  searchProductionsController,
 } from "../controllers/production.controller.js";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+router.get("/search", searchProductionsController);
 
 router.get("/popular", getPopularMoviesController);
 router.get("/genres", getGenresController);

@@ -503,3 +503,21 @@ export const getPopularMoviesService = async () => {
     series: p.series,
   }));
 };
+export const searchProductionsService = async (query) => {
+  if (!query) return [];
+  
+  return await prisma.productions.findMany({
+    where: {
+      OR: [
+        { title: { contains: query } },
+        { description: { contains: query } },
+      ],
+      type: { in: ["movie", "series"] },
+    },
+    take: 10, // Giới hạn 10 kết quả cho dropdown
+    include: {
+      movies: true,
+      series: true,
+    }
+  });
+};
