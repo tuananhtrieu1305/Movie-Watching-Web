@@ -7,6 +7,7 @@ const router = express.Router();
 router.post("/payos/create-url", requireAuth, paymentController.createPayosUrl);
 router.get("/payos/return", paymentController.handlePayosReturn);
 router.post("/payos/webhook", paymentController.handlePayosWebhook);
+router.get("/payos/webhook", paymentController.handlePayosWebhookHealth);
 router.get(
   "/history",
   requireAuth,

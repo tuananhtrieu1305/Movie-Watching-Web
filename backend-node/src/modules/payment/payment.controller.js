@@ -65,6 +65,12 @@ export const paymentController = {
       return res.status(400).json({ success: false, message: error.message });
     }
   },
+  handlePayosWebhookHealth(req, res) {
+    return res.status(200).json({
+      success: true,
+      message: "PayOS webhook endpoint is reachable",
+    });
+  },
 
   async getUserTransactionHistory(req, res) {
     try {
