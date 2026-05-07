@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { GENRES } from "../../browse/constants";
 
 const HeroSlider = ({ movies = [] }) => {
   const navigate = useNavigate();
@@ -106,15 +107,25 @@ const HeroSlider = ({ movies = [] }) => {
                 {/* Genres */}
                 {Array.isArray(movie.genres) && movie.genres.length > 0 && (
                   <div className="hero-genres">
-                    {movie.genres.map((genre, idx) => (
-                      <Link
-                        key={idx}
-                        to={`/genre/${genre}`}
-                        className="genre-tag"
-                      >
-                        {genre}
-                      </Link>
-                    ))}
+                    {movie.genres.map((genre, idx) => {
+                      const matchedGenre = GENRES.find(
+                        (g) =>
+                          g.label.toLowerCase() === genre.toLowerCase() ||
+                          g.value === genre,
+                      );
+                      const genreValue = matchedGenre
+                        ? matchedGenre.value
+                        : genre;
+                      return (
+                        <Link
+                          key={idx}
+                          to={`/movies?genre=${genreValue}`}
+                          className="genre-tag"
+                        >
+                          {genre}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
 

@@ -13,6 +13,11 @@ services:
       - db_data:/var/lib/mysql
       - ./database:/docker-entrypoint-initdb.d
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Backend Node (JS)
   backend-node:
@@ -25,13 +30,14 @@ services:
       DATABASE_URL: mysql://root:rootpassword@db:3306/movie_streaming_db
       PORT: 3000
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - ./backend-node/.env
     volumes:
       - ./backend-node:/app
       - /app/node_modules
-    command: sh -c "npm install && npx prisma generate && npm run dev"
+    command: sh -c "npx prisma generate && npm run dev"
 
   # Python Video Service
   video-processor:
