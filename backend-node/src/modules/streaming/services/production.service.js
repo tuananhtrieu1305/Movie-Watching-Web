@@ -139,8 +139,10 @@ export const uploadMovieService = async (file, metadata) => {
   // 4. Gọi Python xử lý Video ngầm
   if (firstEpisodeId && fileName) {
     console.log(`🔥 Đã lưu DB. Đang gửi file ${fileName} sang Python xử lý...`);
+    const pythonApiUrl =
+      process.env.PYTHON_SERVICE_URL || "http://video_service:8001";
     axios
-      .post("http://video_service:8001/process-video", {
+      .post(`${pythonApiUrl}/process-video`, {
         file_name: fileName,
         production_id: newProduction.id,
         episode_id: firstEpisodeId,
@@ -370,11 +372,18 @@ export const deleteProductionService = async (id) => {
   });
 };
 
-export const getMoviesService = async ({ scope, genre, year, country, type, sort } = {}) => {
+export const getMoviesService = async ({
+  scope,
+  genre,
+  year,
+  country,
+  type,
+  sort,
+} = {}) => {
   const isHomeScope = scope === "home";
 
   const where = {
-    type: { in: (type && type !== "all") ? [type] : ["movie", "series"] }
+    type: { in: type && type !== "all" ? [type] : ["movie", "series"] },
   };
 
   if (isHomeScope) {
@@ -391,8 +400,8 @@ export const getMoviesService = async ({ scope, genre, year, country, type, sort
   }
 
   if (genre && genre !== "all") {
-    const genreArray = typeof genre === 'string' ? genre.split(',') : [genre];
-    
+    const genreArray = typeof genre === "string" ? genre.split(",") : [genre];
+
     where.production_genres = {
       some: {
         genres: {
@@ -400,12 +409,12 @@ export const getMoviesService = async ({ scope, genre, year, country, type, sort
             return {
               OR: [
                 { id: !isNaN(g) ? parseInt(g) : undefined },
-                { slug: g }
-              ].filter(Boolean)
+                { slug: g },
+              ].filter(Boolean),
             };
-          })
-        }
-      }
+          }),
+        },
+      },
     };
   }
 
@@ -439,7 +448,10 @@ export const getMoviesService = async ({ scope, genre, year, country, type, sort
 
   const results = productions.map((production) => {
     const totalViews = Array.isArray(production.episodes)
-      ? production.episodes.reduce((sum, ep) => sum + (Number(ep?.views_count) || 0), 0)
+      ? production.episodes.reduce(
+          (sum, ep) => sum + (Number(ep?.views_count) || 0),
+          0,
+        )
       : 0;
 
     const genres = Array.isArray(production.production_genres)
@@ -588,7 +600,7 @@ export const getPopularMoviesService = async () => {
 };
 export const searchProductionsService = async (query) => {
   if (!query) return [];
-  
+
   return await prisma.productions.findMany({
     where: {
       OR: [
@@ -601,6 +613,6 @@ export const searchProductionsService = async (query) => {
     include: {
       movies: true,
       series: true,
-    }
+    },
   });
 };

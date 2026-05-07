@@ -55,8 +55,10 @@ export const createEpisodeService = async (data, file) => {
   });
 
   if (file && videoUrl) {
+    const pythonApiUrl =
+      process.env.PYTHON_SERVICE_URL || "http://video_service:8001";
     axios
-      .post("http://video_service:8001/process-video", {
+      .post(`${pythonApiUrl}/process-video`, {
         file_name: videoUrl,
         production_id: episode.production_id,
         episode_id: episode.id,
@@ -79,7 +81,8 @@ export const updateEpisodeService = async (id, data, file) => {
       : undefined,
     title: data.title,
     duration: data.duration ? Number(data.duration) : undefined,
-    thumbnail_url: data.thumbnail_url !== undefined ? data.thumbnail_url : undefined,
+    thumbnail_url:
+      data.thumbnail_url !== undefined ? data.thumbnail_url : undefined,
     updated_at: new Date(),
   };
 
@@ -91,8 +94,10 @@ export const updateEpisodeService = async (id, data, file) => {
   });
 
   if (file && videoUrl) {
+    const pythonApiUrl =
+      process.env.PYTHON_SERVICE_URL || "http://video_service:8001";
     axios
-      .post("http://video_service:8001/process-video", {
+      .post(`${pythonApiUrl}/process-video`, {
         file_name: videoUrl,
         production_id: episode.production_id,
         episode_id: episode.id,
