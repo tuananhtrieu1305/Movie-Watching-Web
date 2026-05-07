@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMeetingContext } from "../MeetingContext";
+import { useMeetingContext } from "../context/MeetingContext";
 
 export default function CreateMeeting() {
   const [title, setTitle] = useState("");

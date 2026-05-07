@@ -85,11 +85,11 @@ export const commentService = {
 
     const comments = await prisma.comments.findMany({
       where,
-      take: take + 1, // fetch one extra to know if there's a next page
+      take: take + 1, 
       ...(cursor && {
         cursor: { id: cursor },
-        skip: 1, // skip the cursor itself
-      }),
+        skip: 1,
+      }), //Nếu có cursors thì đặt mốc tại comment đó và skip nó
       orderBy: { id: "desc" }, // newest first
       include: {
         users: { select: { id: true, username: true, avatar_url: true } },
@@ -290,6 +290,17 @@ export const commentService = {
       },
     });
 
+    try {
+      const io = getIO();
+      io.to(`production_${existing.production_id}`).emit("comment_deleted", {
+        commentId,
+        productionId: existing.production_id,
+        parentId: existing.parent_id,
+      });
+    } catch (e) {
+      console.error("Socket emit error:", e);
+    }
+
     return { id: commentId, status: "deleted" };
   },
 
@@ -307,7 +318,7 @@ export const commentService = {
     });
 
     // Use a transaction for atomic counter updates
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       if (existing) {
         if (existing.type === reactType) {
           // Same reaction → remove it (toggle off)
@@ -356,5 +367,36 @@ export const commentService = {
         return { action: "added", type: reactType };
       }
     });
+
+    const updatedComment = await prisma.comments.findUnique({
+      where: { id: commentId },
+      select: {
+        id: true,
+        production_id: true,
+        parent_id: true,
+        likes_count: true,
+        dislikes_count: true,
+      },
+    });
+
+    if (updatedComment) {
+      try {
+        const io = getIO();
+        io.to(`production_${updatedComment.production_id}`).emit(
+          "comment_reaction_updated",
+          {
+            commentId: updatedComment.id,
+            productionId: updatedComment.production_id,
+            parentId: updatedComment.parent_id,
+            likesCount: updatedComment.likes_count ?? 0,
+            dislikesCount: updatedComment.dislikes_count ?? 0,
+          },
+        );
+      } catch (e) {
+        console.error("Socket emit error:", e);
+      }
+    }
+
+    return result;
   },
 };

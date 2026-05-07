@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Modal, Button, Input, message } from "antd";
 import { TeamOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { useMeetingContext } from "../MeetingContext";
-import { joinMeetingApi } from "../MeetingApi";
+import { useMeetingContext } from "../context/MeetingContext";
+import { joinMeetingApi } from "../services/meetingApi";
 
 const WatchPartyModal = ({ open, onCancel, production }) => {
   const navigate = useNavigate();

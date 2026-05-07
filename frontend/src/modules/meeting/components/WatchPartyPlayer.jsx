@@ -3,10 +3,10 @@ import {
   getMovies,
   getMovieBySlug,
   searchMovies,
-} from "../../../services/movieService";
-import { useMeetingContext } from "../MeetingContext";
+} from "../../../shared/services/movieService";
+import { useMeetingContext } from "../context/MeetingContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getFallbackVideoUrl } from "../../../utils/streaming/fallbackUrl";
+import { getFallbackVideoUrl } from "../../streaming/utils/fallbackUrl";
 import { Spin, Button, Tooltip, message, Card } from "antd";
 import {
   FullscreenOutlined,
@@ -14,7 +14,7 @@ import {
   CopyOutlined,
 } from "@ant-design/icons";
 import GuestControls from "./GuestControls";
-import SearchInput from "../../../components/common/SearchInput";
+import SearchInput from "../../../shared/components/common/SearchInput";
 
 export default function WatchPartyPlayer({
   meeting,

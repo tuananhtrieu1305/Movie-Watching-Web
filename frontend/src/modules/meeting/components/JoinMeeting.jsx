@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMeetingContext } from "../MeetingContext"; // Nhớ import Context
-import { joinMeetingApi } from "../MeetingApi"; // Nhớ import hàm API của bạn
+import { useMeetingContext } from "../context/MeetingContext"; // Nhớ import Context
+import { joinMeetingApi } from "../services/meetingApi"; // Nhớ import hàm API của bạn
 
 export default function JoinMeeting() {
   const [meetingId, setMeetingId] = useState("");
