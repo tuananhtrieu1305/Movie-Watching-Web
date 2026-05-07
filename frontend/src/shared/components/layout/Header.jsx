@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaSearch,
-  FaBars,
   FaUserPlus,
   FaSignInAlt,
   FaPlayCircle,
@@ -208,10 +207,6 @@ const Header = () => {
                 </Link>
               </div>
             )}
-
-            <button className="lg:hidden text-white text-2xl ml-1">
-              <FaBars />
-            </button>
           </div>
         </div>
       </header>

@@ -174,8 +174,8 @@ export default function MeetingUI({ meeting }) {
           
           {/* Dialog xác nhận thoát — chỉ mount khi bấm nút Leave */}
           {sidebarState.activeLeaveConfirmation && (
-            <div className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2">
-              <div className="w-full max-w-full overflow-hidden scale-90 origin-center">
+            <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto">
                 <RtkLeaveMeeting
                   meeting={meeting}
                   states={sidebarState}
