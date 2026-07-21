@@ -68,9 +68,6 @@ const VideoPlayer = (props) => {
       setIsModalVisible(true);
     }
 
-    // Tăng thời gian đã xem (thêm 0.25s mỗi event timeupdate tùy browsers)
-    // Tạm bỏ qua độ chính xác tuyệt đối, chỉ đếm cho event
-    // Cách an toàn hơn: gửi thẳng currentTime lên
     syncHistory(currentTime);
   };
 
